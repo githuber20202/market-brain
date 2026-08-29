@@ -1,0 +1,63 @@
+index,ticker,asset_type,name,exchange,sector_proxy,audit_required,ranking_eligible,notes,universe_version
+0,NVDA,EQUITY,NVIDIA Corporation,Nasdaq,SMH,True,True,,2026-08-27.1
+1,AVGO,EQUITY,Broadcom Inc.,Nasdaq,SMH,True,True,,2026-08-27.1
+2,DELL,EQUITY,Dell Technologies Inc.,NYSE,XLK,True,True,,2026-08-27.1
+3,AAPL,EQUITY,Apple Inc.,Nasdaq,XLK,True,True,,2026-08-27.1
+4,TXN,EQUITY,Texas Instruments Incorporated,Nasdaq,SMH,True,True,,2026-08-27.1
+5,CDNS,EQUITY,Cadence Design Systems Inc.,Nasdaq,XLK,True,True,,2026-08-27.1
+6,SNPS,EQUITY,Synopsys Inc.,Nasdaq,XLK,True,True,,2026-08-27.1
+7,ORCL,EQUITY,Oracle Corporation,NYSE,XLK,True,True,,2026-08-27.1
+8,NOW,EQUITY,ServiceNow Inc.,NYSE,XLK,True,True,,2026-08-27.1
+9,ADBE,EQUITY,Adobe Inc.,Nasdaq,XLK,True,True,,2026-08-27.1
+10,WDAY,EQUITY,Workday Inc.,Nasdaq,XLK,True,True,,2026-08-27.1
+11,MSFT,EQUITY,Microsoft Corporation,Nasdaq,XLK,True,True,,2026-08-27.1
+12,AMZN,EQUITY,Amazon.com Inc.,Nasdaq,XLY,True,True,,2026-08-27.1
+13,BA,EQUITY,The Boeing Company,NYSE,XLI,True,True,,2026-08-27.1
+14,AMD,EQUITY,Advanced Micro Devices Inc.,Nasdaq,SMH,True,True,,2026-08-27.1
+15,INTC,EQUITY,Intel Corporation,Nasdaq,SMH,True,True,,2026-08-27.1
+16,MRVL,EQUITY,Marvell Technology Inc.,Nasdaq,SMH,True,True,,2026-08-27.1
+17,MRNA,EQUITY,Moderna Inc.,Nasdaq,XBI,True,True,Mandatory audit per explicit user correction 2026-08-26,2026-08-27.1
+18,SNDK,EQUITY,Sandisk Corporation,Nasdaq,SMH,True,True,,2026-08-27.1
+19,GOOGL,EQUITY,Alphabet Inc. Class A,Nasdaq,XLC,True,True,,2026-08-27.1
+20,GS,EQUITY,The Goldman Sachs Group Inc.,NYSE,XLF,True,True,,2026-08-27.1
+21,ABNB,EQUITY,Airbnb Inc.,Nasdaq,XLY,True,True,,2026-08-27.1
+22,DASH,EQUITY,DoorDash Inc.,Nasdaq,XLY,True,True,,2026-08-27.1
+23,MU,EQUITY,Micron Technology Inc.,Nasdaq,SMH,True,True,,2026-08-27.1
+24,GE,EQUITY,GE Aerospace,NYSE,XLI,True,True,,2026-08-27.1
+25,JPM,EQUITY,JPMorgan Chase & Co.,NYSE,XLF,True,True,,2026-08-27.1
+26,BAC,EQUITY,Bank of America Corporation,NYSE,XLF,True,True,,2026-08-27.1
+27,MS,EQUITY,Morgan Stanley,NYSE,XLF,True,True,,2026-08-27.1
+28,WMT,EQUITY,Walmart Inc.,Nasdaq,XLP,True,True,Transferred to Nasdaq in December 2025,2026-08-27.1
+29,COIN,EQUITY,Coinbase Global Inc.,Nasdaq,IBIT,True,True,,2026-08-27.1
+30,HOOD,EQUITY,Robinhood Markets Inc.,Nasdaq,XLF,True,True,,2026-08-27.1
+31,PLTR,EQUITY,Palantir Technologies Inc.,Nasdaq,XLK,True,True,,2026-08-27.1
+32,MSTR,EQUITY,Strategy Inc.,Nasdaq,IBIT,True,True,,2026-08-27.1
+33,META,EQUITY,Meta Platforms Inc.,Nasdaq,XLC,True,True,,2026-08-27.1
+34,NFLX,EQUITY,Netflix Inc.,Nasdaq,XLC,True,True,,2026-08-27.1
+35,UBER,EQUITY,Uber Technologies Inc.,NYSE,XLY,True,True,,2026-08-27.1
+36,PYPL,EQUITY,PayPal Holdings Inc.,Nasdaq,XLF,True,True,,2026-08-27.1
+37,V,EQUITY,Visa Inc.,NYSE,XLF,True,True,,2026-08-27.1
+38,EBAY,EQUITY,eBay Inc.,Nasdaq,XLY,True,True,,2026-08-27.1
+39,DIS,EQUITY,The Walt Disney Company,NYSE,XLC,True,True,,2026-08-27.1
+40,PG,EQUITY,The Procter & Gamble Company,NYSE,XLP,True,True,,2026-08-27.1
+41,CVX,EQUITY,Chevron Corporation,NYSE,XLE,True,True,,2026-08-27.1
+42,QCOM,EQUITY,QUALCOMM Incorporated,Nasdaq,SMH,True,True,,2026-08-27.1
+43,AMAT,EQUITY,Applied Materials Inc.,Nasdaq,SMH,True,True,,2026-08-27.1
+44,TSLA,EQUITY,Tesla Inc.,Nasdaq,XLY,True,True,,2026-08-27.1
+45,CSCO,EQUITY,Cisco Systems Inc.,Nasdaq,XLK,True,True,,2026-08-27.1
+46,ALAB,EQUITY,Astera Labs Inc.,Nasdaq,SMH,True,True,,2026-08-27.1
+47,IBKR,EQUITY,Interactive Brokers Group Inc.,Nasdaq,XLF,True,True,,2026-08-27.1
+48,LHX,EQUITY,L3Harris Technologies Inc.,NYSE,ITA,True,True,,2026-08-27.1
+49,NOC,EQUITY,Northrop Grumman Corporation,NYSE,ITA,True,True,,2026-08-27.1
+50,CHG,UNRESOLVED,Identifier unresolved,UNKNOWN,,True,False,Audit row required but identifier is stale and ranking is prohibited,2026-08-27.1
+51,ONDS,EQUITY,Ondas Holdings Inc.,Nasdaq,XAR,True,True,,2026-08-27.1
+52,SPY,ETF,SPDR S&P 500 ETF Trust,NYSE Arca,SPY,True,True,Market benchmark,2026-08-27.1
+53,QQQ,ETF,Invesco QQQ Trust,Nasdaq,QQQ,True,True,Growth benchmark,2026-08-27.1
+54,VOO,ETF,Vanguard S&P 500 ETF,NYSE Arca,SPY,True,True,Market benchmark,2026-08-27.1
+55,IBIT,ETF,iShares Bitcoin Trust ETF,Nasdaq,IBIT,True,True,Crypto proxy,2026-08-27.1
+56,XLE,ETF,Energy Select Sector SPDR Fund,NYSE Arca,XLE,True,True,Sector benchmark,2026-08-27.1
+57,GLTR,ETF,abrdn Physical Precious Metals Basket Shares ETF,NYSE Arca,GLTR,True,True,Commodity proxy,2026-08-27.1
+58,REMX,ETF,VanEck Rare Earth and Strategic Metals ETF,NYSE Arca,REMX,True,True,Materials proxy,2026-08-27.1
+59,ITA,ETF,iShares U.S. Aerospace & Defense ETF,Cboe BZX,ITA,True,True,Defense benchmark,2026-08-27.1
+60,XAR,ETF,SPDR S&P Aerospace & Defense ETF,NYSE Arca,XAR,True,True,Defense benchmark,2026-08-27.1
+

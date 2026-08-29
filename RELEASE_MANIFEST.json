@@ -1,0 +1,29 @@
+{
+  "release": "MARKET_BRAIN_V4_BROKERLESS-4.0.0",
+  "status": "CI_VALIDATED_NOT_LIVE",
+  "architecture": "BROKERLESS_EVENT_SOURCED",
+  "direct_account_access": false,
+  "automatic_order_execution": false,
+  "canonical_config_manifest": "config/00-V4_MANIFEST.json",
+  "risk_envelope": "config/02-RISK_ENVELOPE.json",
+  "validation": {
+    "source": "GitHub Actions CI",
+    "gates": [
+      "compileall",
+      "ruff",
+      "pytest",
+      "postgres_marker_suite_no_skips",
+      "runtime_validation",
+      "docker_compose_config",
+      "compose_smoke"
+    ]
+  },
+  "not_proven_by_ci": [
+    "always-on host deployment",
+    "live Alpaca credentialed stream session",
+    "configured external alert delivery",
+    "multi-session shadow validation",
+    "production backup/restore drill"
+  ]
+}
+

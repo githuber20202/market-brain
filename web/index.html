@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Market Brain V4</title>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:960px;margin:auto;padding:24px;background:#111;color:#eee}
+    .card{border:1px solid #444;border-radius:14px;padding:16px;margin:12px 0;background:#1b1b1b}
+    button,input{font:inherit;padding:10px;margin:4px;border-radius:8px;border:1px solid #555}
+    button{cursor:pointer;font-weight:700}
+    pre{white-space:pre-wrap;word-break:break-word}
+  </style>
+</head>
+<body>
+  <h1>Market Brain V4 — Brokerless</h1>
+  <div class="card">
+    <h2>Risk Wallet</h2>
+    <input id="capital" type="number" placeholder="Capital base" />
+    <input id="cash" type="number" placeholder="Cash available" />
+    <button onclick="seed()">Seed Wallet</button>
+  </div>
+  <div class="card">
+    <h2>Positions</h2>
+    <button onclick="positions()">Refresh</button>
+    <pre id="out"></pre>
+  </div>
+<script>
+const out=document.getElementById('out');
+async function seed(){
+ const r=await fetch('/wallet/seed',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({capital_base:+capital.value,cash_available:+cash.value})});
+ out.textContent=JSON.stringify(await r.json(),null,2);
+}
+async function positions(){
+ const r=await fetch('/positions'); out.textContent=JSON.stringify(await r.json(),null,2);
+}
+</script>
+</body>
+</html>
+

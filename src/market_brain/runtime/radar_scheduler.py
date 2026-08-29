@@ -1,0 +1,260 @@
+from __future__ import annotations
+
+import asyncio
+import logging
+from collections.abc import Callable
+from datetime import UTC, datetime, time, timedelta
+from pathlib import Path
+
+from market_brain.domain.models import AlertRecord, QualityProfile, StrategyLane
+from market_brain.ledger.events import LedgerEvent
+from market_brain.orchestration.universe import (
+    EASTERN,
+    ManualQuality,
+    MarketSession,
+    NyseMarketCalendar,
+    UniverseEntry,
+    load_manual_quality,
+    load_market_calendar,
+    load_universe,
+)
+
+LOGGER = logging.getLogger(__name__)
+
+
+class RadarScheduler:
+    def __init__(
+        self,
+        *,
+        service,
+        screener,
+        universe_dir: Path,
+        quality_path: Path,
+        calendar_path: Path,
+        plans_per_run: int = 5,
+        poll_seconds: float = 5.0,
+        daily_digest=None,
+        now: Callable[[], datetime] | None = None,
+        sleep=asyncio.sleep,
+    ) -> None:
+        self.service = service
+        self.screener = screener
+        self.universe_dir = universe_dir
+        self.quality_path = quality_path
+        self.calendar_path = calendar_path
+        self.plans_per_run = plans_per_run
+        self.poll_seconds = poll_seconds
+        self.daily_digest = daily_digest
+        self.now = now or (lambda: datetime.now(UTC))
+        self.sleep = sleep
+        self.universe: tuple[UniverseEntry, ...] = ()
+        self.quality: dict[str, ManualQuality] = {}
+        self.calendar: NyseMarketCalendar | None = None
+        self._attempted: set[str] = set()
+        self._stop = asyncio.Event()
+
+    def validate_startup(self, *, now: datetime | None = None) -> None:
+        timestamp = _aware(now or self.now()).astimezone(EASTERN)
+        self.universe = load_universe(self.universe_dir)
+        self.quality = load_manual_quality(self.quality_path)
+        self.calendar = load_market_calendar(
+            self.calendar_path,
+            required_years={timestamp.year, timestamp.year + 1},
+        )
+
+    async def run_pending(self, *, now: datetime | None = None) -> dict | None:
+        if self.calendar is None or not self.universe:
+            raise RuntimeError("RADAR_SCHEDULER_NOT_VALIDATED")
+        timestamp = _aware(now or self.now()).astimezone(EASTERN)
+        session = self.calendar.session_for(timestamp.date())
+        digest = await self._run_daily_digest_pending(timestamp, session)
+        if digest is not None:
+            return digest
+        if session is None or not session.opens_at <= timestamp < session.closes_at:
+            return None
+        slot = _matching_slot(timestamp, session)
+        if slot is None:
+            return None
+        run_id = f"radar:{slot.date().isoformat()}:{slot.strftime('%H%M')}"
+        if run_id in self._attempted:
+            return None
+        existing = await self.service.store.get_runtime_status_key(f"radar_run:{run_id}")
+        if existing is not None:
+            self._attempted.add(run_id)
+            return None
+        self._attempted.add(run_id)
+        await self.service.store.set_runtime_status(
+            f"radar_run:{run_id}",
+            {"status": "STARTED", "scheduled_for": slot.isoformat()},
+        )
+        try:
+            return await self._execute(run_id, slot, timestamp)
+        except Exception as exc:
+            LOGGER.exception("radar_run_failed run_id=%s", run_id)
+            return await self._persist_result(
+                run_id,
+                slot,
+                status="FAILED",
+                candidates=[],
+                plan_ids=[],
+                error_type=type(exc).__name__,
+            )
+
+    async def _execute(self, run_id: str, slot: datetime, timestamp: datetime) -> dict:
+        symbols = [entry.symbol for entry in self.universe if entry.ranking_eligible]
+        rows = await self.screener.screen(symbols, top_n=len(symbols))
+        candidates: list[dict] = []
+        plan_ids: list[str] = []
+        for row in rows[: self.plans_per_run]:
+            snapshot = row.get("snapshot", {})
+            score = row.get("score", {})
+            symbol = str(snapshot.get("symbol", "")).upper()
+            candidate = {
+                "symbol": symbol,
+                "rank_score": score.get("discovery_total"),
+                "lane": None,
+                "quality_source": None,
+                "plan_id": None,
+                "levels": None,
+                "reason": None,
+            }
+            manual_quality = self.quality.get(symbol)
+            catalyst_verified = bool(snapshot.get("catalyst_verified", False))
+            catalyst_strength = float(snapshot.get("catalyst_strength", 0.0) or 0.0)
+            if manual_quality is not None:
+                quality = manual_quality.profile()
+                lane = StrategyLane.CORE_MOMENTUM
+                candidate["quality_source"] = manual_quality.source
+            elif catalyst_verified:
+                quality = QualityProfile(
+                    symbol=symbol,
+                    score=35.0,
+                    tier="UNRATED",
+                    risk_multiplier=0.0,
+                    as_of=timestamp.astimezone(UTC),
+                )
+                lane = StrategyLane.EVENT_MOMENTUM
+                candidate["quality_source"] = "MISSING_EVENT_ONLY"
+            else:
+                candidate["reason"] = "QUALITY_MISSING_CORE_BLOCKED"
+                candidates.append(candidate)
+                continue
+            candidate["lane"] = str(lane)
+            try:
+                plan, _evidence = await self.service.build_plan_from_market(
+                    symbol=symbol,
+                    quality=quality,
+                    lane=lane,
+                    catalyst_verified=catalyst_verified,
+                    catalyst_strength=catalyst_strength,
+                    structure_score=15.0,
+                    rr_score=10.0,
+                    now=timestamp.astimezone(UTC),
+                )
+            except (RuntimeError, ValueError, TypeError) as exc:
+                candidate["reason"] = str(exc) or type(exc).__name__
+                candidates.append(candidate)
+                continue
+            candidate["plan_id"] = plan.plan_id
+            candidate["levels"] = {
+                "entry_trigger": plan.entry_trigger,
+                "entry_zone_high": plan.entry_zone_high,
+                "stop": plan.stop,
+                "tp1": plan.tp1,
+                "tp2": plan.tp2,
+            }
+            plan_ids.append(plan.plan_id)
+            candidates.append(candidate)
+        return await self._persist_result(
+            run_id,
+            slot,
+            status="COMPLETED",
+            candidates=candidates,
+            plan_ids=plan_ids,
+        )
+
+    async def _persist_result(
+        self,
+        run_id: str,
+        slot: datetime,
+        *,
+        status: str,
+        candidates: list[dict],
+        plan_ids: list[str],
+        error_type: str | None = None,
+    ) -> dict:
+        payload = {
+            "run_id": run_id,
+            "status": status,
+            "scheduled_for": slot.isoformat(),
+            "universe_size": len(self.universe),
+            "candidates": candidates,
+            "plan_ids": plan_ids,
+            "error_type": error_type,
+        }
+        async with self.service.store.transaction():
+            await self.service.store.append(LedgerEvent("RADAR_RUN", run_id, payload))
+            await self.service.store.save_alert(AlertRecord(kind="RADAR_DIGEST", payload=payload))
+            await self.service.store.set_runtime_status(f"radar_run:{run_id}", payload)
+        return payload
+
+    async def _run_daily_digest_pending(
+        self,
+        timestamp: datetime,
+        session: MarketSession | None,
+    ) -> dict | None:
+        if self.daily_digest is None or session is None:
+            return None
+        scheduled = datetime.combine(timestamp.date(), time(16, 15), EASTERN)
+        if timestamp.replace(second=0, microsecond=0) != scheduled:
+            return None
+        run_id = f"daily_digest:{timestamp.date().isoformat()}"
+        alert = await self.daily_digest.create(
+            now=timestamp.astimezone(UTC),
+            run_id=run_id,
+        )
+        if alert is None:
+            return None
+        return {
+            "run_id": run_id,
+            "status": "COMPLETED",
+            "scheduled_for": scheduled.isoformat(),
+            "alert_id": alert.alert_id,
+        }
+
+    async def run(self) -> None:
+        self._stop.clear()
+        while not self._stop.is_set():
+            try:
+                await self.run_pending()
+            except asyncio.CancelledError:
+                raise
+            except (RuntimeError, ValueError, OSError) as exc:
+                LOGGER.error("radar_scheduler_fail_closed error_type=%s", type(exc).__name__)
+            await self.sleep(self.poll_seconds)
+
+    async def stop(self) -> None:
+        self._stop.set()
+
+
+def scheduled_slots(session: MarketSession) -> tuple[datetime, ...]:
+    slot = datetime.combine(session.session_date, time(9, 50), EASTERN)
+    latest = min(
+        datetime.combine(session.session_date, time(15, 0), EASTERN),
+        session.closes_at,
+    )
+    slots: list[datetime] = []
+    while slot <= latest and slot < session.closes_at:
+        slots.append(slot)
+        slot += timedelta(minutes=30)
+    return tuple(slots)
+
+
+def _matching_slot(timestamp: datetime, session: MarketSession) -> datetime | None:
+    minute = timestamp.replace(second=0, microsecond=0)
+    return minute if minute in scheduled_slots(session) else None
+
+
+def _aware(value: datetime) -> datetime:
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+

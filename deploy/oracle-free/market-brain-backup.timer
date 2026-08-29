@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Market Brain PostgreSQL backup nightly
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+Unit=market-brain-backup.service
+
+[Install]
+WantedBy=timers.target
+

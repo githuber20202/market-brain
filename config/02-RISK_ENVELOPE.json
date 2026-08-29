@@ -1,0 +1,8 @@
+{
+  "max_trade_risk_pct": 0.5,
+  "max_daily_loss_pct": 1.0,
+  "max_position_notional_pct": 35.0,
+  "max_concurrent_positions": 4,
+  "automatic_execution_allowed": false
+}
+

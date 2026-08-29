@@ -1,0 +1,21 @@
+{
+  "system": "MARKET_BRAIN_V4",
+  "version": "4.0.0",
+  "architecture": "BROKERLESS_EVENT_SOURCED",
+  "canonical_files": [
+    "02-RISK_ENVELOPE.json",
+    "schema.sql"
+  ],
+  "runtime_loading": {
+    "00-V4_MANIFEST.json": "market_brain.settings startup config-set validation",
+    "02-RISK_ENVELOPE.json": "market_brain.settings defaults; environment may override",
+    "schema.sql": "market_brain.settings startup schema-contract validation and PostgreSQL compose init"
+  },
+  "invariants": {
+    "account_connectivity": "NONE",
+    "automatic_execution": false,
+    "portfolio_state": "USER_CONFIRMED_EVENT_LEDGER",
+    "fail_closed": true
+  }
+}
+

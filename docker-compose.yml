@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: market
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-market}
+      POSTGRES_DB: market
+    volumes:
+      - market_pg:/var/lib/postgresql/data
+      - ./config/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U market -d market"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  nats:
+    image: nats:2-alpine
+    command: ["-js", "-m", "8222"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build: .
+    env_file: .env
+    environment:
+      PYTHONPATH: /app/src
+      POSTGRES_DSN: postgresql://market:${POSTGRES_PASSWORD:-market}@postgres:5432/market
+      NATS_URL: nats://nats:4222
+      EXECUTION_ACTIONS_ALLOWED: "false"
+      DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
+    ports:
+      - "127.0.0.1:${API_BIND_PORT:-8080}:8080"
+    volumes:
+      - ./reports:/app/reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    restart: unless-stopped
+
+  stream-worker:
+    build: .
+    env_file: .env
+    environment:
+      PYTHONPATH: /app/src
+      POSTGRES_DSN: postgresql://market:${POSTGRES_PASSWORD:-market}@postgres:5432/market
+      NATS_URL: nats://nats:4222
+      EXECUTION_ACTIONS_ALLOWED: "false"
+      DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
+    command: ["python", "-m", "market_brain.runtime.stream_worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: ["live"]
+
+volumes:
+  market_pg:

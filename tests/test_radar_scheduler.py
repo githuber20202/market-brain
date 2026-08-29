@@ -1,0 +1,229 @@
+from __future__ import annotations
+
+from datetime import datetime, timedelta
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+import pytest
+
+from market_brain.domain.models import StrategyLane, TradePlan
+from market_brain.ledger.store import InMemoryEventStore
+from market_brain.orchestration.universe import load_universe
+from market_brain.runtime.daily_digest import DailyDigest
+from market_brain.runtime.radar_scheduler import RadarScheduler
+from market_brain.runtime.stream_worker import select_subscription_symbols
+
+EASTERN = ZoneInfo("America/New_York")
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class FakeScreener:
+    def __init__(self, rows: list[dict]):
+        self.rows = rows
+        self.calls: list[tuple[list[str], int]] = []
+
+    async def screen(self, symbols: list[str], top_n: int):
+        self.calls.append((symbols, top_n))
+        return self.rows[:top_n]
+
+
+class FakeService:
+    def __init__(self):
+        self.store = InMemoryEventStore()
+        self.plan_calls: list[dict] = []
+
+    async def build_plan_from_market(self, **kwargs):
+        self.plan_calls.append(kwargs)
+        now = kwargs["now"]
+        plan = TradePlan(
+            symbol=kwargs["symbol"],
+            lane=kwargs["lane"],
+            entry_trigger=100.0,
+            entry_zone_high=100.1,
+            stop=99.0,
+            tp1=101.5,
+            tp2=102.0,
+            max_spread_pct=0.25,
+            max_slippage_pct=0.30,
+            created_at=now,
+            expires_at=now + timedelta(minutes=5),
+            quality_risk_multiplier=0.5,
+        )
+        await self.store.save_plan(plan)
+        return plan, {"score": {"total": 75.0}}
+
+
+def _row(symbol: str, score: float = 90.0, *, catalyst: bool = False) -> dict:
+    return {
+        "snapshot": {
+            "symbol": symbol,
+            "catalyst_verified": catalyst,
+            "catalyst_strength": 0.9 if catalyst else 0.0,
+        },
+        "score": {"discovery_total": score},
+    }
+
+
+def _files(tmp_path: Path, *, symbols: tuple[str, ...], quality: tuple[str, ...] = ()):
+    universe_dir = tmp_path / "universe"
+    universe_dir.mkdir()
+    universe_rows = "symbol,ranking_eligible\n" + "".join(
+        f"{symbol},true\n" for symbol in symbols
+    )
+    (universe_dir / "universe.csv").write_text(universe_rows)
+    quality_path = tmp_path / "quality.csv"
+    quality_path.write_text(
+        "symbol,quality_score,as_of\n"
+        + "".join(f"{symbol},85,2026-08-01T00:00:00+00:00\n" for symbol in quality)
+    )
+    calendar_path = tmp_path / "market_calendar.csv"
+    calendar_path.write_text(
+        "date,status,open_time,close_time,source\n"
+        "2026-09-07,CLOSED,,,NYSE\n"
+        "2026-11-27,EARLY_CLOSE,09:30,13:00,NYSE\n"
+        "2027-01-01,CLOSED,,,NYSE\n"
+    )
+    return universe_dir, quality_path, calendar_path
+
+
+def _scheduler(tmp_path: Path, rows: list[dict], *, symbols=("AAPL",), quality=("AAPL",)):
+    paths = _files(tmp_path, symbols=symbols, quality=quality)
+    service = FakeService()
+    screener = FakeScreener(rows)
+    scheduler = RadarScheduler(
+        service=service,
+        screener=screener,
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    scheduler.validate_startup(now=datetime(2026, 8, 28, 9, 49, tzinfo=EASTERN))
+    return scheduler, service, screener
+
+
+def test_universe_loader_normalizes_and_rejects_duplicates(tmp_path: Path):
+    universe_dir = tmp_path / "universe"
+    universe_dir.mkdir()
+    (universe_dir / "a.csv").write_text("symbol\naapl\n")
+    (universe_dir / "b.csv").write_text("ticker\nAAPL\n")
+    with pytest.raises(ValueError, match="UNIVERSE_DUPLICATE_SYMBOL=AAPL"):
+        load_universe(universe_dir)
+
+
+def test_docker_image_includes_runtime_data_and_report_scripts():
+    dockerfile = (ROOT / "Dockerfile").read_text()
+    assert "COPY data /app/data" in dockerfile
+    assert "COPY scripts /app/scripts" in dockerfile
+
+
+@pytest.mark.asyncio
+async def test_fake_clock_fires_at_0950_once_and_creates_digest(tmp_path: Path):
+    scheduler, service, screener = _scheduler(tmp_path, [_row("AAPL")])
+    before = datetime(2026, 8, 28, 9, 49, tzinfo=EASTERN)
+    slot = datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+
+    assert await scheduler.run_pending(now=before) is None
+    result = await scheduler.run_pending(now=slot)
+    assert result is not None
+    assert result["status"] == "COMPLETED"
+    assert len(screener.calls) == 1
+    assert len(service.plan_calls) == 1
+    assert service.plan_calls[0]["lane"] == StrategyLane.CORE_MOMENTUM
+    assert service.plan_calls[0]["quality"].evidence[0].source == "MANUAL"
+    assert await scheduler.run_pending(now=slot.replace(second=30)) is None
+
+    assert service.store.events[-1].event_type == "RADAR_RUN"
+    alerts = await service.store.list_undelivered()
+    assert alerts[-1].kind == "RADAR_DIGEST"
+    assert alerts[-1].payload["candidates"][0]["levels"]["stop"] == 99.0
+
+
+@pytest.mark.asyncio
+async def test_weekend_and_holiday_make_no_provider_calls(tmp_path: Path):
+    scheduler, _service, screener = _scheduler(tmp_path, [_row("AAPL")])
+    weekend = datetime(2026, 8, 29, 9, 50, tzinfo=EASTERN)
+    holiday = datetime(2026, 9, 7, 9, 50, tzinfo=EASTERN)
+
+    assert await scheduler.run_pending(now=weekend) is None
+    assert await scheduler.run_pending(now=holiday) is None
+    assert screener.calls == []
+
+
+@pytest.mark.asyncio
+async def test_early_close_stops_after_1300(tmp_path: Path):
+    scheduler, _service, screener = _scheduler(tmp_path, [_row("AAPL")])
+    last_slot = datetime(2026, 11, 27, 12, 50, tzinfo=EASTERN)
+    after_close = datetime(2026, 11, 27, 13, 20, tzinfo=EASTERN)
+
+    assert await scheduler.run_pending(now=last_slot) is not None
+    assert await scheduler.run_pending(now=after_close) is None
+    assert len(screener.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_symbol_without_quality_gets_no_core_plan(tmp_path: Path):
+    scheduler, service, _screener = _scheduler(
+        tmp_path,
+        [_row("MSFT")],
+        symbols=("MSFT",),
+        quality=(),
+    )
+    result = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    )
+
+    assert result is not None
+    assert service.plan_calls == []
+    assert result["candidates"][0]["reason"] == "QUALITY_MISSING_CORE_BLOCKED"
+
+
+@pytest.mark.asyncio
+async def test_missing_quality_with_catalyst_uses_event_lane(tmp_path: Path):
+    scheduler, service, _screener = _scheduler(
+        tmp_path,
+        [_row("MSFT", catalyst=True)],
+        symbols=("MSFT",),
+        quality=(),
+    )
+    await scheduler.run_pending(now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN))
+
+    assert service.plan_calls[0]["lane"] == StrategyLane.EVENT_MOMENTUM
+    assert service.plan_calls[0]["quality"].tier == "UNRATED"
+
+
+@pytest.mark.asyncio
+async def test_scheduler_plans_flow_into_capped_stream_subscriptions(tmp_path: Path):
+    scheduler, service, _screener = _scheduler(tmp_path, [_row("AAPL")])
+    await scheduler.run_pending(now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN))
+
+    selection = await select_subscription_symbols(service.store, cap=30, watchlist=[])
+    assert selection.selected == ["AAPL"]
+    assert selection.dropped == []
+
+
+@pytest.mark.asyncio
+async def test_daily_digest_hook_fires_at_1615_et_once_on_market_day(tmp_path: Path):
+    scheduler, service, screener = _scheduler(tmp_path, [])
+    scheduler.daily_digest = DailyDigest(service.store)
+    slot = datetime(2026, 8, 28, 16, 15, tzinfo=EASTERN)
+
+    result = await scheduler.run_pending(now=slot)
+
+    assert result is not None
+    assert result["run_id"] == "daily_digest:2026-08-28"
+    assert result["status"] == "COMPLETED"
+    assert await scheduler.run_pending(now=slot.replace(second=30)) is None
+    alerts = await service.store.list_undelivered()
+    assert [alert.kind for alert in alerts] == ["DAILY_DIGEST"]
+    assert screener.calls == []
+
+
+@pytest.mark.asyncio
+async def test_daily_digest_hook_does_not_fire_on_holiday(tmp_path: Path):
+    scheduler, service, _screener = _scheduler(tmp_path, [])
+    scheduler.daily_digest = DailyDigest(service.store)
+
+    assert await scheduler.run_pending(
+        now=datetime(2026, 9, 7, 16, 15, tzinfo=EASTERN)
+    ) is None
+    assert await service.store.list_undelivered() == []

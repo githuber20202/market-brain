@@ -1,0 +1,25 @@
+[Unit]
+Description=Market Brain brokerless advisory runtime
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/market-brain
+Environment=COMPOSE_PROJECT_NAME=market-brain
+ExecStart=/usr/bin/docker compose --profile live up --build --remove-orphans
+ExecStop=/usr/bin/docker compose --profile live down
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=0
+TimeoutStopSec=120
+UMask=0077
+StandardOutput=append:/var/log/market-brain/market-brain.log
+StandardError=append:/var/log/market-brain/market-brain.log
+
+[Install]
+WantedBy=multi-user.target
+
