@@ -1,4 +1,4 @@
-name: Probe SEC from GitHub Runner
+name: Probe Task 25b Data Sources
 
 on:
   push:
@@ -11,11 +11,72 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe SEC endpoints
+      - name: Probe SEC, then Yahoo fundamentals
+        shell: bash
         run: |
-          ua='market-brain/1.0 (github.com/githuber20202/market-brain)'
-          tickers_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 --user-agent "$ua" https://www.sec.gov/files/company_tickers.json || true)"
-          facts_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 --user-agent "$ua" https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json || true)"
+          set -euo pipefail
+          sec_ua='Market Brain shadow radar githuber20202@users.noreply.github.com'
+          yahoo_ua='Market-Brain/1.0 (+https://github.com/githuber20202/market-brain)'
+
+          sec_headers=(
+            --header "User-Agent: $sec_ua"
+            --header "Accept: application/json"
+            --header "Accept-Encoding: gzip, deflate"
+            --compressed
+          )
+
+          tickers_status="$(curl --silent --show-error --output sec_tickers.json --write-out '%{http_code}' --max-time 20 "${sec_headers[@]}" --header 'Host: www.sec.gov' https://www.sec.gov/files/company_tickers.json || true)"
+          facts_status="$(curl --silent --show-error --output sec_nvda.json --write-out '%{http_code}' --max-time 20 "${sec_headers[@]}" --header 'Host: data.sec.gov' https://data.sec.gov/api/xbrl/companyfacts/CIK0001045810.json || true)"
           echo "SEC_COMPANY_TICKERS_HTTP=$tickers_status"
-          echo "SEC_COMPANYFACTS_HTTP=$facts_status"
-          test "$facts_status" = "200"
+          echo "SEC_NVDA_COMPANYFACTS_HTTP=$facts_status"
+
+          if [[ "$tickers_status" == "200" && "$facts_status" == "200" ]]; then
+            echo "PROVEN_QUALITY_SOURCE=SEC_EDGAR"
+            exit 0
+          fi
+
+          period1="$(date -u -d '3 years ago' +%s)"
+          period2="$(date -u +%s)"
+          types='annualTotalRevenue,quarterlyTotalRevenue,annualOperatingIncome,quarterlyOperatingIncome,annualTotalDebt,annualCashAndCashEquivalents,annualFreeCashFlow,quarterlyFreeCashFlow,annualDilutedAverageShares,quarterlyDilutedAverageShares'
+
+          for symbol in NVDA AAPL; do
+            output="yahoo_${symbol}.json"
+            url="https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/${symbol}?type=${types}&period1=${period1}&period2=${period2}&merge=false"
+            status="$(curl --silent --show-error --output "$output" --write-out '%{http_code}' --max-time 30 --header "User-Agent: $yahoo_ua" --header 'Accept: application/json' "$url" || true)"
+            echo "YAHOO_${symbol}_HTTP=$status"
+            if [[ "$status" != "200" ]]; then
+              continue
+            fi
+            python - "$symbol" "$output" <<'PY'
+import json
+import sys
+
+symbol, path = sys.argv[1:]
+payload = json.load(open(path, encoding="utf-8"))
+rows = payload.get("timeseries", {}).get("result", [])
+counts = {}
+for row in rows:
+    metric = row.get("meta", {}).get("type") or row.get("type")
+    if metric:
+        counts[metric] = len(row.get("timestamp", []))
+for metric in (
+    "annualTotalRevenue",
+    "quarterlyTotalRevenue",
+    "annualOperatingIncome",
+    "quarterlyOperatingIncome",
+    "annualTotalDebt",
+    "annualCashAndCashEquivalents",
+    "annualFreeCashFlow",
+    "quarterlyFreeCashFlow",
+    "annualDilutedAverageShares",
+    "quarterlyDilutedAverageShares",
+):
+    print(f"YAHOO_{symbol}_{metric}_POINTS={counts.get(metric, 0)}")
+PY
+          done
+
+          nvda_status="$(grep -o '"symbol":"NVDA"' yahoo_NVDA.json 2>/dev/null | head -1 || true)"
+          aapl_status="$(grep -o '"symbol":"AAPL"' yahoo_AAPL.json 2>/dev/null | head -1 || true)"
+          test -n "$nvda_status"
+          test -n "$aapl_status"
+          echo "PROVEN_QUALITY_SOURCE=YAHOO_FUNDAMENTALS"
