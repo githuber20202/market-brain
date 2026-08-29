@@ -62,6 +62,10 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
         "shadow_wallet",
         {"mode": "virtual", "source": "SHADOW_VIRTUAL"},
     )
+    await store.set_runtime_status(
+        "quality_state",
+        {"status": "QUALITY_STALE", "rows": 58},
+    )
     await store.append(
         LedgerEvent(
             "RADAR_RUN",
@@ -108,8 +112,10 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     assert alert.payload["shadow"]["today"]["trades"] == 1
     assert alert.payload["shadow"]["today"]["unfinalized"] == 1
     assert alert.payload["wallet"] == "virtual"
+    assert alert.payload["quality"]["status"] == "QUALITY_STALE"
     assert alert.payload["data_availability"]["slots_missed"] == 1
     assert "Wallet: virtual" in alert.payload["text"]
+    assert "Quality: QUALITY_STALE rows=58" in alert.payload["text"]
     assert "Shadow today:" in alert.payload["text"]
     assert "Shadow by setup: {'" not in alert.payload["text"]
     assert (

@@ -6,11 +6,12 @@ import os
 import shutil
 import subprocess
 import tempfile
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from market_brain.ledger.replay import replay_check
 from market_brain.ledger.store import PostgresEventStore
+from market_brain.orchestration.universe import load_manual_quality
 
 
 def _run(
@@ -70,6 +71,67 @@ def restore_state(repo: Path, dsn: str, *, ref: str = "origin/shadow-state") -> 
     )
     print(f"STATE_RESTORE=PASS bytes={dump_path.stat().st_size}")
     return True
+
+
+async def activate_quality_from_state(
+    repo: Path,
+    target: Path,
+    store,
+    *,
+    now: datetime,
+    max_age_days: int = 14,
+) -> dict:
+    source = repo / "state" / "quality.csv"
+    timestamp = _aware(now)
+    status: dict
+    if not source.exists():
+        status = {
+            "status": "QUALITY_MISSING",
+            "checked_at": timestamp.isoformat(),
+            "rows": 0,
+        }
+    else:
+        try:
+            records = load_manual_quality(source)
+            if any(record.source != "EDGAR_AUTO" for record in records.values()):
+                raise ValueError("QUALITY_STATE_SOURCE_INVALID")
+            as_of_values = [_aware(record.as_of) for record in records.values()]
+        except (OSError, KeyError, TypeError, ValueError) as exc:
+            raise RuntimeError("QUALITY_STATE_INVALID") from exc
+        if not records or not as_of_values:
+            status = {
+                "status": "QUALITY_MISSING",
+                "checked_at": timestamp.isoformat(),
+                "rows": 0,
+            }
+        else:
+            oldest = min(as_of_values)
+            stale = oldest > timestamp + timedelta(minutes=5) or (
+                timestamp - oldest > timedelta(days=max_age_days)
+            )
+            if stale:
+                status = {
+                    "status": "QUALITY_STALE",
+                    "checked_at": timestamp.isoformat(),
+                    "as_of": oldest.isoformat(),
+                    "rows": len(records),
+                }
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+                status = {
+                    "status": "READY",
+                    "source": "EDGAR_AUTO",
+                    "checked_at": timestamp.isoformat(),
+                    "as_of": oldest.isoformat(),
+                    "rows": len(records),
+                }
+    await store.set_runtime_status("quality_state", status)
+    print(
+        "QUALITY_STATE="
+        f"{status['status']} rows={status['rows']} as_of={status.get('as_of')}"
+    )
+    return status
 
 
 def _snapshot_files(snapshot_dir: Path) -> list[Path]:
@@ -198,13 +260,37 @@ def main() -> None:
                 default=datetime.now(UTC).date().isoformat(),
             )
             command.add_argument("--push", action="store_true")
+    quality = sub.add_parser("activate-quality")
+    quality.add_argument("--dsn", required=True)
+    quality.add_argument("--repo", type=Path, default=Path.cwd())
+    quality.add_argument("--target", type=Path, default=Path("data/quality.csv"))
+    quality.add_argument("--now", help="UTC/offset ISO timestamp; tests use only")
     args = parser.parse_args()
     if args.command == "restore":
         restore_state(args.repo.resolve(), args.dsn, ref=args.ref)
     elif args.command == "verify":
         raise SystemExit(1 if asyncio.run(verify_state(args.dsn)) else 0)
+    elif args.command == "activate-quality":
+        async def activate() -> None:
+            store = PostgresEventStore(args.dsn)
+            try:
+                now = datetime.fromisoformat(args.now) if args.now else datetime.now(UTC)
+                await activate_quality_from_state(
+                    args.repo.resolve(),
+                    args.target.resolve(),
+                    store,
+                    now=now,
+                )
+            finally:
+                await store.close()
+
+        asyncio.run(activate())
     else:
         asyncio.run(_persist(args.repo.resolve(), args.dsn, args.session_date, args.push))
+
+
+def _aware(value: datetime) -> datetime:
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
 
 
 if __name__ == "__main__":

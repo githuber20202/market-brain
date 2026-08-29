@@ -1,0 +1,62 @@
+{
+  "cik": 1,
+  "entityName": "Full Metrics Corp",
+  "facts": {
+    "us-gaap": {
+      "Revenues": {"units": {"USD": [
+        {"start":"2024-01-01","end":"2024-03-31","val":100,"filed":"2024-05-01","form":"10-Q","accn":"r1"},
+        {"start":"2024-04-01","end":"2024-06-30","val":100,"filed":"2024-08-01","form":"10-Q","accn":"r2"},
+        {"start":"2024-07-01","end":"2024-09-30","val":100,"filed":"2024-11-01","form":"10-Q","accn":"r3"},
+        {"start":"2024-10-01","end":"2024-12-31","val":100,"filed":"2025-02-01","form":"10-K","accn":"r4"},
+        {"start":"2025-01-01","end":"2025-03-31","val":120,"filed":"2025-05-01","form":"10-Q","accn":"r5"},
+        {"start":"2025-04-01","end":"2025-06-30","val":120,"filed":"2025-08-01","form":"10-Q","accn":"r6"},
+        {"start":"2025-07-01","end":"2025-09-30","val":120,"filed":"2025-11-01","form":"10-Q","accn":"r7"},
+        {"start":"2025-10-01","end":"2025-12-31","val":120,"filed":"2026-02-01","form":"10-K","accn":"r8"}
+      ]}},
+      "OperatingIncomeLoss": {"units": {"USD": [
+        {"start":"2024-01-01","end":"2024-03-31","val":20,"filed":"2024-05-01","form":"10-Q","accn":"o1"},
+        {"start":"2024-04-01","end":"2024-06-30","val":20,"filed":"2024-08-01","form":"10-Q","accn":"o2"},
+        {"start":"2024-07-01","end":"2024-09-30","val":20,"filed":"2024-11-01","form":"10-Q","accn":"o3"},
+        {"start":"2024-10-01","end":"2024-12-31","val":20,"filed":"2025-02-01","form":"10-K","accn":"o4"},
+        {"start":"2025-01-01","end":"2025-03-31","val":30,"filed":"2025-05-01","form":"10-Q","accn":"o5"},
+        {"start":"2025-04-01","end":"2025-06-30","val":30,"filed":"2025-08-01","form":"10-Q","accn":"o6"},
+        {"start":"2025-07-01","end":"2025-09-30","val":30,"filed":"2025-11-01","form":"10-Q","accn":"o7"},
+        {"start":"2025-10-01","end":"2025-12-31","val":30,"filed":"2026-02-01","form":"10-K","accn":"o8"}
+      ]}},
+      "NetCashProvidedByUsedInOperatingActivities": {"units": {"USD": [
+        {"start":"2024-01-01","end":"2024-03-31","val":30,"filed":"2024-05-01","form":"10-Q","accn":"c1"},
+        {"start":"2024-04-01","end":"2024-06-30","val":30,"filed":"2024-08-01","form":"10-Q","accn":"c2"},
+        {"start":"2024-07-01","end":"2024-09-30","val":30,"filed":"2024-11-01","form":"10-Q","accn":"c3"},
+        {"start":"2024-10-01","end":"2024-12-31","val":30,"filed":"2025-02-01","form":"10-K","accn":"c4"},
+        {"start":"2025-01-01","end":"2025-03-31","val":40,"filed":"2025-05-01","form":"10-Q","accn":"c5"},
+        {"start":"2025-04-01","end":"2025-06-30","val":40,"filed":"2025-08-01","form":"10-Q","accn":"c6"},
+        {"start":"2025-07-01","end":"2025-09-30","val":40,"filed":"2025-11-01","form":"10-Q","accn":"c7"},
+        {"start":"2025-10-01","end":"2025-12-31","val":40,"filed":"2026-02-01","form":"10-K","accn":"c8"}
+      ]}},
+      "PaymentsToAcquirePropertyPlantAndEquipment": {"units": {"USD": [
+        {"start":"2024-01-01","end":"2024-03-31","val":10,"filed":"2024-05-01","form":"10-Q","accn":"p1"},
+        {"start":"2024-04-01","end":"2024-06-30","val":10,"filed":"2024-08-01","form":"10-Q","accn":"p2"},
+        {"start":"2024-07-01","end":"2024-09-30","val":10,"filed":"2024-11-01","form":"10-Q","accn":"p3"},
+        {"start":"2024-10-01","end":"2024-12-31","val":10,"filed":"2025-02-01","form":"10-K","accn":"p4"},
+        {"start":"2025-01-01","end":"2025-03-31","val":10,"filed":"2025-05-01","form":"10-Q","accn":"p5"},
+        {"start":"2025-04-01","end":"2025-06-30","val":10,"filed":"2025-08-01","form":"10-Q","accn":"p6"},
+        {"start":"2025-07-01","end":"2025-09-30","val":10,"filed":"2025-11-01","form":"10-Q","accn":"p7"},
+        {"start":"2025-10-01","end":"2025-12-31","val":10,"filed":"2026-02-01","form":"10-K","accn":"p8"}
+      ]}},
+      "WeightedAverageNumberOfDilutedSharesOutstanding": {"units": {"shares": [
+        {"start":"2024-01-01","end":"2024-03-31","val":100,"filed":"2024-05-01","form":"10-Q","accn":"s1"},
+        {"start":"2024-04-01","end":"2024-06-30","val":100,"filed":"2024-08-01","form":"10-Q","accn":"s2"},
+        {"start":"2024-07-01","end":"2024-09-30","val":100,"filed":"2024-11-01","form":"10-Q","accn":"s3"},
+        {"start":"2024-10-01","end":"2024-12-31","val":100,"filed":"2025-02-01","form":"10-K","accn":"s4"},
+        {"start":"2025-01-01","end":"2025-03-31","val":110,"filed":"2025-05-01","form":"10-Q","accn":"s5"},
+        {"start":"2025-04-01","end":"2025-06-30","val":110,"filed":"2025-08-01","form":"10-Q","accn":"s6"},
+        {"start":"2025-07-01","end":"2025-09-30","val":110,"filed":"2025-11-01","form":"10-Q","accn":"s7"},
+        {"start":"2025-10-01","end":"2025-12-31","val":110,"filed":"2026-02-01","form":"10-K","accn":"s8"}
+      ]}},
+      "LongTermDebt": {"units": {"USD": [{"end":"2025-12-31","val":100,"filed":"2026-02-01","form":"10-K","accn":"d1"}]}},
+      "DebtCurrent": {"units": {"USD": [{"end":"2025-12-31","val":20,"filed":"2026-02-01","form":"10-K","accn":"d2"}]}},
+      "CashAndCashEquivalentsAtCarryingValue": {"units": {"USD": [{"end":"2025-12-31","val":20,"filed":"2026-02-01","form":"10-K","accn":"d3"}]}},
+      "StockholdersEquity": {"units": {"USD": [{"end":"2025-12-31","val":200,"filed":"2026-02-01","form":"10-K","accn":"d4"}]}}
+    }
+  }
+}

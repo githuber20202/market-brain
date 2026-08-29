@@ -1,8 +1,8 @@
-name: Shadow Radar
+name: Shadow Weekly
 
 on:
   schedule:
-    - cron: "*/10 13-20 * * 1-5"
+    - cron: "30 21 * * 5"
   workflow_dispatch:
 
 permissions:
@@ -14,20 +14,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  gate:
+  weekly:
     runs-on: ubuntu-latest
-    outputs:
-      due: ${{ steps.gate.outputs.due }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: gate
-        run: python scripts/batch_gate.py --mode radar
-
-  radar:
-    needs: gate
-    if: needs.gate.outputs.due == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16
@@ -65,10 +54,8 @@ jobs:
           git fetch origin shadow-state:refs/remotes/origin/shadow-state || true
           python -m market_brain.runtime.state restore --repo . --dsn "$POSTGRES_DSN"
           psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f config/schema.sql
-          python -m market_brain.runtime.state activate-quality \
-            --repo . --dsn "$POSTGRES_DSN" --target data/quality.csv
-      - name: Run radar batch
-        run: python -m market_brain.runtime.batch --mode radar
+      - name: Run weekly batch
+        run: python -m market_brain.runtime.batch --mode weekly
       - name: Persist shadow state
         run: |
           session_date=$(TZ=America/New_York date +%F)

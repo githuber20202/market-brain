@@ -57,6 +57,12 @@ class DailyDigest:
             and wallet_status.get("source") == "SHADOW_VIRTUAL"
             else "unseeded"
         )
+        quality_status = runtime.get("quality_state")
+        quality = (
+            quality_status
+            if isinstance(quality_status, dict)
+            else {"status": "QUALITY_MISSING", "rows": 0}
+        )
         stream = _stream_status(runtime, timestamp)
         differences = await replay_check(self.store)
         shadow_trades = await self.store.list_shadow_trades()
@@ -89,6 +95,7 @@ class DailyDigest:
             },
             "data_availability": data_availability,
             "wallet": wallet_mode,
+            "quality": quality,
             "reconcile_reminder": "RECONCILE_BROKER_HOLDINGS_WITH_POSITION_TWIN",
         }
         payload["text"] = _format_text(payload)
@@ -171,6 +178,10 @@ def _format_text(payload: dict[str, Any]) -> str:
             *position_lines,
             f"Replay check: {replay}",
             f"Wallet: {payload['wallet']}",
+            (
+                f"Quality: {payload['quality'].get('status')} "
+                f"rows={payload['quality'].get('rows', 0)}"
+            ),
             (
                 "Data availability: "
                 f"slots_ok={payload['data_availability']['slots_ok']} "

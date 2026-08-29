@@ -197,6 +197,32 @@ async def test_fake_clock_fires_at_0950_once_and_creates_digest(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+async def test_radar_accepts_edgar_auto_quality_for_core_lane(tmp_path: Path):
+    paths = _files(tmp_path, symbols=("AAPL",), quality=())
+    paths[1].write_text(
+        "symbol,quality_score,as_of,source,partial\n"
+        "AAPL,85,2026-08-28T00:00:00+00:00,EDGAR_AUTO,false\n"
+    )
+    service = FakeService()
+    scheduler = RadarScheduler(
+        service=service,
+        screener=FakeScreener([_row("AAPL")]),
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    slot = datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    scheduler.validate_startup(now=slot)
+
+    result = await scheduler.run_pending(now=slot)
+
+    assert result is not None
+    assert service.plan_calls[0]["lane"] == StrategyLane.CORE_MOMENTUM
+    assert service.plan_calls[0]["quality"].evidence[0].source == "EDGAR_AUTO"
+    assert result["candidates"][0]["quality_source"] == "EDGAR_AUTO"
+
+
+@pytest.mark.asyncio
 async def test_batch_run_slot_uses_real_now_and_missed_slot_is_persisted(tmp_path: Path):
     scheduler, service, _screener = _scheduler(tmp_path, [_row("AAPL")])
     slot = datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)

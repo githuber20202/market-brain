@@ -27,13 +27,17 @@ class ManualQuality:
     quality_score: float
     as_of: datetime
     source: str = "MANUAL"
+    partial: bool = False
 
     def profile(self) -> QualityProfile:
         profile = classify_quality(self.symbol, self.quality_score, self.as_of)
         profile.evidence.append(
             EvidenceCard(
                 evidence_type="QUALITY_ASSESSMENT",
-                summary=f"Manual quality score {self.quality_score:g}",
+                summary=(
+                    f"Documented quality score {self.quality_score:g}; "
+                    f"partial={str(self.partial).lower()}"
+                ),
                 source=self.source,
                 published_at=self.as_of,
                 confidence=1.0,
@@ -142,7 +146,11 @@ def load_manual_quality(path: Path) -> dict[str, ManualQuality]:
             if not 0.0 <= score <= 100.0:
                 raise ValueError(f"QUALITY_SCORE_INVALID={symbol}:{line_number}")
             as_of = _parse_datetime(row.get("as_of", ""), f"QUALITY_AS_OF_INVALID={symbol}:{line_number}")
-            records[symbol] = ManualQuality(symbol, score, as_of)
+            source = str(row.get("source") or "MANUAL").strip().upper()
+            if source not in {"MANUAL", "EDGAR_AUTO"}:
+                raise ValueError(f"QUALITY_SOURCE_INVALID={symbol}:{line_number}")
+            partial = _csv_bool(row.get("partial"), default=False)
+            records[symbol] = ManualQuality(symbol, score, as_of, source, partial)
     return records
 
 
@@ -215,4 +223,3 @@ def _parse_time(value: str, session_date: date) -> time:
         return time.fromisoformat(value.strip())
     except ValueError as exc:
         raise ValueError(f"MARKET_CALENDAR_TIME_INVALID={session_date}") from exc
-

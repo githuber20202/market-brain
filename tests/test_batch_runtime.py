@@ -5,6 +5,7 @@ import subprocess
 from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -236,6 +237,46 @@ async def test_batch_digest_catches_up_after_1620_and_writes_report(tmp_path):
     report = Path(result["report"])
     assert report.name == "digest_2026-08-28.md"
     assert "# Shadow digest: 2026-08-28" in report.read_text()
+
+
+@pytest.mark.asyncio
+async def test_weekly_batch_refreshes_quality_into_state(tmp_path, monkeypatch):
+    runtime, scheduler = _runtime(tmp_path)
+    scheduler.universe = (
+        SimpleNamespace(symbol="FULL"),
+        SimpleNamespace(symbol="PART"),
+    )
+    calls: dict[str, object] = {}
+
+    async def fake_quality(symbols, *, output_path, now):
+        calls["quality"] = (symbols, output_path, now)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text("symbol,quality_score,as_of,source,partial\n")
+        return {"status": "COMPLETED", "rows": 2}
+
+    async def fake_replay(**kwargs):
+        calls["replay"] = kwargs
+        return tmp_path / "reports" / "replay.md"
+
+    async def fake_shadow(*_args, **kwargs):
+        calls["shadow"] = kwargs
+        return tmp_path / "reports" / "shadow.md"
+
+    monkeypatch.setattr("scripts.quality_refresh.refresh_quality", fake_quality)
+    monkeypatch.setattr("scripts.replay_report.create_replay_report", fake_replay)
+    monkeypatch.setattr("scripts.shadow_report.create_shadow_report", fake_shadow)
+    now = datetime(2026, 8, 28, 21, 30, tzinfo=UTC)
+
+    result = await runtime.run("weekly", now=now)
+
+    assert result["quality"] == {"status": "COMPLETED", "rows": 2}
+    assert calls["quality"] == (
+        ["FULL", "PART"],
+        tmp_path / "state" / "quality.csv",
+        now,
+    )
+    latest = json.loads((tmp_path / "state" / "latest.json").read_text())
+    assert latest["quality"] == {"status": "COMPLETED", "rows": 2}
 
 
 def _plan_watch_bar(minute, *, high, low, close):

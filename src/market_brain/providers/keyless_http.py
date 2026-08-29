@@ -21,6 +21,7 @@ class KeylessJsonClient:
         client: httpx.AsyncClient | None,
         limiter: TokenBucketRateLimiter,
         retry_attempts: int,
+        user_agent: str = USER_AGENT,
         sleep: Callable[[float], Any] = asyncio.sleep,
     ) -> None:
         self.source_id = source_id
@@ -28,6 +29,7 @@ class KeylessJsonClient:
         self._owned_client: httpx.AsyncClient | None = None
         self.limiter = limiter
         self.retry_attempts = retry_attempts
+        self.user_agent = user_agent
         self.sleep = sleep
 
     async def get_json(
@@ -50,7 +52,7 @@ class KeylessJsonClient:
                 response = await client.get(
                     url,
                     params=params,
-                    headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+                    headers={"User-Agent": self.user_agent, "Accept": "application/json"},
                 )
                 if response.status_code not in RETRYABLE_STATUS:
                     response.raise_for_status()

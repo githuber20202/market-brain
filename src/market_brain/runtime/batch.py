@@ -163,11 +163,17 @@ class BatchRuntime:
         }
 
     async def _run_weekly(self, timestamp: datetime) -> dict:
+        from scripts.quality_refresh import refresh_quality
         from scripts.replay_report import create_replay_report
         from scripts.shadow_report import create_shadow_report
 
         assert self.scheduler.calendar is not None
         symbols = sorted(entry.symbol for entry in self.scheduler.universe)
+        quality = await refresh_quality(
+            symbols,
+            output_path=self.state_dir / "quality.csv",
+            now=timestamp,
+        )
         replay_path = await create_replay_report(
             days=5,
             symbols=symbols,
@@ -188,7 +194,7 @@ class BatchRuntime:
             "status": "COMPLETED",
             "replay_report": str(replay_path),
             "shadow_report": str(shadow_path),
-            "quality": "TASK_25",
+            "quality": quality,
         }
 
     async def _ensure_shadow_wallet(self, timestamp: datetime) -> bool:
@@ -419,6 +425,8 @@ class BatchRuntime:
             "alerts": len(await self.store.list_alerts()),
             "shadow_trades": len(await self.store.list_shadow_trades()),
         }
+        if mode == "weekly":
+            payload["quality"] = result.get("quality")
         self.state_dir.mkdir(parents=True, exist_ok=True)
         (self.state_dir / "latest.json").write_text(
             json.dumps(payload, indent=2, sort_keys=True) + "\n",
