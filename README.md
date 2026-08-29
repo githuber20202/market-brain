@@ -1,6 +1,6 @@
 # MARKET BRAIN V4 — Brokerless Advisory Runtime
 
-Market Brain V4 is a brokerless, manual-execution decision-support runtime. It builds deterministic market plans, evaluates activation and exit gates, keeps an event-sourced software wallet/position twin from user-confirmed events, and queues advisory alerts. It does not connect to an execution account and cannot place, modify, or cancel broker orders.
+Market Brain runs in Shadow mode using delayed public market data. It produces deterministic advisory plans and alerts, never executes, modifies, or cancels broker orders, and is not financial advice.
 
 ## Current status
 
@@ -82,4 +82,3 @@ docker compose config -q
 ```
 
 The compose smoke starts a fresh isolated PostgreSQL + NATS + API stack, waits for `/health`, confirms account/execution access remain disabled, verifies clean replay, and tears the stack down. It does not start the live stream-worker.
-

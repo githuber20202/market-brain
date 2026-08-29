@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, market-brain-v4]
+    branches: [main]
   pull_request:
-    branches: [main, market-brain-v4]
+    branches: [main]
 
 jobs:
   test:
