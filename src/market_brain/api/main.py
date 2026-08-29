@@ -135,6 +135,9 @@ async def lifespan(_app: FastAPI):
             await task
         except asyncio.CancelledError:
             pass
+        close = getattr(market_data, "aclose", None)
+        if close is not None:
+            await close()
 
 
 app = FastAPI(
@@ -271,7 +274,11 @@ async def alerts(undelivered: bool = True) -> list[dict]:
 async def screen(req: ScreenRequest) -> dict:
     try:
         rows = await screener.screen([symbol.upper() for symbol in req.symbols], req.top_n)
-        return {"mode": "BROKERLESS_DISCOVERY", "rows": rows}
+        return {
+            "mode": "BROKERLESS_DISCOVERY",
+            "rows": list(rows),
+            "skipped_symbols": [asdict(item) for item in rows.skipped_symbols],
+        }
     except Exception as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

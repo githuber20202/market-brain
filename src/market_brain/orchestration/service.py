@@ -741,6 +741,7 @@ class DecisionService:
                 "LIQUIDITY_PROFILE_MISSING",
                 "DELAYED_DATA_STALE",
                 "KEYLESS_BAR_RANGE_MISSING",
+                "KEYLESS_BAR_RANGE_TOO_WIDE",
                 "PRICE_CROSS_CHECK_FAILED",
             }
             if any(reason in unavailable_reasons for reason in blocking):

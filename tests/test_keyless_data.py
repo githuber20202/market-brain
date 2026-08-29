@@ -13,6 +13,7 @@ from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import InMemoryEventStore
 from market_brain.orchestration.service import DecisionService
 from market_brain.providers.base import DataUnavailable
+from market_brain.providers.keyless_http import KeylessJsonClient
 from market_brain.providers.rate_limit import TokenBucketRateLimiter
 from market_brain.providers.yahoo import YahooMarketData
 from market_brain.runtime.daily_digest import DailyDigest
@@ -205,6 +206,30 @@ async def test_yahoo_timeout_exhaustion_is_data_unavailable():
 
 
 @pytest.mark.asyncio
+async def test_yahoo_snapshots_isolates_one_symbol_404():
+    async def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.host == "cdn.cboe.com":
+            return httpx.Response(200, json=_fixture("cboe_quote.json"))
+        if request.url.path.endswith("/DELISTED"):
+            return httpx.Response(404, json={"error": "not found"})
+        return httpx.Response(200, json=_fixture("yahoo_chart_1m.json"))
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        provider = YahooMarketData(
+            _cfg(),
+            client,
+            limiter=TokenBucketRateLimiter(1000),
+            now=lambda: FIXED_NOW,
+        )
+        result = await provider.snapshots(["SPY", "DELISTED"])
+
+    assert [snapshot.symbol for snapshot in result] == ["SPY"]
+    assert [(item.symbol, item.error_type) for item in result.skipped_symbols] == [
+        ("DELISTED", "HTTPStatusError")
+    ]
+
+
+@pytest.mark.asyncio
 async def test_yahoo_daily_route_builds_adv_liquidity_profile():
     transport, calls = _transport()
     async with httpx.AsyncClient(transport=transport) as client:
@@ -227,7 +252,7 @@ async def test_yahoo_daily_route_builds_adv_liquidity_profile():
     assert daily[0].url.params["range"] == "1y"
 
 
-def test_keyless_liquidity_gate_uses_adv_age_and_last_bar_range():
+def test_keyless_liquidity_gate_uses_adv_age_and_broken_bar_sanity():
     cfg = _cfg(min_adv_keyless=5_000_000, max_delayed_age_minutes=20)
     transport, _calls = _transport()
     del transport
@@ -254,6 +279,92 @@ def test_keyless_liquidity_gate_uses_adv_age_and_last_bar_range():
     snapshot.delay_minutes = 10.0
     low_adv = LiquidityProfile("TEST", 4_999_999, 99.0, FIXED_NOW)
     assert "ADV_TOO_LOW" in apply_keyless_liquidity_gate(snapshot, low_adv, cfg)
+
+
+def test_keyless_liquidity_gate_uses_fresh_cboe_bid_ask_for_spread():
+    from market_brain.domain.models import MarketSnapshot
+
+    cfg = _cfg(max_spread_bps=20, keyless_max_bar_range_pct=3.0)
+    profile = LiquidityProfile("TEST", 6_000_000, 99.0, FIXED_NOW)
+    snapshot = MarketSnapshot(
+        symbol="TEST",
+        last=100.0,
+        bid=99.8,
+        ask=100.2,
+        source_id="YAHOO_DELAYED",
+        delay_minutes=10.0,
+        metadata={
+            "last_bar_high": 100.8,
+            "last_bar_low": 99.8,
+            "price_cross_check": "PASS",
+        },
+    )
+
+    assert "SPREAD_TOO_WIDE" in apply_keyless_liquidity_gate(snapshot, profile, cfg)
+    snapshot.bid = None
+    snapshot.ask = None
+    assert apply_keyless_liquidity_gate(snapshot, profile, cfg) == [
+        "LIQUIDITY_GATE_PASS"
+    ]
+    snapshot.metadata["last_bar_high"] = 104.0
+    assert "KEYLESS_BAR_RANGE_TOO_WIDE" in apply_keyless_liquidity_gate(
+        snapshot, profile, cfg
+    )
+
+
+@pytest.mark.asyncio
+async def test_cached_cboe_quote_age_is_recomputed_at_use_time():
+    clock = [datetime(2026, 8, 28, 13, 35, 10, tzinfo=UTC)]
+    transport, calls = _transport()
+    async with httpx.AsyncClient(transport=transport) as client:
+        provider = YahooMarketData(
+            _cfg(max_delayed_age_minutes=3),
+            client,
+            limiter=TokenBucketRateLimiter(1000),
+            now=lambda: clock[0],
+        )
+        first = await provider.snapshot("TEST")
+        clock[0] = datetime(2026, 8, 28, 13, 39, 50, tzinfo=UTC)
+        second = await provider.snapshot("TEST")
+
+    assert first.bid is not None
+    assert second.bid is None
+    assert second.metadata["cboe_delay_minutes"] == pytest.approx(4.833333, rel=1e-5)
+    assert len(calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_keyless_http_reuses_one_owned_client_and_closes_it(monkeypatch):
+    created: list[object] = []
+
+    class FakeClient:
+        def __init__(self, **_kwargs):
+            self.closed = False
+            created.append(self)
+
+        async def get(self, *_args, **_kwargs):
+            return httpx.Response(
+                200,
+                json={"ok": True},
+                request=httpx.Request("GET", "https://example.test"),
+            )
+
+        async def aclose(self):
+            self.closed = True
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    client = KeylessJsonClient(
+        source_id="TEST",
+        client=None,
+        limiter=TokenBucketRateLimiter(1000),
+        retry_attempts=1,
+    )
+
+    await client.get_json("https://example.test/one", resource="one", symbol="SPY")
+    await client.get_json("https://example.test/two", resource="two", symbol="SPY")
+    assert len(created) == 1
+    await client.aclose()
+    assert created[0].closed is True
 
 
 @pytest.mark.asyncio

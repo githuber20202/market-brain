@@ -25,6 +25,7 @@ class KeylessJsonClient:
     ) -> None:
         self.source_id = source_id
         self.client = client
+        self._owned_client: httpx.AsyncClient | None = None
         self.limiter = limiter
         self.retry_attempts = retry_attempts
         self.sleep = sleep
@@ -40,8 +41,11 @@ class KeylessJsonClient:
         last_error = "UNKNOWN"
         for attempt in range(self.retry_attempts):
             await self.limiter.acquire()
-            owned = self.client is None
-            client = self.client or httpx.AsyncClient(timeout=10.0)
+            client = self.client
+            if client is None:
+                if self._owned_client is None:
+                    self._owned_client = httpx.AsyncClient(timeout=10.0)
+                client = self._owned_client
             try:
                 response = await client.get(
                     url,
@@ -64,9 +68,6 @@ class KeylessJsonClient:
                     symbol=symbol,
                     error_type=type(exc).__name__,
                 ) from exc
-            finally:
-                if owned:
-                    await client.aclose()
             if attempt + 1 < self.retry_attempts:
                 await self.sleep(float(2**attempt))
         raise DataUnavailable(
@@ -75,3 +76,8 @@ class KeylessJsonClient:
             symbol=symbol,
             error_type=last_error,
         )
+
+    async def aclose(self) -> None:
+        if self._owned_client is not None:
+            await self._owned_client.aclose()
+            self._owned_client = None

@@ -66,6 +66,17 @@ def apply_keyless_liquidity_gate(
     ):
         reasons.append("DELAYED_DATA_STALE")
 
+    bid = snapshot.bid
+    ask = snapshot.ask
+    if bid is not None and ask is not None:
+        if bid <= 0 or ask < bid:
+            reasons.append("SPREAD_TOO_WIDE")
+        else:
+            mid = (bid + ask) / 2.0
+            spread_bps = ((ask - bid) / mid) * 10_000.0 if mid > 0 else float("inf")
+            if spread_bps > cfg.max_spread_bps:
+                reasons.append("SPREAD_TOO_WIDE")
+
     high = snapshot.metadata.get("last_bar_high")
     low = snapshot.metadata.get("last_bar_low")
     try:
@@ -74,7 +85,7 @@ def apply_keyless_liquidity_gate(
         range_pct = None
     if range_pct is None or range_pct < 0:
         reasons.append("KEYLESS_BAR_RANGE_MISSING")
-    elif range_pct > cfg.iex_mid_tolerance_pct:
+    elif range_pct > cfg.keyless_max_bar_range_pct:
         reasons.append("KEYLESS_BAR_RANGE_TOO_WIDE")
     if snapshot.metadata.get("price_cross_check") == "FAIL":
         reasons.append("PRICE_CROSS_CHECK_FAILED")

@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import httpx
 
 from market_brain.domain.models import MarketSnapshot
-from market_brain.providers.base import DataUnavailable
+from market_brain.providers.base import DataUnavailable, SkippedSymbol, SnapshotBatch
 from market_brain.providers.cboe import CboeDelayedQuotes, DelayedQuote, _slot_key
 from market_brain.providers.keyless_http import KeylessJsonClient
 from market_brain.providers.rate_limit import TokenBucketRateLimiter
@@ -108,10 +108,8 @@ class YahooMarketData:
             cboe_error = type(exc).__name__
 
         yahoo_price = _positive_float(meta.get("regularMarketPrice"))
-        fresh_cboe = (
-            cboe_quote is not None
-            and cboe_quote.delay_minutes <= self.cfg.max_delayed_age_minutes
-        )
+        cboe_delay = cboe_quote.delay_minutes_at(fetched_at) if cboe_quote else None
+        fresh_cboe = cboe_delay is not None and cboe_delay <= self.cfg.max_delayed_age_minutes
         if yahoo_price is not None:
             last = yahoo_price
             quote_source = YAHOO_SOURCE_ID
@@ -168,7 +166,7 @@ class YahooMarketData:
                     cboe_quote.quoted_at.isoformat() if cboe_quote else None
                 ),
                 "cboe_delay_minutes": (
-                    cboe_quote.delay_minutes if cboe_quote else None
+                    cboe_delay
                 ),
                 "cboe_error_type": cboe_error,
                 "price_divergence_pct": divergence_pct,
@@ -176,11 +174,22 @@ class YahooMarketData:
             },
         )
 
-    async def snapshots(self, symbols: list[str], *, decision: bool = False) -> list[MarketSnapshot]:
+    async def snapshots(
+        self, symbols: list[str], *, decision: bool = False
+    ) -> SnapshotBatch:
         output: list[MarketSnapshot] = []
+        skipped: list[SkippedSymbol] = []
         for symbol in _symbols(symbols):
-            output.append(await self.snapshot(symbol, decision=decision))
-        return output
+            try:
+                output.append(await self.snapshot(symbol, decision=decision))
+            except (DataUnavailable, RuntimeError, TypeError, ValueError) as exc:
+                error_type = (
+                    exc.error_type
+                    if isinstance(exc, DataUnavailable)
+                    else type(exc).__name__
+                )
+                skipped.append(SkippedSymbol(symbol=symbol, error_type=error_type))
+        return SnapshotBatch(tuple(output), tuple(skipped))
 
     async def bars(
         self,
@@ -213,6 +222,10 @@ class YahooMarketData:
         for symbol in _symbols(symbols):
             output[symbol] = await self.bars(symbol, timeframe, start, end)
         return output
+
+    async def aclose(self) -> None:
+        await self.http.aclose()
+        await self.cboe.aclose()
 
 
 def _chart_bars(chart: dict) -> list[dict]:

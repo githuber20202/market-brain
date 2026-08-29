@@ -100,6 +100,7 @@ class Settings(BaseSettings):
     keyless_calls_per_minute: int = 120
     keyless_request_interval_seconds: float = 0.5
     keyless_retry_attempts: int = 3
+    keyless_max_failure_ratio: float = 0.2
     stream_max_symbols: int = 30
     universe_dir: Path = DATA_DIR / "universe"
     quality_path: Path = DATA_DIR / "quality.csv"
@@ -132,6 +133,7 @@ class Settings(BaseSettings):
     min_adv: float = 2_000_000.0
     min_adv_keyless: float = 5_000_000.0
     max_delayed_age_minutes: float = 20.0
+    keyless_max_bar_range_pct: float = 3.0
     min_price: float = 5.0
     max_spread_bps: float = 20.0
     iex_mid_tolerance_pct: float = 0.75
@@ -184,6 +186,8 @@ class Settings(BaseSettings):
             raise ValueError("KEYLESS_REQUEST_INTERVAL_TOO_LOW")
         if self.keyless_retry_attempts <= 0:
             raise ValueError("INVALID_KEYLESS_RETRY_ATTEMPTS")
+        if self.keyless_max_failure_ratio < 0 or self.keyless_max_failure_ratio > 1:
+            raise ValueError("INVALID_KEYLESS_MAX_FAILURE_RATIO")
         if self.stream_max_symbols <= 0:
             raise ValueError("INVALID_STREAM_SYMBOL_CAP")
         if self.plans_per_run <= 0 or self.plans_per_run > self.stream_max_symbols:
@@ -234,6 +238,8 @@ class Settings(BaseSettings):
             raise ValueError("INVALID_MIN_ADV_KEYLESS")
         if self.max_delayed_age_minutes <= 0:
             raise ValueError("INVALID_MAX_DELAYED_AGE_MINUTES")
+        if self.keyless_max_bar_range_pct <= 0:
+            raise ValueError("INVALID_KEYLESS_MAX_BAR_RANGE_PCT")
         if self.min_price <= 0:
             raise ValueError("INVALID_MIN_PRICE")
         if self.max_spread_bps <= 0:

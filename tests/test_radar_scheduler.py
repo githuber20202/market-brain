@@ -9,8 +9,9 @@ import pytest
 
 from market_brain.domain.models import StrategyLane, TradePlan
 from market_brain.ledger.store import InMemoryEventStore
+from market_brain.orchestration.screener import ScreenResult
 from market_brain.orchestration.universe import load_universe
-from market_brain.providers.base import DataUnavailable
+from market_brain.providers.base import DataUnavailable, SkippedSymbol
 from market_brain.runtime.daily_digest import DailyDigest
 from market_brain.runtime.radar_scheduler import RadarScheduler
 from market_brain.runtime.stream_worker import select_subscription_symbols
@@ -89,6 +90,25 @@ class KeylessPreflightService(FakeService):
                 symbol=symbol,
                 error_type="HTTP_503",
             )
+
+
+class KeylessFailureRatioService(FakeService):
+    def __init__(self):
+        super().__init__()
+        self.cfg = SimpleNamespace(
+            data_plan="keyless_delayed",
+            keyless_max_failure_ratio=0.2,
+        )
+
+
+class PartialScreener(FakeScreener):
+    def __init__(self, rows: list[dict], skipped: tuple[SkippedSymbol, ...]):
+        super().__init__(rows)
+        self.skipped = skipped
+
+    async def screen(self, symbols: list[str], top_n: int):
+        self.calls.append((symbols, top_n))
+        return ScreenResult(tuple(self.rows[:top_n]), self.skipped)
 
 
 def _row(symbol: str, score: float = 90.0, *, catalyst: bool = False) -> dict:
@@ -334,3 +354,59 @@ async def test_keyless_preflight_prevents_partial_plans_when_later_symbol_fails(
     assert service.prepared == ["AAPL", "MSFT"]
     assert service.plan_calls == []
     assert await service.store.list_plans() == []
+
+
+@pytest.mark.asyncio
+async def test_one_keyless_symbol_failure_completes_and_is_recorded(tmp_path: Path):
+    symbols = ("SPY", "AAPL", "MSFT", "NVDA", "META")
+    paths = _files(tmp_path, symbols=symbols, quality=("SPY",))
+    service = KeylessFailureRatioService()
+    screener = PartialScreener(
+        [_row("SPY")],
+        (SkippedSymbol("DELISTED", "HTTPStatusError"),),
+    )
+    scheduler = RadarScheduler(
+        service=service,
+        screener=screener,
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    scheduler.validate_startup(now=datetime(2026, 8, 28, 9, 49, tzinfo=EASTERN))
+
+    result = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    )
+
+    assert result is not None
+    assert result["status"] == "COMPLETED"
+    assert result["skipped_symbols"] == [
+        {"symbol": "DELISTED", "error_type": "HTTPStatusError"}
+    ]
+
+
+@pytest.mark.asyncio
+async def test_keyless_thirty_percent_failures_make_slot_unavailable(tmp_path: Path):
+    symbols = ("SPY", "AAPL", "MSFT", "NVDA", "META", "AMZN", "GOOG", "AMD", "TSLA", "QQQ")
+    paths = _files(tmp_path, symbols=symbols, quality=("SPY",))
+    service = KeylessFailureRatioService()
+    skipped = tuple(
+        SkippedSymbol(symbol, "ReadTimeout") for symbol in ("AAPL", "MSFT", "NVDA")
+    )
+    scheduler = RadarScheduler(
+        service=service,
+        screener=PartialScreener([_row("SPY")], skipped),
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    scheduler.validate_startup(now=datetime(2026, 8, 28, 9, 49, tzinfo=EASTERN))
+
+    result = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    )
+
+    assert result is not None
+    assert result["status"] == "DATA_UNAVAILABLE"
+    assert result["error_type"] == "KEYLESS_FAILURE_RATIO_EXCEEDED"
+    assert len(result["skipped_symbols"]) == 3

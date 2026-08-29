@@ -32,6 +32,9 @@ class DelayedQuote:
     def delay_minutes(self) -> float:
         return max(0.0, (self.fetched_at - self.quoted_at).total_seconds() / 60.0)
 
+    def delay_minutes_at(self, now: datetime) -> float:
+        return max(0.0, (_aware(now) - self.quoted_at).total_seconds() / 60.0)
+
 
 class CboeDelayedQuotes:
     def __init__(
@@ -98,6 +101,9 @@ class CboeDelayedQuotes:
         self._cache[key] = quote
         return quote
 
+    async def aclose(self) -> None:
+        await self.http.aclose()
+
 
 def _parse_cboe_time(value) -> datetime | None:
     if not isinstance(value, str):
@@ -121,7 +127,7 @@ def _positive_float(value) -> float | None:
 
 def _slot_key(value: datetime) -> str:
     stamp = _aware(value)
-    minute = stamp.minute - stamp.minute % 30
+    minute = stamp.minute - stamp.minute % 5
     return stamp.replace(minute=minute, second=0, microsecond=0).isoformat()
 
 

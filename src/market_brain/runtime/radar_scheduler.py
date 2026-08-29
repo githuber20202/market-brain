@@ -116,6 +116,10 @@ class RadarScheduler:
                     "symbol": exc.symbol,
                     "attempt_slot": slot.isoformat(),
                 },
+                skipped_symbols=[
+                    {"symbol": item.symbol, "error_type": item.error_type}
+                    for item in exc.skipped_symbols
+                ],
             )
         except Exception as exc:
             LOGGER.exception("radar_run_failed run_id=%s", run_id)
@@ -148,8 +152,25 @@ class RadarScheduler:
 
     async def _execute(self, run_id: str, slot: datetime, timestamp: datetime) -> dict:
         symbols = [entry.symbol for entry in self.universe if entry.ranking_eligible]
-        rows = await self.screener.screen(symbols, top_n=len(symbols))
+        screen_result = await self.screener.screen(symbols, top_n=len(symbols))
+        rows = list(screen_result)
+        skipped = tuple(getattr(screen_result, "skipped_symbols", ()))
         cfg = getattr(self.service, "cfg", None)
+        if getattr(cfg, "data_plan", None) == "keyless_delayed" and skipped:
+            skipped_names = {item.symbol for item in skipped}
+            failure_ratio = len(skipped) / len(symbols) if symbols else 1.0
+            if "SPY" in skipped_names or failure_ratio > cfg.keyless_max_failure_ratio:
+                raise DataUnavailable(
+                    source_id="YAHOO_DELAYED",
+                    resource="snapshots",
+                    symbol="SPY" if "SPY" in skipped_names else "UNIVERSE",
+                    error_type=(
+                        "MARKET_ANCHOR_UNAVAILABLE"
+                        if "SPY" in skipped_names
+                        else "KEYLESS_FAILURE_RATIO_EXCEEDED"
+                    ),
+                    skipped_symbols=skipped,
+                )
         if (
             getattr(cfg, "data_plan", None) == "keyless_delayed"
             and hasattr(self.service, "prepare_plan_market_data")
@@ -241,6 +262,10 @@ class RadarScheduler:
             status="COMPLETED",
             candidates=candidates,
             plan_ids=plan_ids,
+            skipped_symbols=[
+                {"symbol": item.symbol, "error_type": item.error_type}
+                for item in skipped
+            ],
         )
 
     async def _persist_result(
@@ -253,6 +278,7 @@ class RadarScheduler:
         plan_ids: list[str],
         error_type: str | None = None,
         unavailable: dict | None = None,
+        skipped_symbols: list[dict] | None = None,
     ) -> dict:
         payload = {
             "run_id": run_id,
@@ -263,6 +289,7 @@ class RadarScheduler:
             "plan_ids": plan_ids,
             "error_type": error_type,
             "data_unavailable": unavailable,
+            "skipped_symbols": skipped_symbols or [],
         }
         async with self.service.store.transaction():
             await self.service.store.append(LedgerEvent("RADAR_RUN", run_id, payload))
@@ -316,7 +343,7 @@ class RadarScheduler:
 def scheduled_slots(session: MarketSession) -> tuple[datetime, ...]:
     slot = datetime.combine(session.session_date, time(9, 50), EASTERN)
     latest = min(
-        datetime.combine(session.session_date, time(15, 0), EASTERN),
+        datetime.combine(session.session_date, time(14, 50), EASTERN),
         session.closes_at,
     )
     slots: list[datetime] = []
