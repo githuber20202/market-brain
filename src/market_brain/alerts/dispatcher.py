@@ -51,12 +51,14 @@ class AlertDispatcher:
         max_attempts: int = 6,
         redact_values: tuple[str, ...] = (),
         run_mode: str = settings.run_mode,
+        data_plan: str = settings.data_plan,
     ) -> None:
         self.store = store
         self.sinks = sinks
         self.poll_seconds = poll_seconds
         self.max_attempts = max_attempts
         self.run_mode = run_mode
+        self.data_plan = data_plan
         sink_secrets = tuple(
             token
             for sink in sinks
@@ -83,12 +85,19 @@ class AlertDispatcher:
 
     def _delivery_payload(self, alert: AlertRecord) -> dict:
         payload = dict(_redact(alert.payload, self.redact_values))
+        tags = []
         if self.run_mode == "shadow":
+            tags.append("[SHADOW]")
+        if self.data_plan == "keyless_delayed":
+            tags.append("[DELAYED]")
+        if tags:
             text = payload.get("text")
             if not isinstance(text, str):
                 text = json.dumps(payload, sort_keys=True, default=str)
-            if not text.startswith("[SHADOW]"):
-                payload["text"] = f"[SHADOW] {text}"
+            for tag in ("[SHADOW]", "[DELAYED]"):
+                if text.startswith(tag):
+                    text = text.removeprefix(tag).lstrip()
+            payload["text"] = f"{''.join(tags)} {text}"
         return payload
 
     async def deliver(self, alert: AlertRecord, *, now=None) -> bool:

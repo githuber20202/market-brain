@@ -67,7 +67,12 @@ def test_plans_rejects_snapshot_and_price_fields():
 @pytest.mark.asyncio
 async def test_alpaca_bars_uses_symbol_endpoint_one_minute_and_historical_feed():
     seen = []
-    cfg = Settings(alpaca_api_key="key", alpaca_api_secret="secret", discovery_feed="iex")
+    cfg = Settings(
+        data_plan="free",
+        alpaca_api_key="key",
+        alpaca_api_secret="secret",
+        discovery_feed="iex",
+    )
     async with httpx.AsyncClient(transport=market_transport(seen)) as client:
         provider = AlpacaMarketData(cfg, client)
         rows = await provider.bars(
@@ -86,7 +91,12 @@ async def test_alpaca_bars_uses_symbol_endpoint_one_minute_and_historical_feed()
 @pytest.mark.asyncio
 async def test_build_plan_from_market_fetches_snapshot_and_derives_structure():
     seen = []
-    cfg = Settings(alpaca_api_key="key", alpaca_api_secret="secret", discovery_feed="iex")
+    cfg = Settings(
+        data_plan="free",
+        alpaca_api_key="key",
+        alpaca_api_secret="secret",
+        discovery_feed="iex",
+    )
     async with httpx.AsyncClient(transport=market_transport(seen)) as client:
         provider = AlpacaMarketData(cfg, client)
         original_snapshot = provider.snapshot
@@ -139,4 +149,3 @@ async def test_opening_structure_requires_contiguous_bars_and_retest_bar():
             session_start,
             closed_before,
         )
-

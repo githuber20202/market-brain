@@ -121,6 +121,33 @@ async def test_token_bucket_allows_180_burst_and_181st_waits():
 
 
 @pytest.mark.asyncio
+async def test_token_bucket_single_request_burst_enforces_half_second_spacing():
+    class Clock:
+        value = 0.0
+
+        def __call__(self):
+            return self.value
+
+    clock = Clock()
+    waits = []
+
+    async def fake_sleep(delay):
+        waits.append(delay)
+        clock.value += delay
+
+    limiter = TokenBucketRateLimiter(
+        120,
+        burst_capacity=1,
+        clock=clock,
+        sleep=fake_sleep,
+    )
+    await limiter.acquire()
+    await limiter.acquire()
+
+    assert waits == [pytest.approx(0.5)]
+
+
+@pytest.mark.asyncio
 async def test_snapshots_and_bars_batch_symbols_instead_of_one_call_per_symbol():
     calls = []
 
@@ -192,4 +219,3 @@ async def test_bars_batch_follows_pagination_for_complete_session():
     assert [row["t"] for row in result["A"]] == ["first", "second"]
     assert len(calls) == 2
     assert calls[1]["page_token"] == "page-2"
-

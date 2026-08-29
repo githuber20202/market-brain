@@ -43,3 +43,45 @@ def apply_iex_liquidity_gate(
     snapshot.authoritative = not reasons
     return ["LIQUIDITY_GATE_PASS"] if snapshot.authoritative else list(dict.fromkeys(reasons))
 
+
+def apply_keyless_liquidity_gate(
+    snapshot: MarketSnapshot,
+    profile: LiquidityProfile | None,
+    cfg: Settings,
+) -> list[str]:
+    if not _is_keyless_source(snapshot.source_id):
+        return []
+
+    reasons: list[str] = []
+    if profile is None:
+        reasons.append("LIQUIDITY_PROFILE_MISSING")
+    elif profile.adv20 < cfg.min_adv_keyless:
+        reasons.append("ADV_TOO_LOW")
+    if snapshot.last < cfg.min_price:
+        reasons.append("PRICE_TOO_LOW")
+    if (
+        snapshot.delay_minutes is None
+        or snapshot.delay_minutes < 0
+        or snapshot.delay_minutes > cfg.max_delayed_age_minutes
+    ):
+        reasons.append("DELAYED_DATA_STALE")
+
+    high = snapshot.metadata.get("last_bar_high")
+    low = snapshot.metadata.get("last_bar_low")
+    try:
+        range_pct = (float(high) - float(low)) / snapshot.last * 100.0
+    except (TypeError, ValueError, ZeroDivisionError):
+        range_pct = None
+    if range_pct is None or range_pct < 0:
+        reasons.append("KEYLESS_BAR_RANGE_MISSING")
+    elif range_pct > cfg.iex_mid_tolerance_pct:
+        reasons.append("KEYLESS_BAR_RANGE_TOO_WIDE")
+    if snapshot.metadata.get("price_cross_check") == "FAIL":
+        reasons.append("PRICE_CROSS_CHECK_FAILED")
+
+    snapshot.authoritative = not reasons
+    return ["LIQUIDITY_GATE_PASS"] if snapshot.authoritative else list(dict.fromkeys(reasons))
+
+
+def _is_keyless_source(source_id: str | None) -> bool:
+    return bool(source_id and ("YAHOO" in source_id or "CBOE_DELAYED" in source_id))

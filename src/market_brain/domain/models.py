@@ -169,6 +169,8 @@ class MarketSnapshot:
     catalyst_strength: float = 0.0
     data_age_seconds: float | None = None
     source_id: str | None = None
+    delay_minutes: float | None = None
+    fetched_at: datetime | None = None
     authoritative: bool = False
     halted: bool = False
     metadata: dict[str, Any] = field(default_factory=dict)

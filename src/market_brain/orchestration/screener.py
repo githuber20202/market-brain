@@ -4,12 +4,12 @@ from dataclasses import asdict
 
 from market_brain.engines.features import compute_features
 from market_brain.engines.ranking import score_features
-from market_brain.providers.alpaca import AlpacaMarketData
+from market_brain.providers import build_market_data_provider
 
 
 class MarketScreener:
-    def __init__(self, provider: AlpacaMarketData | None = None):
-        self.provider = provider or AlpacaMarketData()
+    def __init__(self, provider=None):
+        self.provider = provider or build_market_data_provider()
 
     async def screen(self, symbols: list[str], top_n: int = 10) -> list[dict]:
         snapshots = await self.provider.snapshots(symbols, decision=False)
@@ -27,4 +27,3 @@ class MarketScreener:
             )
         rows.sort(key=lambda row: row["score"]["discovery_total"], reverse=True)
         return rows[:top_n]
-

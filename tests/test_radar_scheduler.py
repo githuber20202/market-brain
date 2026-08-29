@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -9,6 +10,7 @@ import pytest
 from market_brain.domain.models import StrategyLane, TradePlan
 from market_brain.ledger.store import InMemoryEventStore
 from market_brain.orchestration.universe import load_universe
+from market_brain.providers.base import DataUnavailable
 from market_brain.runtime.daily_digest import DailyDigest
 from market_brain.runtime.radar_scheduler import RadarScheduler
 from market_brain.runtime.stream_worker import select_subscription_symbols
@@ -24,6 +26,24 @@ class FakeScreener:
 
     async def screen(self, symbols: list[str], top_n: int):
         self.calls.append((symbols, top_n))
+        return self.rows[:top_n]
+
+
+class RecoveringScreener(FakeScreener):
+    def __init__(self, rows: list[dict]):
+        super().__init__(rows)
+        self.unavailable = True
+
+    async def screen(self, symbols: list[str], top_n: int):
+        self.calls.append((symbols, top_n))
+        if self.unavailable:
+            self.unavailable = False
+            raise DataUnavailable(
+                source_id="YAHOO_DELAYED",
+                resource="chart:1m",
+                symbol=symbols[0],
+                error_type="HTTP_429",
+            )
         return self.rows[:top_n]
 
 
@@ -51,6 +71,24 @@ class FakeService:
         )
         await self.store.save_plan(plan)
         return plan, {"score": {"total": 75.0}}
+
+
+class KeylessPreflightService(FakeService):
+    def __init__(self):
+        super().__init__()
+        self.cfg = SimpleNamespace(data_plan="keyless_delayed")
+        self.prepared: list[str] = []
+
+    async def prepare_plan_market_data(self, symbol: str, *, now):
+        del now
+        self.prepared.append(symbol)
+        if symbol == "MSFT":
+            raise DataUnavailable(
+                source_id="YAHOO_DELAYED",
+                resource="chart:1m",
+                symbol=symbol,
+                error_type="HTTP_503",
+            )
 
 
 def _row(symbol: str, score: float = 90.0, *, catalyst: bool = False) -> dict:
@@ -227,3 +265,72 @@ async def test_daily_digest_hook_does_not_fire_on_holiday(tmp_path: Path):
         now=datetime(2026, 9, 7, 16, 15, tzinfo=EASTERN)
     ) is None
     assert await service.store.list_undelivered() == []
+
+
+@pytest.mark.asyncio
+async def test_data_unavailable_slot_fails_closed_and_next_slot_catches_up(tmp_path: Path):
+    paths = _files(tmp_path, symbols=("AAPL",), quality=("AAPL",))
+    service = FakeService()
+    screener = RecoveringScreener([_row("AAPL")])
+    scheduler = RadarScheduler(
+        service=service,
+        screener=screener,
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    scheduler.validate_startup(now=datetime(2026, 8, 28, 9, 49, tzinfo=EASTERN))
+
+    unavailable = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    )
+    assert unavailable is not None
+    assert unavailable["status"] == "DATA_UNAVAILABLE"
+    assert unavailable["plan_ids"] == []
+    assert service.plan_calls == []
+    assert [event.event_type for event in service.store.events][-2:] == [
+        "RADAR_RUN",
+        "DATA_UNAVAILABLE",
+    ]
+
+    next_slot = datetime(2026, 8, 28, 10, 20, tzinfo=EASTERN)
+    caught_up = await scheduler.run_pending(now=next_slot)
+    current = await scheduler.run_pending(now=next_slot.replace(second=10))
+    repeated = await scheduler.run_pending(now=next_slot.replace(second=20))
+
+    assert caught_up is not None
+    assert caught_up["scheduled_for"].endswith("09:50:00-04:00")
+    assert caught_up["status"] == "COMPLETED"
+    assert current is not None
+    assert current["scheduled_for"].endswith("10:20:00-04:00")
+    assert current["status"] == "COMPLETED"
+    assert repeated is None
+    assert len(service.plan_calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_keyless_preflight_prevents_partial_plans_when_later_symbol_fails(tmp_path: Path):
+    paths = _files(
+        tmp_path,
+        symbols=("AAPL", "MSFT"),
+        quality=("AAPL", "MSFT"),
+    )
+    service = KeylessPreflightService()
+    scheduler = RadarScheduler(
+        service=service,
+        screener=FakeScreener([_row("AAPL"), _row("MSFT")]),
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    scheduler.validate_startup(now=datetime(2026, 8, 28, 9, 49, tzinfo=EASTERN))
+
+    result = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    )
+
+    assert result is not None
+    assert result["status"] == "DATA_UNAVAILABLE"
+    assert service.prepared == ["AAPL", "MSFT"]
+    assert service.plan_calls == []
+    assert await service.store.list_plans() == []

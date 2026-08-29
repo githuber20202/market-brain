@@ -55,6 +55,7 @@ class DailyDigest:
         shadow_trades = await self.store.list_shadow_trades()
         shadow_today = shadow_metrics(shadow_trades, all_events, session_date=session_date)
         shadow_cumulative = shadow_metrics(shadow_trades, all_events)
+        data_availability = _data_availability(events)
         open_positions = [
             {
                 "symbol": position.symbol,
@@ -79,6 +80,7 @@ class DailyDigest:
                 "today": shadow_today,
                 "cumulative": shadow_cumulative,
             },
+            "data_availability": data_availability,
             "reconcile_reminder": "RECONCILE_BROKER_HOLDINGS_WITH_POSITION_TWIN",
         }
         payload["text"] = _format_text(payload)
@@ -161,6 +163,11 @@ def _format_text(payload: dict[str, Any]) -> str:
             *position_lines,
             f"Replay check: {replay}",
             (
+                "Data availability: "
+                f"slots_ok={payload['data_availability']['slots_ok']} "
+                f"slots_unavailable={payload['data_availability']['slots_unavailable']}"
+            ),
+            (
                 "Shadow today: "
                 f"signals={today['signals']} trades={today['trades']} "
                 f"unfinalized={today['unfinalized']} no_trigger={today['no_trigger']} "
@@ -187,6 +194,19 @@ def _duration(seconds: int | None) -> str:
     hours, remainder = divmod(max(0, seconds), 3600)
     minutes, secs = divmod(remainder, 60)
     return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+
+def _data_availability(events) -> dict[str, int]:
+    latest: dict[str, str] = {}
+    for event in events:
+        if event.event_type == "RADAR_RUN":
+            latest[event.aggregate_id] = str(event.payload.get("status", "UNKNOWN"))
+    return {
+        "slots_ok": sum(status == "COMPLETED" for status in latest.values()),
+        "slots_unavailable": sum(
+            status == "DATA_UNAVAILABLE" for status in latest.values()
+        ),
+    }
 
 
 def _runtime_datetime(value) -> datetime | None:

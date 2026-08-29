@@ -85,7 +85,7 @@ class Settings(BaseSettings):
     direct_account_access_allowed: bool = False
     strategy_speculative_enabled: bool = False
 
-    data_plan: Literal["free", "plus"] = "free"
+    data_plan: Literal["keyless_delayed", "free", "plus"] = "keyless_delayed"
     discovery_feed: str = "iex"
     decision_feed: str = "iex"
     historical_feed: str = "sip"
@@ -97,6 +97,9 @@ class Settings(BaseSettings):
     rest_calls_per_minute: int = 200
     rest_safe_calls_per_minute: int = 180
     rest_batch_symbols: int = 100
+    keyless_calls_per_minute: int = 120
+    keyless_request_interval_seconds: float = 0.5
+    keyless_retry_attempts: int = 3
     stream_max_symbols: int = 30
     universe_dir: Path = DATA_DIR / "universe"
     quality_path: Path = DATA_DIR / "quality.csv"
@@ -127,6 +130,8 @@ class Settings(BaseSettings):
     retest_window_minutes: int = 30
     intraday_backfill_interval_seconds: float = 300.0
     min_adv: float = 2_000_000.0
+    min_adv_keyless: float = 5_000_000.0
+    max_delayed_age_minutes: float = 20.0
     min_price: float = 5.0
     max_spread_bps: float = 20.0
     iex_mid_tolerance_pct: float = 0.75
@@ -161,6 +166,10 @@ class Settings(BaseSettings):
                 raise ValueError("FREE_PLAN_REST_LIMIT_EXCEEDED")
             if self.rest_safe_calls_per_minute > 180:
                 raise ValueError("FREE_PLAN_REST_SAFE_LIMIT_EXCEEDED")
+        elif self.data_plan == "keyless_delayed":
+            self.discovery_feed = "yahoo"
+            self.decision_feed = "yahoo"
+            self.historical_feed = "yahoo"
         if self.historical_lag_minutes < 0:
             raise ValueError("INVALID_HISTORICAL_LAG")
         if self.rest_calls_per_minute <= 0:
@@ -169,6 +178,12 @@ class Settings(BaseSettings):
             raise ValueError("INVALID_REST_SAFE_CALL_LIMIT")
         if self.rest_batch_symbols <= 0:
             raise ValueError("INVALID_REST_BATCH_SIZE")
+        if self.keyless_calls_per_minute <= 0:
+            raise ValueError("INVALID_KEYLESS_CALL_LIMIT")
+        if self.keyless_request_interval_seconds < 0.5:
+            raise ValueError("KEYLESS_REQUEST_INTERVAL_TOO_LOW")
+        if self.keyless_retry_attempts <= 0:
+            raise ValueError("INVALID_KEYLESS_RETRY_ATTEMPTS")
         if self.stream_max_symbols <= 0:
             raise ValueError("INVALID_STREAM_SYMBOL_CAP")
         if self.plans_per_run <= 0 or self.plans_per_run > self.stream_max_symbols:
@@ -215,6 +230,10 @@ class Settings(BaseSettings):
             raise ValueError("INVALID_INTRADAY_BACKFILL_INTERVAL")
         if self.min_adv <= 0:
             raise ValueError("INVALID_MIN_ADV")
+        if self.min_adv_keyless <= 0:
+            raise ValueError("INVALID_MIN_ADV_KEYLESS")
+        if self.max_delayed_age_minutes <= 0:
+            raise ValueError("INVALID_MAX_DELAYED_AGE_MINUTES")
         if self.min_price <= 0:
             raise ValueError("INVALID_MIN_PRICE")
         if self.max_spread_bps <= 0:

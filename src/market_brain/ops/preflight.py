@@ -168,12 +168,12 @@ class PreflightRunner:
         ]
         results.extend(
             (
-                _exact_policy(
+                _allowed_policy(
                     self.env,
                     "DATA_PLAN",
-                    "free",
-                    "DATA_PLAN_FREE",
-                    "free data plan is required",
+                    {"free", "keyless_delayed"},
+                    "DATA_PLAN_SAFE",
+                    "data plan must be free or keyless_delayed",
                 ),
                 _exact_policy(
                     self.env,
@@ -510,6 +510,17 @@ def _exact_policy(
     hint: str,
 ) -> CheckResult:
     passed = env.get(name, "").strip().lower() == expected
+    return CheckResult("PASS" if passed else "FAIL", code, hint)
+
+
+def _allowed_policy(
+    env: Mapping[str, str],
+    name: str,
+    allowed: set[str],
+    code: str,
+    hint: str,
+) -> CheckResult:
+    passed = env.get(name, "").strip().lower() in allowed
     return CheckResult("PASS" if passed else "FAIL", code, hint)
 
 

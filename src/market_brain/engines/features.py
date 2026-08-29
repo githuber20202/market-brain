@@ -37,7 +37,15 @@ def compute_features(snapshot: MarketSnapshot) -> FeatureVector:
         if anchor is not None:
             relative_strength = price_return - anchor
 
-    liquidity_ok = bool(spread_pct is not None and spread_pct <= 0.25)
+    keyless = bool(
+        snapshot.source_id
+        and ("YAHOO" in snapshot.source_id or "CBOE_DELAYED" in snapshot.source_id)
+    )
+    liquidity_ok = (
+        snapshot.authoritative
+        if keyless
+        else bool(spread_pct is not None and spread_pct <= 0.25)
+    )
     catalyst = snapshot.catalyst_strength if snapshot.catalyst_verified else 0.0
 
     return FeatureVector(
@@ -53,8 +61,9 @@ def compute_features(snapshot: MarketSnapshot) -> FeatureVector:
         evidence={
             "source_id": snapshot.source_id,
             "data_age_seconds": snapshot.data_age_seconds,
+            "delay_minutes": snapshot.delay_minutes,
+            "fetched_at": snapshot.fetched_at,
             "authoritative": snapshot.authoritative,
             "halted": snapshot.halted,
         },
     )
-

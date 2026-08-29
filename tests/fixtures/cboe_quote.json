@@ -1,0 +1,10 @@
+{
+  "data": {
+    "symbol": "TEST",
+    "current_price": 100.55,
+    "last_trade_time": "2026-08-28T09:35:00",
+    "bid": 100.5,
+    "ask": 100.6,
+    "volume": 9000000
+  }
+}

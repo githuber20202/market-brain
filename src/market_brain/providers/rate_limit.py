@@ -9,13 +9,16 @@ class TokenBucketRateLimiter:
         self,
         calls_per_minute: int,
         *,
+        burst_capacity: int | None = None,
         clock=time.monotonic,
         sleep=asyncio.sleep,
     ) -> None:
         if calls_per_minute <= 0:
             raise ValueError("RATE_LIMIT_MUST_BE_POSITIVE")
-        self.capacity = float(calls_per_minute)
-        self.refill_per_second = self.capacity / 60.0
+        if burst_capacity is not None and burst_capacity <= 0:
+            raise ValueError("RATE_LIMIT_BURST_MUST_BE_POSITIVE")
+        self.capacity = float(burst_capacity or calls_per_minute)
+        self.refill_per_second = float(calls_per_minute) / 60.0
         self.tokens = self.capacity
         self.clock = clock
         self.sleep = sleep
@@ -37,4 +40,3 @@ class TokenBucketRateLimiter:
                     return
                 wait_seconds = (1.0 - self.tokens) / self.refill_per_second
             await self.sleep(wait_seconds)
-

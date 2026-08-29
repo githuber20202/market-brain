@@ -18,6 +18,7 @@ from market_brain.orchestration.universe import (
     load_market_calendar,
     load_universe,
 )
+from market_brain.providers.base import DataUnavailable
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class RadarScheduler:
         self.universe: tuple[UniverseEntry, ...] = ()
         self.quality: dict[str, ManualQuality] = {}
         self.calendar: NyseMarketCalendar | None = None
-        self._attempted: set[str] = set()
+        self._attempted: set[tuple[str, str]] = set()
         self._stop = asyncio.Event()
 
     def validate_startup(self, *, now: datetime | None = None) -> None:
@@ -75,20 +76,47 @@ class RadarScheduler:
         slot = _matching_slot(timestamp, session)
         if slot is None:
             return None
-        run_id = f"radar:{slot.date().isoformat()}:{slot.strftime('%H%M')}"
-        if run_id in self._attempted:
+        catch_up_slot = await self._unavailable_catch_up_slot(session, slot)
+        scheduled_slot = catch_up_slot or slot
+        run_id = (
+            f"radar:{scheduled_slot.date().isoformat()}:{scheduled_slot.strftime('%H%M')}"
+        )
+        attempt_key = (run_id, slot.isoformat())
+        if attempt_key in self._attempted:
             return None
         existing = await self.service.store.get_runtime_status_key(f"radar_run:{run_id}")
-        if existing is not None:
-            self._attempted.add(run_id)
+        if isinstance(existing, dict) and existing.get("status") == "COMPLETED":
+            self._attempted.add(attempt_key)
             return None
-        self._attempted.add(run_id)
+        if scheduled_slot == slot and existing is not None:
+            self._attempted.add(attempt_key)
+            return None
+        self._attempted.add(attempt_key)
         await self.service.store.set_runtime_status(
             f"radar_run:{run_id}",
-            {"status": "STARTED", "scheduled_for": slot.isoformat()},
+            {
+                "status": "STARTED",
+                "scheduled_for": scheduled_slot.isoformat(),
+                "attempt_slot": slot.isoformat(),
+            },
         )
         try:
-            return await self._execute(run_id, slot, timestamp)
+            return await self._execute(run_id, scheduled_slot, timestamp)
+        except DataUnavailable as exc:
+            return await self._persist_result(
+                run_id,
+                scheduled_slot,
+                status="DATA_UNAVAILABLE",
+                candidates=[],
+                plan_ids=[],
+                error_type=exc.error_type,
+                unavailable={
+                    "source_id": exc.source_id,
+                    "resource": exc.resource,
+                    "symbol": exc.symbol,
+                    "attempt_slot": slot.isoformat(),
+                },
+            )
         except Exception as exc:
             LOGGER.exception("radar_run_failed run_id=%s", run_id)
             return await self._persist_result(
@@ -100,9 +128,49 @@ class RadarScheduler:
                 error_type=type(exc).__name__,
             )
 
+    async def _unavailable_catch_up_slot(
+        self,
+        session: MarketSession,
+        current_slot: datetime,
+    ) -> datetime | None:
+        for candidate in scheduled_slots(session):
+            if candidate >= current_slot:
+                break
+            run_id = f"radar:{candidate.date().isoformat()}:{candidate.strftime('%H%M')}"
+            status = await self.service.store.get_runtime_status_key(f"radar_run:{run_id}")
+            if (
+                isinstance(status, dict)
+                and status.get("status") == "DATA_UNAVAILABLE"
+                and (run_id, current_slot.isoformat()) not in self._attempted
+            ):
+                return candidate
+        return None
+
     async def _execute(self, run_id: str, slot: datetime, timestamp: datetime) -> dict:
         symbols = [entry.symbol for entry in self.universe if entry.ranking_eligible]
         rows = await self.screener.screen(symbols, top_n=len(symbols))
+        cfg = getattr(self.service, "cfg", None)
+        if (
+            getattr(cfg, "data_plan", None) == "keyless_delayed"
+            and hasattr(self.service, "prepare_plan_market_data")
+        ):
+            for row in rows[: self.plans_per_run]:
+                snapshot = row.get("snapshot", {})
+                symbol = str(snapshot.get("symbol", "")).upper()
+                eligible = symbol in self.quality or bool(
+                    snapshot.get("catalyst_verified", False)
+                )
+                if not eligible:
+                    continue
+                try:
+                    await self.service.prepare_plan_market_data(
+                        symbol,
+                        now=timestamp.astimezone(UTC),
+                    )
+                except DataUnavailable:
+                    raise
+                except (RuntimeError, ValueError, TypeError):
+                    continue
         candidates: list[dict] = []
         plan_ids: list[str] = []
         for row in rows[: self.plans_per_run]:
@@ -151,6 +219,8 @@ class RadarScheduler:
                     rr_score=10.0,
                     now=timestamp.astimezone(UTC),
                 )
+            except DataUnavailable:
+                raise
             except (RuntimeError, ValueError, TypeError) as exc:
                 candidate["reason"] = str(exc) or type(exc).__name__
                 candidates.append(candidate)
@@ -182,6 +252,7 @@ class RadarScheduler:
         candidates: list[dict],
         plan_ids: list[str],
         error_type: str | None = None,
+        unavailable: dict | None = None,
     ) -> dict:
         payload = {
             "run_id": run_id,
@@ -191,9 +262,14 @@ class RadarScheduler:
             "candidates": candidates,
             "plan_ids": plan_ids,
             "error_type": error_type,
+            "data_unavailable": unavailable,
         }
         async with self.service.store.transaction():
             await self.service.store.append(LedgerEvent("RADAR_RUN", run_id, payload))
+            if status == "DATA_UNAVAILABLE":
+                await self.service.store.append(
+                    LedgerEvent("DATA_UNAVAILABLE", run_id, payload)
+                )
             await self.service.store.save_alert(AlertRecord(kind="RADAR_DIGEST", payload=payload))
             await self.service.store.set_runtime_status(f"radar_run:{run_id}", payload)
         return payload
@@ -257,4 +333,3 @@ def _matching_slot(timestamp: datetime, session: MarketSession) -> datetime | No
 
 def _aware(value: datetime) -> datetime:
     return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
-

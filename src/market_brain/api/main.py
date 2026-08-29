@@ -17,7 +17,7 @@ from market_brain.ledger.replay import replay_check
 from market_brain.ledger.store import InMemoryEventStore, PostgresEventStore
 from market_brain.orchestration.screener import MarketScreener
 from market_brain.orchestration.service import DecisionService
-from market_brain.providers.alpaca import AlpacaMarketData
+from market_brain.providers import build_market_data_provider
 from market_brain.runtime.daily_digest import DailyDigest
 from market_brain.runtime.position_monitor import PositionMonitor
 from market_brain.runtime.radar_scheduler import RadarScheduler
@@ -32,7 +32,7 @@ class StrictModel(BaseModel):
 
 
 store = PostgresEventStore(settings.postgres_dsn) if settings.postgres_dsn else InMemoryEventStore()
-market_data = AlpacaMarketData(event_store=store)
+market_data = build_market_data_provider(event_store=store)
 service = DecisionService(store, market_data=market_data)
 screener = MarketScreener(market_data)
 radar_scheduler = RadarScheduler(
@@ -94,6 +94,7 @@ async def lifespan(_app: FastAPI):
         poll_seconds=settings.alert_poll_seconds,
         max_attempts=settings.alert_max_attempts,
         run_mode=settings.run_mode,
+        data_plan=settings.data_plan,
     )
     task = asyncio.create_task(dispatcher.run())
     monitor = PositionMonitor(service)

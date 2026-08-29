@@ -36,13 +36,17 @@ from market_brain.engines.intraday import (
     structure_from_dict,
     structure_key,
 )
-from market_brain.engines.liquidity import apply_iex_liquidity_gate
+from market_brain.engines.liquidity import (
+    _is_keyless_source,
+    apply_iex_liquidity_gate,
+    apply_keyless_liquidity_gate,
+)
 from market_brain.engines.plan import build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.ranking import score_features
 from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import EventStore, InMemoryEventStore
-from market_brain.providers.base import MarketDataProvider
+from market_brain.providers.base import DataUnavailable, MarketDataProvider
 from market_brain.replay.engine import SLIPPAGE_BPS, TIME_STOP_MINUTES
 from market_brain.settings import Settings, settings
 
@@ -427,6 +431,24 @@ class DecisionService:
             return existing
         return await self.refresh_liquidity_profile(symbol, now=timestamp)
 
+    async def _market_liquidity_reasons(
+        self,
+        snapshot: MarketSnapshot,
+        *,
+        now: datetime | None = None,
+    ) -> list[str]:
+        if snapshot.source_id != "ALPACA_IEX" and not _is_keyless_source(snapshot.source_id):
+            return []
+        try:
+            profile = await self.ensure_liquidity_profile(snapshot.symbol, now=now)
+        except DataUnavailable:
+            raise
+        except (RuntimeError, ValueError, TypeError):
+            profile = None
+        if snapshot.source_id == "ALPACA_IEX":
+            return apply_iex_liquidity_gate(snapshot, profile, self.cfg)
+        return apply_keyless_liquidity_gate(snapshot, profile, self.cfg)
+
     async def refresh_liquidity_profiles(self) -> dict[str, int]:
         if self.market_data is None or not getattr(self.market_data, "configured", False):
             return {"refreshed": 0, "failed": 0}
@@ -683,16 +705,52 @@ class DecisionService:
         rr_score: float,
         now: datetime | None = None,
     ) -> tuple[TradePlan, dict]:
+        snapshot = await self.prepare_plan_market_data(symbol, now=now)
+        snapshot.catalyst_verified = catalyst_verified
+        snapshot.catalyst_strength = catalyst_strength
+        return await self.build_plan(
+            snapshot,
+            quality,
+            lane,
+            structure_score,
+            rr_score,
+        )
+
+    async def prepare_plan_market_data(
+        self,
+        symbol: str,
+        *,
+        now: datetime | None = None,
+    ) -> MarketSnapshot:
         if self.market_data is None:
             raise RuntimeError("MARKET_DATA_PROVIDER_NOT_CONFIGURED")
         normalized = symbol.upper().strip()
         if not normalized:
             raise ValueError("INVALID_SYMBOL")
         snapshot = await self.market_data.snapshot(normalized, decision=False)
-        snapshot.catalyst_verified = catalyst_verified
-        snapshot.catalyst_strength = catalyst_strength
 
         timestamp = now or datetime.now(UTC)
+        liquidity_reasons = (
+            await self._market_liquidity_reasons(snapshot, now=timestamp)
+            if _is_keyless_source(snapshot.source_id)
+            else []
+        )
+        blocking = [reason for reason in liquidity_reasons if reason != "LIQUIDITY_GATE_PASS"]
+        if blocking:
+            unavailable_reasons = {
+                "LIQUIDITY_PROFILE_MISSING",
+                "DELAYED_DATA_STALE",
+                "KEYLESS_BAR_RANGE_MISSING",
+                "PRICE_CROSS_CHECK_FAILED",
+            }
+            if any(reason in unavailable_reasons for reason in blocking):
+                raise DataUnavailable(
+                    source_id=snapshot.source_id or "KEYLESS_DELAYED",
+                    resource="planning_snapshot",
+                    symbol=normalized,
+                    error_type=blocking[0],
+                )
+            raise ValueError(blocking[0])
         eastern = ZoneInfo("America/New_York")
         local = timestamp.astimezone(eastern)
         session_local = local.replace(hour=9, minute=30, second=0, microsecond=0)
@@ -720,13 +778,7 @@ class DecisionService:
             "opening_range_session_start": session_start.isoformat(),
             "bars_count": len(bars),
         }
-        return await self.build_plan(
-            snapshot,
-            quality,
-            lane,
-            structure_score,
-            rr_score,
-        )
+        return snapshot
 
     @transactional
     async def build_plan(
@@ -849,13 +901,7 @@ class DecisionService:
             raise RuntimeError("MARKET_DATA_PROVIDER_NOT_CONFIGURED")
 
         snapshot = await self.market_data.snapshot(plan.symbol, decision=True)
-        liquidity_reasons: list[str] = []
-        if snapshot.source_id == "ALPACA_IEX":
-            try:
-                profile = await self.ensure_liquidity_profile(plan.symbol)
-            except (RuntimeError, ValueError, TypeError):
-                profile = None
-            liquidity_reasons = apply_iex_liquidity_gate(snapshot, profile, self.cfg)
+        liquidity_reasons = await self._market_liquidity_reasons(snapshot)
         retest_valid, retest_reasons, retest_state = await self.server_retest(plan)
         return await self._activate_with_context(
             plan_id,
@@ -910,7 +956,10 @@ class DecisionService:
         existing = await self.store.get_reservation(plan_id)
         if existing is not None:
             if datetime.now(UTC) <= existing.expires_at:
-                if not retest_valid or (snapshot.source_id == "ALPACA_IEX" and not snapshot.authoritative):
+                if not retest_valid or (
+                    (snapshot.source_id == "ALPACA_IEX" or _is_keyless_source(snapshot.source_id))
+                    and not snapshot.authoritative
+                ):
                     decision = ActivationDecision(
                         plan_id,
                         plan.symbol,
@@ -1004,7 +1053,11 @@ class DecisionService:
             wallet,
             retest_valid=retest_valid,
             above_vwap=above_vwap,
-            max_data_age_seconds=self.cfg.max_market_data_age_seconds,
+            max_data_age_seconds=(
+                self.cfg.max_delayed_age_minutes * 60.0
+                if _is_keyless_source(snapshot.source_id)
+                else self.cfg.max_market_data_age_seconds
+            ),
             max_trade_risk_pct=self.cfg.max_trade_risk_pct,
             max_daily_loss_pct=self.cfg.max_daily_loss_pct,
             max_position_notional_pct=self.cfg.max_position_notional_pct,
