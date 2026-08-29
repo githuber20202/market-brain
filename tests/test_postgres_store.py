@@ -5,6 +5,7 @@ import pytest
 
 from market_brain.domain.models import (
     AlertRecord,
+    IntradayBarRecord,
     MarketSnapshot,
     PositionState,
     ProtectionState,
@@ -86,6 +87,29 @@ async def test_postgres_outbox_round_trip_next_attempt_at(pg_store):
     assert loaded is not None
     assert loaded.kind == "SELL_NOW"
     assert loaded.next_attempt_at == next_at
+
+
+@pytest.mark.asyncio
+async def test_postgres_prunes_intraday_bars_to_five_latest_sessions(pg_store):
+    for offset in range(7):
+        day = datetime(2026, 8, 20 + offset, 14, 30, tzinfo=UTC)
+        await pg_store.save_intraday_bar(
+            IntradayBarRecord(
+                symbol="SPY",
+                session_date=day.date().isoformat(),
+                minute_ts=day,
+                source="YAHOO_DELAYED",
+                open=100.0,
+                high=101.0,
+                low=99.0,
+                close=100.5,
+                volume=1_000_000,
+            )
+        )
+
+    assert await pg_store.prune_intraday_bars(5) == 2
+    assert await pg_store.list_intraday_bars("SPY", "2026-08-20") == []
+    assert len(await pg_store.list_intraday_bars("SPY", "2026-08-26")) == 1
 
 
 @pytest.mark.asyncio

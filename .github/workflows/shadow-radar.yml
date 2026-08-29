@@ -1,0 +1,77 @@
+name: Shadow Radar
+
+on:
+  schedule:
+    - cron: "20,50 13-19 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: market-brain-shadow-state
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      due: ${{ steps.gate.outputs.due }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: gate
+        run: python scripts/batch_gate.py --mode radar
+
+  radar:
+    needs: gate
+    if: needs.gate.outputs.due == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: market
+          POSTGRES_PASSWORD: market_batch
+          POSTGRES_DB: market
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U market -d market"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      POSTGRES_DSN: postgresql://market:market_batch@127.0.0.1:5432/market
+      DATA_PLAN: keyless_delayed
+      RUN_MODE: shadow
+      EXECUTION_ACTIONS_ALLOWED: "false"
+      DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Start duration timer
+        run: echo "BATCH_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Install runtime
+        run: python -m pip install -e .
+      - name: Restore shadow state
+        run: |
+          git fetch origin shadow-state:refs/remotes/origin/shadow-state || true
+          python -m market_brain.runtime.state restore --repo . --dsn "$POSTGRES_DSN"
+          psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f config/schema.sql
+      - name: Run radar batch
+        run: python -m market_brain.runtime.batch --mode radar
+      - name: Persist shadow state
+        run: |
+          session_date=$(TZ=America/New_York date +%F)
+          python -m market_brain.runtime.state persist --repo . --dsn "$POSTGRES_DSN" --session-date "$session_date" --push
+      - name: Print duration
+        if: always()
+        run: echo "BATCH_DURATION_SECONDS=$(($(date +%s)-BATCH_STARTED_AT))"
+

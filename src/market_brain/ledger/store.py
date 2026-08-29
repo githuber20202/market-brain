@@ -62,7 +62,9 @@ class EventStore(Protocol):
     async def list_shadow_trades(self) -> list[ShadowTrade]: ...
     async def save_alert(self, alert: AlertRecord) -> None: ...
     async def get_alert(self, alert_id: str) -> AlertRecord | None: ...
+    async def list_alerts(self) -> list[AlertRecord]: ...
     async def list_undelivered(self) -> list[AlertRecord]: ...
+    async def prune_intraday_bars(self, keep_sessions: int) -> int: ...
     async def mark_delivered(self, alert_id: str) -> AlertRecord | None: ...
     async def mark_failed(
         self, alert_id: str, error: str, next_attempt_at: datetime | None
@@ -172,11 +174,27 @@ class InMemoryEventStore:
     async def get_alert(self, alert_id: str) -> AlertRecord | None:
         return self.alerts.get(alert_id)
 
+    async def list_alerts(self) -> list[AlertRecord]:
+        return sorted(self.alerts.values(), key=lambda alert: alert.created_at)
+
     async def list_undelivered(self) -> list[AlertRecord]:
         return sorted(
             (alert for alert in self.alerts.values() if alert.delivered_at is None),
             key=lambda alert: alert.created_at,
         )
+
+    async def prune_intraday_bars(self, keep_sessions: int) -> int:
+        if keep_sessions <= 0:
+            raise ValueError("KEEP_SESSIONS_INVALID")
+        retained = sorted({key[1] for key in self.intraday_bars}, reverse=True)[:keep_sessions]
+        retained_set = set(retained)
+        before = len(self.intraday_bars)
+        self.intraday_bars = {
+            key: value
+            for key, value in self.intraday_bars.items()
+            if key[1] in retained_set
+        }
+        return before - len(self.intraday_bars)
 
     async def mark_delivered(self, alert_id: str) -> AlertRecord | None:
         alert = self.alerts.get(alert_id)
@@ -471,9 +489,26 @@ class PostgresEventStore:
         row = await self._fetchrow("SELECT * FROM alerts WHERE alert_id=$1", alert_id)
         return _alert_from_row(row) if row is not None else None
 
+    async def list_alerts(self) -> list[AlertRecord]:
+        rows = await self._fetch("SELECT * FROM alerts ORDER BY created_at")
+        return [_alert_from_row(row) for row in rows]
+
     async def list_undelivered(self) -> list[AlertRecord]:
         rows = await self._fetch("SELECT * FROM alerts WHERE delivered_at IS NULL ORDER BY created_at")
         return [_alert_from_row(row) for row in rows]
+
+    async def prune_intraday_bars(self, keep_sessions: int) -> int:
+        if keep_sessions <= 0:
+            raise ValueError("KEEP_SESSIONS_INVALID")
+        result = await self._execute(
+            """DELETE FROM intraday_bars
+               WHERE session_date NOT IN (
+                 SELECT session_date FROM intraday_bars
+                 GROUP BY session_date ORDER BY session_date DESC LIMIT $1
+               )""",
+            keep_sessions,
+        )
+        return int(str(result).rsplit(" ", 1)[-1])
 
     async def mark_delivered(self, alert_id: str) -> AlertRecord | None:
         row = await self._fetchrow(

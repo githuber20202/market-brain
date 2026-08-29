@@ -63,6 +63,28 @@ jobs:
       - name: Replay smoke
         run: python scripts/replay_smoke.py --fixture tests/fixtures/replay_bars.json
 
+      - name: Batch state smoke
+        env:
+          POSTGRES_DSN: postgresql://market:market_test@127.0.0.1:5432/market_test
+          DATA_PLAN: keyless_delayed
+          RUN_MODE: shadow
+          EXECUTION_ACTIONS_ALLOWED: "false"
+          DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
+        run: |
+          psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f config/schema.sql
+          python -m market_brain.runtime.batch \
+            --mode radar \
+            --fixtures tests/fixtures \
+            --now 2026-08-28T13:50:00+00:00
+          pg_dump --format=custom --no-owner --no-privileges \
+            --file /tmp/market-batch.dump "$POSTGRES_DSN"
+          psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 \
+            -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+          pg_restore --no-owner --no-privileges --exit-on-error \
+            --dbname "$POSTGRES_DSN" /tmp/market-batch.dump
+          python -m market_brain.runtime.state verify --dsn "$POSTGRES_DSN"
+          echo "BATCH_STATE_SMOKE=PASS"
+
       - uses: docker/setup-qemu-action@v3
 
       - uses: docker/setup-buildx-action@v3
