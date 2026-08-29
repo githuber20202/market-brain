@@ -39,6 +39,7 @@ jobs:
           period2="$(date -u +%s)"
           types='annualTotalRevenue,quarterlyTotalRevenue,annualOperatingIncome,quarterlyOperatingIncome,annualTotalDebt,annualCashAndCashEquivalents,annualFreeCashFlow,quarterlyFreeCashFlow,annualDilutedAverageShares,quarterlyDilutedAverageShares'
 
+          yahoo_success=0
           for symbol in NVDA AAPL; do
             output="yahoo_${symbol}.json"
             url="https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/${symbol}?type=${types}&period1=${period1}&period2=${period2}&merge=false"
@@ -47,6 +48,7 @@ jobs:
             if [[ "$status" != "200" ]]; then
               continue
             fi
+            yahoo_success=$((yahoo_success + 1))
             python - "$symbol" "$output" <<'PY'
           import json
           import sys
@@ -80,8 +82,5 @@ jobs:
           PY
           done
 
-          nvda_status="$(grep -o '"symbol":"NVDA"' yahoo_NVDA.json 2>/dev/null | head -1 || true)"
-          aapl_status="$(grep -o '"symbol":"AAPL"' yahoo_AAPL.json 2>/dev/null | head -1 || true)"
-          test -n "$nvda_status"
-          test -n "$aapl_status"
+          test "$yahoo_success" -eq 2
           echo "PROVEN_QUALITY_SOURCE=YAHOO_FUNDAMENTALS"
