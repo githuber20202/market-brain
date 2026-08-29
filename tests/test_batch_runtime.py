@@ -243,13 +243,27 @@ async def test_batch_digest_catches_up_after_1620_and_writes_report(tmp_path):
 async def test_weekly_batch_refreshes_quality_into_state(tmp_path, monkeypatch):
     runtime, scheduler = _runtime(tmp_path)
     scheduler.universe = (
-        SimpleNamespace(symbol="FULL"),
-        SimpleNamespace(symbol="PART"),
+        SimpleNamespace(symbol="FULL", instrument_type="EQUITY"),
+        SimpleNamespace(symbol="PART", instrument_type="EQUITY"),
+        SimpleNamespace(symbol="SPY", instrument_type="ETF"),
     )
     calls: dict[str, object] = {}
 
-    async def fake_quality(symbols, *, output_path, now):
-        calls["quality"] = (symbols, output_path, now)
+    async def fake_quality(
+        symbols,
+        *,
+        output_path,
+        now,
+        quality_source,
+        skipped_instruments,
+    ):
+        calls["quality"] = (
+            symbols,
+            output_path,
+            now,
+            quality_source,
+            skipped_instruments,
+        )
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text("symbol,quality_score,as_of,source,partial\n")
         return {"status": "COMPLETED", "rows": 2}
@@ -274,6 +288,8 @@ async def test_weekly_batch_refreshes_quality_into_state(tmp_path, monkeypatch):
         ["FULL", "PART"],
         tmp_path / "state" / "quality.csv",
         now,
+        "yahoo",
+        [{"symbol": "SPY", "instrument_type": "ETF"}],
     )
     latest = json.loads((tmp_path / "state" / "latest.json").read_text())
     assert latest["quality"] == {"status": "COMPLETED", "rows": 2}

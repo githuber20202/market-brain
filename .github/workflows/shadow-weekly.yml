@@ -34,6 +34,7 @@ jobs:
     env:
       POSTGRES_DSN: postgresql://market:market_batch@127.0.0.1:5432/market
       DATA_PLAN: keyless_delayed
+      QUALITY_SOURCE: yahoo
       RUN_MODE: shadow
       EXECUTION_ACTIONS_ALLOWED: "false"
       DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"

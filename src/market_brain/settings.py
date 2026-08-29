@@ -106,6 +106,7 @@ class Settings(BaseSettings):
     stream_max_symbols: int = 30
     universe_dir: Path = DATA_DIR / "universe"
     quality_path: Path = DATA_DIR / "quality.csv"
+    quality_source: Literal["edgar", "yahoo"] = "yahoo"
     market_calendar_path: Path = DATA_DIR / "market_calendar.csv"
     plans_per_run: int = 5
     radar_poll_seconds: float = 5.0

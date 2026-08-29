@@ -1,4 +1,4 @@
-index,ticker,asset_type,name,exchange,sector_proxy,audit_required,ranking_eligible,notes,universe_version
+index,ticker,instrument_type,name,exchange,sector_proxy,audit_required,ranking_eligible,notes,universe_version
 0,NVDA,EQUITY,NVIDIA Corporation,Nasdaq,SMH,True,True,,2026-08-27.1
 1,AVGO,EQUITY,Broadcom Inc.,Nasdaq,SMH,True,True,,2026-08-27.1
 2,DELL,EQUITY,Dell Technologies Inc.,NYSE,XLK,True,True,,2026-08-27.1
@@ -60,4 +60,3 @@ index,ticker,asset_type,name,exchange,sector_proxy,audit_required,ranking_eligib
 58,REMX,ETF,VanEck Rare Earth and Strategic Metals ETF,NYSE Arca,REMX,True,True,Materials proxy,2026-08-27.1
 59,ITA,ETF,iShares U.S. Aerospace & Defense ETF,Cboe BZX,ITA,True,True,Defense benchmark,2026-08-27.1
 60,XAR,ETF,SPDR S&P Aerospace & Defense ETF,NYSE Arca,XAR,True,True,Defense benchmark,2026-08-27.1
-

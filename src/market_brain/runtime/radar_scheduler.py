@@ -6,7 +6,12 @@ from collections.abc import Callable
 from datetime import UTC, datetime, time, timedelta
 from pathlib import Path
 
-from market_brain.domain.models import AlertRecord, QualityProfile, StrategyLane
+from market_brain.domain.models import (
+    AlertRecord,
+    EvidenceCard,
+    QualityProfile,
+    StrategyLane,
+)
 from market_brain.ledger.events import LedgerEvent
 from market_brain.orchestration.universe import (
     EASTERN,
@@ -250,10 +255,13 @@ class RadarScheduler:
             getattr(cfg, "data_plan", None) == "keyless_delayed"
             and hasattr(self.service, "prepare_plan_market_data")
         ):
+            instrument_types = {
+                entry.symbol: entry.instrument_type for entry in self.universe
+            }
             for row in rows[: self.plans_per_run]:
                 snapshot = row.get("snapshot", {})
                 symbol = str(snapshot.get("symbol", "")).upper()
-                eligible = symbol in self.quality or bool(
+                eligible = instrument_types.get(symbol) == "ETF" or symbol in self.quality or bool(
                     snapshot.get("catalyst_verified", False)
                 )
                 if not eligible:
@@ -269,6 +277,9 @@ class RadarScheduler:
                     continue
         candidates: list[dict] = []
         plan_ids: list[str] = []
+        instrument_types = {
+            entry.symbol: entry.instrument_type for entry in self.universe
+        }
         for row in rows[: self.plans_per_run]:
             snapshot = row.get("snapshot", {})
             score = row.get("score", {})
@@ -289,6 +300,26 @@ class RadarScheduler:
                 quality = manual_quality.profile()
                 lane = StrategyLane.CORE_MOMENTUM
                 candidate["quality_source"] = manual_quality.source
+            elif instrument_types.get(symbol) == "ETF":
+                quality = QualityProfile(
+                    symbol=symbol,
+                    score=0.0,
+                    tier="NOT_APPLICABLE",
+                    risk_multiplier=1.0,
+                    as_of=timestamp.astimezone(UTC),
+                    evidence=[
+                        EvidenceCard(
+                            evidence_type="QUALITY_NOT_APPLICABLE",
+                            summary="Company fundamentals quality is not applicable to ETFs",
+                            source="INSTRUMENT_TYPE_ETF",
+                            published_at=timestamp.astimezone(UTC),
+                            confidence=1.0,
+                            expires_at=datetime.max.replace(tzinfo=UTC),
+                        )
+                    ],
+                )
+                lane = StrategyLane.CORE_MOMENTUM
+                candidate["quality_source"] = "NOT_APPLICABLE_ETF"
             elif catalyst_verified:
                 quality = QualityProfile(
                     symbol=symbol,

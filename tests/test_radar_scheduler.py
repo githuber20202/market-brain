@@ -197,11 +197,15 @@ async def test_fake_clock_fires_at_0950_once_and_creates_digest(tmp_path: Path):
 
 
 @pytest.mark.asyncio
-async def test_radar_accepts_edgar_auto_quality_for_core_lane(tmp_path: Path):
+@pytest.mark.parametrize("source", ["EDGAR_AUTO", "YAHOO_FUNDAMENTALS"])
+async def test_radar_accepts_automated_quality_for_core_lane(
+    tmp_path: Path,
+    source: str,
+):
     paths = _files(tmp_path, symbols=("AAPL",), quality=())
     paths[1].write_text(
         "symbol,quality_score,as_of,source,partial\n"
-        "AAPL,85,2026-08-28T00:00:00+00:00,EDGAR_AUTO,false\n"
+        f"AAPL,85,2026-08-28T00:00:00+00:00,{source},false\n"
     )
     service = FakeService()
     scheduler = RadarScheduler(
@@ -218,8 +222,36 @@ async def test_radar_accepts_edgar_auto_quality_for_core_lane(tmp_path: Path):
 
     assert result is not None
     assert service.plan_calls[0]["lane"] == StrategyLane.CORE_MOMENTUM
-    assert service.plan_calls[0]["quality"].evidence[0].source == "EDGAR_AUTO"
-    assert result["candidates"][0]["quality_source"] == "EDGAR_AUTO"
+    assert service.plan_calls[0]["quality"].evidence[0].source == source
+    assert result["candidates"][0]["quality_source"] == source
+
+
+@pytest.mark.asyncio
+async def test_radar_treats_etf_company_quality_as_not_applicable(tmp_path: Path):
+    paths = _files(tmp_path, symbols=("SPY",), quality=())
+    (paths[0] / "universe.csv").write_text(
+        "symbol,instrument_type,ranking_eligible\nSPY,ETF,true\n"
+    )
+    service = FakeService()
+    scheduler = RadarScheduler(
+        service=service,
+        screener=FakeScreener([_row("SPY")]),
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    slot = datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    scheduler.validate_startup(now=slot)
+
+    result = await scheduler.run_pending(now=slot)
+
+    assert result is not None
+    assert service.plan_calls[0]["lane"] == StrategyLane.CORE_MOMENTUM
+    quality = service.plan_calls[0]["quality"]
+    assert quality.tier == "NOT_APPLICABLE"
+    assert quality.risk_multiplier == 1.0
+    assert result["candidates"][0]["quality_source"] == "NOT_APPLICABLE_ETF"
+    assert result["candidates"][0]["reason"] is None
 
 
 @pytest.mark.asyncio

@@ -168,11 +168,22 @@ class BatchRuntime:
         from scripts.shadow_report import create_shadow_report
 
         assert self.scheduler.calendar is not None
-        symbols = sorted(entry.symbol for entry in self.scheduler.universe)
+        universe = sorted(self.scheduler.universe, key=lambda entry: entry.symbol)
+        symbols = [entry.symbol for entry in universe]
+        quality_symbols = [
+            entry.symbol for entry in universe if entry.instrument_type == "EQUITY"
+        ]
+        skipped_instruments = [
+            {"symbol": entry.symbol, "instrument_type": entry.instrument_type}
+            for entry in universe
+            if entry.instrument_type != "EQUITY"
+        ]
         quality = await refresh_quality(
-            symbols,
+            quality_symbols,
             output_path=self.state_dir / "quality.csv",
             now=timestamp,
+            quality_source=self.cfg.quality_source,
+            skipped_instruments=skipped_instruments,
         )
         replay_path = await create_replay_report(
             days=5,

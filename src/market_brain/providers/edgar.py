@@ -11,7 +11,9 @@ from market_brain.providers.keyless_http import KeylessJsonClient
 from market_brain.providers.rate_limit import TokenBucketRateLimiter
 
 EDGAR_SOURCE_ID = "SEC_EDGAR"
-EDGAR_USER_AGENT = "market-brain/1.0 (github.com/githuber20202/market-brain)"
+EDGAR_USER_AGENT = (
+    "Market Brain shadow radar githuber20202@users.noreply.github.com"
+)
 EDGAR_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 EDGAR_FACTS_BASE_URL = "https://data.sec.gov/api/xbrl/companyfacts"
 EDGAR_REQUEST_INTERVAL_SECONDS = 0.15
@@ -99,4 +101,3 @@ class EdgarCompanyFacts:
 
     async def aclose(self) -> None:
         await self.http.aclose()
-

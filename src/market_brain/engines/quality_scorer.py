@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from market_brain.providers.yahoo_fundamentals import YahooFundamentalsSnapshot
 
 REVENUE_TAGS = (
     "Revenues",
@@ -32,7 +35,7 @@ class MetricScore:
 
 
 @dataclass(frozen=True, slots=True)
-class EdgarQualityScore:
+class QualityScore:
     symbol: str
     quality_score: int
     as_of: datetime
@@ -41,6 +44,9 @@ class EdgarQualityScore:
     metrics: dict[str, MetricScore]
     dilution_penalty: int
     missing_metrics: tuple[str, ...]
+
+
+EdgarQualityScore = QualityScore
 
 
 def score_companyfacts(
@@ -70,26 +76,117 @@ def score_companyfacts(
             _annual_series(facts, DILUTED_SHARES_TAGS, "shares")
         )
 
+    return _build_quality_score(
+        symbol=symbol,
+        as_of=timestamp,
+        source="EDGAR_AUTO",
+        revenue_growth=revenue_growth,
+        operating_margin=operating_margin,
+        leverage=leverage[0],
+        fcf_margin=fcf_margin,
+        dilution=dilution,
+        facts_as_of={
+            "revenue_growth_yoy": _latest_date(revenue),
+            "operating_margin": _latest_common_date(operating_income, revenue),
+            "leverage": leverage[1],
+            "fcf_margin": _latest_common_date(cfo, capex, revenue),
+        },
+    )
+
+
+def score_yahoo_fundamentals(
+    snapshot: YahooFundamentalsSnapshot,
+    *,
+    as_of: datetime,
+) -> QualityScore:
+    annual_revenue = _yahoo_series(snapshot, "annualTotalRevenue")
+    quarterly_revenue = _yahoo_series(snapshot, "quarterlyTotalRevenue")
+    annual_operating = _yahoo_series(snapshot, "annualOperatingIncome")
+    quarterly_operating = _yahoo_series(snapshot, "quarterlyOperatingIncome")
+    annual_debt = _yahoo_series(snapshot, "annualTotalDebt")
+    annual_cash = _yahoo_series(snapshot, "annualCashAndCashEquivalents")
+    annual_fcf = _yahoo_series(snapshot, "annualFreeCashFlow")
+    quarterly_fcf = _yahoo_series(snapshot, "quarterlyFreeCashFlow")
+    annual_shares = _yahoo_series(snapshot, "annualDilutedAverageShares")
+    quarterly_shares = _yahoo_series(snapshot, "quarterlyDilutedAverageShares")
+
+    revenue_growth = _yoy_growth(quarterly_revenue)
+    revenue_growth_series = quarterly_revenue
+    if revenue_growth is None:
+        revenue_growth = _annual_yoy_growth(annual_revenue)
+        revenue_growth_series = annual_revenue
+
+    operating_margin = _trailing_margin(quarterly_operating, quarterly_revenue)
+    operating_date = _latest_common_date(quarterly_operating, quarterly_revenue)
+    if operating_margin is None:
+        operating_margin = _latest_ratio(annual_operating, annual_revenue)
+        operating_date = _latest_common_date(annual_operating, annual_revenue)
+
+    fcf_margin = _trailing_margin(quarterly_fcf, quarterly_revenue)
+    fcf_date = _latest_common_date(quarterly_fcf, quarterly_revenue)
+    if fcf_margin is None:
+        fcf_margin = _latest_ratio(annual_fcf, annual_revenue)
+        fcf_date = _latest_common_date(annual_fcf, annual_revenue)
+
+    leverage, leverage_date = _yahoo_leverage(
+        annual_debt,
+        annual_cash,
+        annual_operating,
+    )
+    dilution = _yoy_growth(quarterly_shares)
+    if dilution is None:
+        dilution = _annual_yoy_growth(annual_shares)
+
+    return _build_quality_score(
+        symbol=snapshot.symbol,
+        as_of=_aware(as_of),
+        source="YAHOO_FUNDAMENTALS",
+        revenue_growth=revenue_growth,
+        operating_margin=operating_margin,
+        leverage=leverage,
+        fcf_margin=fcf_margin,
+        dilution=dilution,
+        facts_as_of={
+            "revenue_growth_yoy": _latest_date(revenue_growth_series),
+            "operating_margin": operating_date,
+            "leverage": leverage_date,
+            "fcf_margin": fcf_date,
+        },
+    )
+
+
+def _build_quality_score(
+    *,
+    symbol: str,
+    as_of: datetime,
+    source: str,
+    revenue_growth: float | None,
+    operating_margin: float | None,
+    leverage: float | None,
+    fcf_margin: float | None,
+    dilution: float | None,
+    facts_as_of: dict[str, str | None],
+) -> QualityScore:
     metrics = {
         "revenue_growth_yoy": MetricScore(
             revenue_growth,
             _higher_is_better(revenue_growth, (0.20, 0.10, 0.05, 0.0, -0.10)),
-            _latest_date(revenue),
+            facts_as_of.get("revenue_growth_yoy"),
         ),
         "operating_margin": MetricScore(
             operating_margin,
             _higher_is_better(operating_margin, (0.25, 0.15, 0.10, 0.05, 0.0)),
-            _latest_common_date(operating_income, revenue),
+            facts_as_of.get("operating_margin"),
         ),
         "leverage": MetricScore(
-            leverage[0],
-            _lower_is_better(leverage[0], (0.0, 1.0, 2.0, 3.0, 4.0)),
-            leverage[1],
+            leverage,
+            _lower_is_better(leverage, (0.0, 1.0, 2.0, 3.0, 4.0)),
+            facts_as_of.get("leverage"),
         ),
         "fcf_margin": MetricScore(
             fcf_margin,
             _higher_is_better(fcf_margin, (0.20, 0.15, 0.10, 0.05, 0.0)),
-            _latest_common_date(cfo, capex, revenue),
+            facts_as_of.get("fcf_margin"),
         ),
     }
     missing = [name for name, metric in metrics.items() if metric.value is None]
@@ -97,11 +194,11 @@ def score_companyfacts(
         missing.append("dilution_yoy")
     penalty = _dilution_penalty(dilution)
     total = max(0, min(100, sum(metric.points for metric in metrics.values()) - penalty))
-    return EdgarQualityScore(
+    return QualityScore(
         symbol=symbol.upper(),
         quality_score=total,
-        as_of=timestamp,
-        source="EDGAR_AUTO",
+        as_of=as_of,
+        source=source,
         partial=bool(missing),
         metrics=metrics,
         dilution_penalty=penalty,
@@ -176,6 +273,43 @@ def _fcf_margin(
     denominator = sum(revenue[day] for day in selected)
     free_cash_flow = sum(cfo[day] - capex[day] for day in selected)
     return free_cash_flow / denominator if denominator > 0 else None
+
+
+def _latest_ratio(
+    numerator: dict[date, float],
+    denominator: dict[date, float],
+) -> float | None:
+    common = sorted(set(numerator) & set(denominator))
+    if not common:
+        return None
+    day = common[-1]
+    return numerator[day] / denominator[day] if denominator[day] > 0 else None
+
+
+def _yahoo_series(
+    snapshot: YahooFundamentalsSnapshot,
+    metric: str,
+) -> dict[date, float]:
+    return {point.as_of: point.value for point in snapshot.series.get(metric, ())}
+
+
+def _yahoo_leverage(
+    debt: dict[date, float],
+    cash: dict[date, float],
+    operating_income: dict[date, float],
+) -> tuple[float | None, str | None]:
+    if not debt or not cash or not operating_income:
+        return None, None
+    debt_day = max(debt)
+    cash_day = max(cash)
+    operating_day = max(operating_income)
+    denominator = operating_income[operating_day]
+    if denominator <= 0:
+        return None, None
+    return (
+        (debt[debt_day] - cash[cash_day]) / denominator,
+        max(debt_day, cash_day, operating_day).isoformat(),
+    )
 
 
 def _leverage(

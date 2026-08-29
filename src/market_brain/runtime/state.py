@@ -93,7 +93,8 @@ async def activate_quality_from_state(
     else:
         try:
             records = load_manual_quality(source)
-            if any(record.source != "EDGAR_AUTO" for record in records.values()):
+            sources = {record.source for record in records.values()}
+            if not sources.issubset({"EDGAR_AUTO", "YAHOO_FUNDAMENTALS"}) or len(sources) > 1:
                 raise ValueError("QUALITY_STATE_SOURCE_INVALID")
             as_of_values = [_aware(record.as_of) for record in records.values()]
         except (OSError, KeyError, TypeError, ValueError) as exc:
@@ -121,7 +122,7 @@ async def activate_quality_from_state(
                 shutil.copyfile(source, target)
                 status = {
                     "status": "READY",
-                    "source": "EDGAR_AUTO",
+                    "source": next(iter(sources)),
                     "checked_at": timestamp.isoformat(),
                     "as_of": oldest.isoformat(),
                     "rows": len(records),

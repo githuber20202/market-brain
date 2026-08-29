@@ -1,0 +1,94 @@
+{
+  "timeseries": {
+    "result": [
+      {
+        "meta": {"symbol": ["FULL"], "type": ["annualTotalRevenue"]},
+        "annualTotalRevenue": [
+          {"asOfDate": "2024-12-31", "reportedValue": {"raw": 100.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 110.0}},
+          {"asOfDate": "2026-12-31", "reportedValue": {"raw": 132.0}}
+        ]
+      },
+      {
+        "meta": {"symbol": ["FULL"], "type": ["quarterlyTotalRevenue"]},
+        "quarterlyTotalRevenue": [
+          {"asOfDate": "2025-06-30", "reportedValue": {"raw": 25.0}},
+          {"asOfDate": "2025-09-30", "reportedValue": {"raw": 26.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 27.0}},
+          {"asOfDate": "2026-03-31", "reportedValue": {"raw": 28.0}},
+          {"asOfDate": "2026-06-30", "reportedValue": {"raw": 30.0}}
+        ]
+      },
+      {
+        "meta": {"symbol": ["FULL"], "type": ["annualOperatingIncome"]},
+        "annualOperatingIncome": [
+          {"asOfDate": "2024-12-31", "reportedValue": {"raw": 20.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 25.0}},
+          {"asOfDate": "2026-12-31", "reportedValue": {"raw": 33.0}}
+        ]
+      },
+      {
+        "meta": {"symbol": ["FULL"], "type": ["quarterlyOperatingIncome"]},
+        "quarterlyOperatingIncome": [
+          {"asOfDate": "2025-06-30", "reportedValue": {"raw": 6.0}},
+          {"asOfDate": "2025-09-30", "reportedValue": {"raw": 7.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 7.0}},
+          {"asOfDate": "2026-03-31", "reportedValue": {"raw": 8.0}},
+          {"asOfDate": "2026-06-30", "reportedValue": {"raw": 9.0}}
+        ]
+      },
+      {
+        "meta": {"symbol": ["FULL"], "type": ["annualTotalDebt"]},
+        "annualTotalDebt": [
+          {"asOfDate": "2024-12-31", "reportedValue": {"raw": 25.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 22.0}},
+          {"asOfDate": "2026-12-31", "reportedValue": {"raw": 20.0}}
+        ]
+      },
+      {
+        "meta": {"symbol": ["FULL"], "type": ["annualCashAndCashEquivalents"]},
+        "annualCashAndCashEquivalents": [
+          {"asOfDate": "2024-12-31", "reportedValue": {"raw": 3.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 4.0}},
+          {"asOfDate": "2026-12-31", "reportedValue": {"raw": 5.0}}
+        ]
+      },
+      {
+        "meta": {"symbol": ["FULL"], "type": ["annualFreeCashFlow"]},
+        "annualFreeCashFlow": [
+          {"asOfDate": "2024-12-31", "reportedValue": {"raw": 18.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 22.0}},
+          {"asOfDate": "2026-12-31", "reportedValue": {"raw": 27.0}}
+        ]
+      },
+      {
+        "meta": {"symbol": ["FULL"], "type": ["quarterlyFreeCashFlow"]},
+        "quarterlyFreeCashFlow": [
+          {"asOfDate": "2025-06-30", "reportedValue": {"raw": 5.0}},
+          {"asOfDate": "2025-09-30", "reportedValue": {"raw": 5.5}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 6.0}},
+          {"asOfDate": "2026-03-31", "reportedValue": {"raw": 6.5}},
+          {"asOfDate": "2026-06-30", "reportedValue": {"raw": 7.0}}
+        ]
+      },
+      {
+        "meta": {"symbol": ["FULL"], "type": ["annualDilutedAverageShares"]},
+        "annualDilutedAverageShares": [
+          {"asOfDate": "2024-12-31", "reportedValue": {"raw": 100.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 105.0}},
+          {"asOfDate": "2026-12-31", "reportedValue": {"raw": 115.0}}
+        ]
+      },
+      {
+        "meta": {"symbol": ["FULL"], "type": ["quarterlyDilutedAverageShares"]},
+        "quarterlyDilutedAverageShares": [
+          {"asOfDate": "2025-06-30", "reportedValue": {"raw": 103.0}},
+          {"asOfDate": "2025-09-30", "reportedValue": {"raw": 105.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 108.0}},
+          {"asOfDate": "2026-03-31", "reportedValue": {"raw": 112.0}},
+          {"asOfDate": "2026-06-30", "reportedValue": {"raw": 115.0}}
+        ]
+      }
+    ]
+  }
+}

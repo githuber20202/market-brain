@@ -30,13 +30,25 @@ A `SELL_NOW` decision requires:
 - a stored position passport;
 - a live deterministic exit condition such as stop breach, failed breakout below VWAP, or time-stop invalidation.
 
-## Slow Brain lite — SEC EDGAR quality
+## Slow Brain lite — documented fundamentals quality
 
-`MANUAL` ו־`EDGAR_AUTO` הם מקורות איכות מתועדים שמותרים ב־CORE lane. קובץ
-`state/quality.csv` נבנה מחדש בכל ריצת Weekly מנתוני SEC EDGAR פומביים; ריצת
+`MANUAL`, ‏`EDGAR_AUTO` ו־`YAHOO_FUNDAMENTALS` הם מקורות איכות מתועדים
+שמותרים ב־CORE lane. `QUALITY_SOURCE=yahoo` הוא ברירת המחדל בסביבת GitHub
+Actions, משום ש־SEC מחזיר `403` ל־GitHub-hosted runners; ‏`edgar` נשאר מסלול
+אופציונלי. קובץ `state/quality.csv` נבנה מחדש בכל ריצת Weekly; ריצת
 Radar מעתיקה אותו אל `data/quality.csv` רק כאשר גיל כל שורות `as_of` אינו עולה
 על 14 ימים. קובץ חסר או ישן אינו משמש לתכנון ומופיע בדיגסט כ־
 `QUALITY_MISSING` או `QUALITY_STALE`.
+
+במסלול EDGAR המקור הוא הדוחות הרשמיים ב־SEC. במסלול Yahoo המקור הוא endpoint
+ציבורי ללא מפתח שמציג עיבוד של נתוני הדוחות, ולא את הדוחות עצמם. ה־provenance
+נשמר כ־`YAHOO_FUNDAMENTALS`, ואין להציג אותו כמקור SEC רשמי. הכנסות, רווח
+תפעולי, חוב, מזומן, FCF ומספר מניות נלקחים מסדרות annual/quarterly; כאשר אין
+שמונה רבעונים לצמיחת YoY או לדילול, משתמשים בשתי נקודות annual האחרונות.
+
+ה־Universe מגדיר `instrument_type`. רק `EQUITY` נכנס לרענון איכות. `ETF`
+ו־`UNRESOLVED` מדולגים במפורש ואינם נספרים כנתון איכות חסר, משום שציון איכות
+חברה אינו חל עליהם.
 
 הציון דטרמיניסטי ומחושב מארבעה מדדים, 0–25 נקודות לכל מדד. נתון חסר מקבל 0
 במדד שלו ומסמן `partial=true`; אין השלמת ערכים משוערים.

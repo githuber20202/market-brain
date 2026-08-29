@@ -31,6 +31,9 @@ def _fixture(name: str) -> dict:
 
 @pytest.mark.asyncio
 async def test_edgar_provider_uses_policy_user_agent_rate_limit_and_cache() -> None:
+    assert EDGAR_USER_AGENT == (
+        "Market Brain shadow radar githuber20202@users.noreply.github.com"
+    )
     requests: list[httpx.Request] = []
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -238,5 +241,6 @@ def test_shadow_weekly_workflow_and_radar_quality_restore_are_configured() -> No
     assert "group: market-brain-shadow-state" in weekly
     assert "permissions:\n  contents: write\n  issues: write" in weekly
     assert "python -m market_brain.runtime.batch --mode weekly" in weekly
+    assert "QUALITY_SOURCE: yahoo" in weekly
     assert "market_brain.runtime.state persist" in weekly
     assert "market_brain.runtime.state activate-quality" in radar

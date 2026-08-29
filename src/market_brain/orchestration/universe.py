@@ -19,6 +19,7 @@ class UniverseEntry:
     symbol: str
     ranking_eligible: bool
     source_file: str
+    instrument_type: str = "EQUITY"
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,11 +113,19 @@ def load_universe(directory: Path) -> tuple[UniverseEntry, ...]:
                         f"UNIVERSE_DUPLICATE_SYMBOL={symbol}:{seen[symbol]}:{path.name}:{line_number}"
                     )
                 seen[symbol] = f"{path.name}:{line_number}"
+                instrument_type = str(
+                    row.get("instrument_type") or row.get("asset_type") or "EQUITY"
+                ).strip().upper()
+                if instrument_type not in {"EQUITY", "ETF", "UNRESOLVED"}:
+                    raise ValueError(
+                        f"UNIVERSE_INSTRUMENT_TYPE_INVALID={symbol}:{path.name}:{line_number}"
+                    )
                 entries.append(
                     UniverseEntry(
                         symbol=symbol,
                         ranking_eligible=_csv_bool(row.get("ranking_eligible"), default=True),
                         source_file=path.name,
+                        instrument_type=instrument_type,
                     )
                 )
     if not entries:
@@ -147,7 +156,7 @@ def load_manual_quality(path: Path) -> dict[str, ManualQuality]:
                 raise ValueError(f"QUALITY_SCORE_INVALID={symbol}:{line_number}")
             as_of = _parse_datetime(row.get("as_of", ""), f"QUALITY_AS_OF_INVALID={symbol}:{line_number}")
             source = str(row.get("source") or "MANUAL").strip().upper()
-            if source not in {"MANUAL", "EDGAR_AUTO"}:
+            if source not in {"MANUAL", "EDGAR_AUTO", "YAHOO_FUNDAMENTALS"}:
                 raise ValueError(f"QUALITY_SOURCE_INVALID={symbol}:{line_number}")
             partial = _csv_bool(row.get("partial"), default=False)
             records[symbol] = ManualQuality(symbol, score, as_of, source, partial)

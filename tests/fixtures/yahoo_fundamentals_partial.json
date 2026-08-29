@@ -1,0 +1,14 @@
+{
+  "timeseries": {
+    "result": [
+      {
+        "meta": {"symbol": ["PART"], "type": ["annualTotalRevenue"]},
+        "annualTotalRevenue": [
+          {"asOfDate": "2024-12-31", "reportedValue": {"raw": 100.0}},
+          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 105.0}},
+          {"asOfDate": "2026-12-31", "reportedValue": {"raw": 110.0}}
+        ]
+      }
+    ]
+  }
+}
