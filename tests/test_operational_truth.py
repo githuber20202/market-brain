@@ -31,7 +31,7 @@ def test_manifest_declares_how_every_remaining_config_is_loaded():
         assert loading[name]
 
 
-def test_readme_lists_real_api_and_not_removed_planned_endpoints():
+def test_readme_lists_real_modes_api_and_not_removed_planned_endpoints():
     readme = (ROOT / "README.md").read_text()
     for real in (
         "GET /health",
@@ -50,7 +50,10 @@ def test_readme_lists_real_api_and_not_removed_planned_endpoints():
         "/architecture/invariants",
     ):
         assert stale not in readme
-    assert "not declared production READY" in readme
+    assert "GitHub Actions keyless" in readme
+    assert "SEC EDGAR חסום" in readme
+    assert "אינו ייעוץ פיננסי" in readme
+    assert "READY" not in readme
 
 
 def test_release_manifest_cannot_claim_ready_or_old_fixed_test_count():
@@ -66,4 +69,3 @@ def test_compose_smoke_excludes_live_stream_worker():
     assert "up -d --build postgres nats api" in smoke
     assert "stream-worker" not in smoke
     assert "COMPOSE_SMOKE=PASS" in smoke
-

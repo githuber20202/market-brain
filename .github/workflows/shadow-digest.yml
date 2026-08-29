@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "20 20,21 * * 1-5"
   workflow_dispatch:
+    inputs:
+      force:
+        description: Bypass only the workflow time/session gate
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -21,7 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: gate
-        run: python scripts/batch_gate.py --mode digest
+        env:
+          FORCE_GATE: ${{ inputs.force || 'false' }}
+        run: |
+          args=()
+          if [[ "$FORCE_GATE" == "true" ]]; then args+=(--force); fi
+          python scripts/batch_gate.py --mode digest "${args[@]}"
 
   digest:
     needs: gate
@@ -74,4 +85,3 @@ jobs:
       - name: Print duration
         if: always()
         run: echo "BATCH_DURATION_SECONDS=$(($(date +%s)-BATCH_STARTED_AT))"
-

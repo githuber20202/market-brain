@@ -603,6 +603,12 @@ def test_batch_gate_selects_only_real_et_schedule(tmp_path):
     assert not should_run(
         "radar", datetime(2026, 9, 7, 13, 50, tzinfo=UTC), calendar
     )
+    assert should_run(
+        "radar",
+        datetime(2026, 8, 29, 13, 50, tzinfo=UTC),
+        calendar,
+        force=True,
+    )
 
 
 def test_shadow_workflows_have_exact_schedule_permissions_and_concurrency():
@@ -618,3 +624,6 @@ def test_shadow_workflows_have_exact_schedule_permissions_and_concurrency():
         assert "issues: write" in workflow
         assert "secrets." not in workflow
         assert "BATCH_DURATION_SECONDS" in workflow
+        assert "force:" in workflow
+        assert "args+=(--force)" in workflow
+        assert "FORCE_GATE" in workflow

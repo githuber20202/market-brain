@@ -82,6 +82,13 @@ Radar מעתיקה אותו אל `data/quality.csv` רק כאשר גיל כל ש
 מציג `plan_rejections` לפי reason. הרצפות מסננות רעש בלבד; הן אינן משנות את
 גאומטריית `entry=OR high`, ‏`stop=retest low`, ‏`TP1=1.5R`, ‏`TP2=2R`.
 
+## Intraday bar provenance label
+
+השדה הפנימי `source="SIP"` ב־`intraday_bars` מציין נרות מאושרים מהספק שמוגדר
+למסלול ההיסטורי, ולא בהכרח מוצר Alpaca SIP. במצב `keyless_delayed` הנרות מגיעים
+מ־Yahoo; במצב Alpaca הם מגיעים מ־SIP בהתאם למגבלת הפיגור. ה־snapshot שומר בנוסף
+את `source_id`, ‏`fetched_at` ו־`delay_minutes`, והם המקור המדויק ל־provenance.
+
 ## State machines
 
 Candidate:

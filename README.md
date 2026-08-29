@@ -1,44 +1,51 @@
-# MARKET BRAIN V4 — Brokerless Advisory Runtime
+# Market Brain
 
-Market Brain runs in Shadow mode using delayed public market data. It produces deterministic advisory plans and alerts, never executes, modifies, or cancels broker orders, and is not financial advice.
+Market Brain הוא רדאר שוק brokerless שפועל כברירת מחדל ב־Shadow mode עם נתונים
+ציבוריים מושהים. הוא יוצר תוכניות והתראות דטרמיניסטיות לצורכי מדידה בלבד, אינו
+מבצע, משנה או מבטל פקודות אצל ברוקר, ואינו ייעוץ פיננסי.
 
-## Current status
+## מצב ברירת המחדל — GitHub Actions keyless
 
-This repository is CI-validated engineering software and is **not declared production READY**. Production/advisory readiness additionally requires an always-on deployment, credentialed live market-data operation, configured alert delivery, current reconciliation, and multi-session shadow validation.
+ה־workflows המתוזמנים משתמשים ב־Yahoo לנתוני intraday, daily ו־fundamentals ללא
+מפתח. Postgres זמני משוחזר בתחילת כל job מהענף ה־orphan בשם `shadow-state`, עובר
+`replay_check`, ובסיום נשמר חזרה כ־dump יחיד עם snapshots ודוחות. התראות נכתבות
+ל־GitHub Issue יומי עם label בשם `shadow`; אין Telegram, חשבון Alpaca או שרת
+שנדרשים להפעלה הזו.
 
-## Runtime components
+ממומשים בפועל:
 
-- FastAPI advisory API.
-- PostgreSQL event/materialized state store, with in-memory development fallback.
-- Alpaca market-data adapters.
-- NATS market-event transport.
-- Resilient stream-worker with reconnect/staleness handling and throttled status writes.
-- Cached PositionMonitor with persistent `triggered_at`, deterministic exit evaluation, and alert dedupe.
-- Webhook/Telegram alert dispatcher when configured.
+- טעינה ואימות של Universe, כולל סיווג `EQUITY`, ‏`ETF` ו־`UNRESOLVED`;
+- discovery מתוזמן, דירוג, Opening Range, ‏trigger ו־retest בצד השרת;
+- רצפות גאומטריה משותפות ל־Radar ול־Replay;
+- תוכניות, `BUY_NOW` וטריידי Shadow עם event sourcing ו־state replay;
+- Replay ודוחות Shadow שבועיים;
+- איכות דטרמיניסטית מ־Yahoo Fundamentals עם provenance ו־partial flags;
+- batch runtime ב־GitHub Actions, ‏GitHub Issues alert sink ו־state מתמיד;
+- Preflight, מסלול Docker Compose ובדיקת ARM64 עבור מצב השרת האופציונלי.
 
-## Runtime-authoritative configuration
+מגבלות ידועות:
 
-`config/` contains only files consumed during startup/runtime:
+- הנתונים הציבוריים מושהים והריצה מתבצעת כל עשר דקות; אין ניטור בזמן אמת ואין
+  `SELL_NOW` תוך שניות במצב keyless;
+- SEC EDGAR חסום מ־GitHub-hosted runners ב־HTTP 403. הקוד נשאר אופציונלי, אך
+  ברירת המחדל המוכחת היא `QUALITY_SOURCE=yahoo`;
+- אין operator console;
+- המערכת מיועדת ל־Shadow בלבד ואינה שולחת פקודות ביצוע.
 
-- `00-V4_MANIFEST.json` — loaded by `market_brain.settings`; startup fails closed if the config set drifts.
-- `02-RISK_ENVELOPE.json` — the single source for trade-risk, daily-loss, position-notional, concurrent-position, and automatic-execution defaults.
-- `schema.sql` — validated by `market_brain.settings` at startup and mounted into PostgreSQL initialization by Docker Compose.
+## מצב אופציונלי — Oracle + Alpaca
 
-There is no `05-RUNTIME_CONFIG.json`. Environment variables may override Settings fields, including `MAX_POSITION_NOTIONAL_PCT` and `MAX_CONCURRENT_POSITIONS`; the example env file intentionally does not duplicate their numeric defaults.
+הקוד כולל גם API רציף, Postgres, ‏NATS, stream worker, נתוני Alpaca ו־Telegram.
+מצב זה דורש שרת וחשבונות חיצוניים ולכן אינו ברירת המחדל ואינו נדרש להפעלת
+GitHub Actions keyless. גם בו execution וגישת חשבון ישירה חסומים בקונפיגורציה.
 
-## Risk behavior
+## נקודות כניסה
 
-New system-managed entries are constrained by the active risk envelope. The same Settings values are used by sizing, activation, trigger advisory sizing, and confirmed-fill hard guards. Manual/imported holdings remain truth even when the user already holds more positions than the entry envelope permits; that state blocks additional managed entries rather than hiding holdings.
+- `python -m market_brain.runtime.batch --mode radar|digest|weekly`
+- `docs/SHADOW_RUNBOOK.md` — הפעלה, צפייה בדוחות וטיפול בתקלות;
+- `docs/GITHUB_ACTIONS_BATCH.md` — cadence, ‏state ותקציב הריצות;
+- `docs/01-V4_SOURCE_OF_TRUTH.md` — כללי ההחלטה וה־state machines.
 
-## Plan construction
-
-`POST /plans` fetches price/bar data server-side. Opening Range uses 1–5 consecutive closed one-minute bars beginning at 09:30 ET. Missing/non-consecutive bars fail closed. `TRIGGER_HIT` is advisory only; `POST /plans/{plan_id}/activate` is the separate deterministic activation step.
-
-## Operating loop
-
-`TRIGGER_HIT` / `BUY_NOW` → enter the order and protective stop manually in the broker → `POST /fills/confirm` with `stop_order_placed=true` → monitor advisory alerts → `POST /positions/{position_id}/exit` after a user-confirmed exit → `POST /reconcile` daily.
-
-## Actual API endpoints
+ה־API של מצב השרת האופציונלי כולל:
 
 - `GET /health`
 - `GET /policy`
@@ -58,27 +65,14 @@ New system-managed entries are constrained by the active risk envelope. The same
 - `POST /positions/{position_id}/evaluate`
 - `POST /positions/{position_id}/exit`
 
-## Not wired yet
-
-- `data/universe/03-WATCH_UNIVERSE.csv` and `data/universe/04-MARKET_CORE_UNIVERSE.csv` are retained reference universes and are **not loaded by runtime yet**.
-
-## Not implemented
-
-- Slow Brain / fundamentals pipeline.
-- Backtest framework.
-- Operator console.
-- Universe loader.
-- Server-derived retest validation; `retest_valid` is still manual input to `POST /plans/{plan_id}/activate`.
-
-## Validation
+## ולידציה
 
 ```bash
 python -m pytest -q
 python -m pytest -m postgres -q --strict-markers
 python scripts/validate_runtime.py
+python scripts/replay_smoke.py --fixture tests/fixtures/replay_bars.json
 cp .env.example .env
 docker compose config -q
 ./scripts/compose_smoke.sh
 ```
-
-The compose smoke starts a fresh isolated PostgreSQL + NATS + API stack, waits for `/health`, confirms account/execution access remain disabled, verifies clean replay, and tears the stack down. It does not start the live stream-worker.
