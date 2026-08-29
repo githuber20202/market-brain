@@ -1,0 +1,21 @@
+name: Dispatch Task 25 Weekly
+
+on:
+  push:
+    branches: [task25-edgar-quality-work]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    if: github.event.head_commit.message == 'ci: dispatch Task 25 weekly'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Shadow Weekly on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run shadow-weekly.yml --ref main --repo "$GITHUB_REPOSITORY"
+          echo "WEEKLY_DISPATCH=PASS"
