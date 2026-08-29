@@ -3,14 +3,12 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 
 import nats
 from nats.errors import Error as NatsError
 
 from market_brain.domain.models import AlertRecord, PlanStatus, PositionAction
-from market_brain.engines.wallet import size_from_wallet
 from market_brain.ledger.events import LedgerEvent
 from market_brain.settings import Settings, settings
 
@@ -272,60 +270,12 @@ class PositionMonitor:
                 or not (previous < plan.entry_trigger <= last)
             ):
                 continue
-            wallet = await self.store.get_wallet()
-            quantity = 0
-            if wallet is not None:
-                sizing = size_from_wallet(
-                    wallet,
-                    plan,
-                    max_trade_risk_pct=self.cfg.max_trade_risk_pct,
-                    max_daily_loss_pct=self.cfg.max_daily_loss_pct,
-                    max_position_notional_pct=self.cfg.max_position_notional_pct,
-                )
-                if sizing.allowed:
-                    quantity = sizing.quantity
-            ticket = {
-                "symbol": plan.symbol,
-                "side": "BUY",
-                "quantity": quantity,
-                "limit_price": plan.entry_zone_high,
-                "stop_price": plan.stop,
-                "tp1": plan.tp1,
-                "tp2": plan.tp2,
-                "expires_at": plan.expires_at.isoformat(),
-                "text": (
-                    f"TRIGGER {plan.symbol} {plan.entry_trigger:.2f} | "
-                    f"LMT {plan.entry_zone_high:.2f} STOP {plan.stop:.2f} | "
-                    f"TP1 {plan.tp1:.2f} TP2 {plan.tp2:.2f} | QTY {quantity}"
-                ),
-            }
-            alert = AlertRecord(
-                kind="TRIGGER_HIT",
-                payload={
-                    "action": "TRIGGER_HIT",
-                    "plan_id": plan.plan_id,
-                    "symbol": plan.symbol,
-                    "last": last,
-                    "order_ticket": ticket,
-                    "text": ticket["text"],
-                },
+            await self.service.record_trigger_hit(
+                plan.plan_id,
+                last=last,
+                triggered_at=now,
+                source="POSITION_MONITOR",
             )
-            async with self.store.transaction():
-                plan.triggered_at = now
-                await self.store.save_plan(plan)
-                await self.store.save_alert(alert)
-                await self.store.append(
-                    LedgerEvent(
-                        "TRIGGER_HIT",
-                        plan.plan_id,
-                        {
-                            "alert_id": alert.alert_id,
-                            "order_ticket": ticket,
-                            "last": last,
-                            "plan": asdict(plan),
-                        },
-                    )
-                )
             self._plans_by_symbol[symbol] = tuple(
                 row for row in self._plans_by_symbol.get(symbol, ())
                 if row.plan_id != plan.plan_id
@@ -429,4 +379,3 @@ class PositionMonitor:
 
     async def stop(self) -> None:
         self._stop.set()
-

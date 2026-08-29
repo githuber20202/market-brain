@@ -94,6 +94,31 @@ class ShadowEvaluator:
         )
         return evaluated + count
 
+    async def evaluate_now(self, *, now: datetime | None = None) -> int:
+        """Evaluate all newly stored bars regardless of cron start minute."""
+        if self.cfg.run_mode != "shadow":
+            return 0
+        if self.calendar is None:
+            raise RuntimeError("SHADOW_EVALUATOR_NOT_VALIDATED")
+        timestamp = _aware(now or self.clock()).astimezone(EASTERN)
+        evaluated = await self.catch_up(now=timestamp)
+        session = self.calendar.session_for(timestamp.date())
+        if session is None:
+            return evaluated
+        end_slot = self._end_slot(session.closes_at)
+        if timestamp >= end_slot:
+            return evaluated + await self._finalize_session(
+                session.session_date,
+                end_slot=end_slot,
+                now=timestamp,
+            )
+        if timestamp < session.opens_at:
+            return evaluated
+        return evaluated + await self.evaluate_session(
+            session.session_date,
+            finalize=False,
+        )
+
     async def catch_up(self, *, now: datetime | None = None) -> int:
         if self.cfg.run_mode != "shadow":
             return 0
@@ -300,7 +325,12 @@ class ShadowEvaluator:
                 )
 
     def _end_slot(self, closes_at: datetime) -> datetime:
-        delay = 5 * ceil(self.cfg.historical_lag_minutes / 5)
+        lag_minutes = (
+            self.cfg.keyless_confirmed_lag_minutes
+            if self.cfg.data_plan == "keyless_delayed"
+            else self.cfg.historical_lag_minutes
+        )
+        delay = 5 * ceil(lag_minutes / 5)
         return closes_at + timedelta(minutes=delay)
 
     async def evaluate_session(self, session_date: date, *, finalize: bool = False) -> int:

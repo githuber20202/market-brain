@@ -197,6 +197,27 @@ async def test_fake_clock_fires_at_0950_once_and_creates_digest(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+async def test_batch_run_slot_uses_real_now_and_missed_slot_is_persisted(tmp_path: Path):
+    scheduler, service, _screener = _scheduler(tmp_path, [_row("AAPL")])
+    slot = datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    actual = datetime(2026, 8, 28, 9, 58, tzinfo=EASTERN)
+
+    result = await scheduler.run_slot(slot, now=actual)
+
+    assert result is not None and result["status"] == "COMPLETED"
+    assert service.plan_calls[0]["now"] == actual.astimezone(ZoneInfo("UTC"))
+
+    missed_slot = datetime(2026, 8, 28, 10, 20, tzinfo=EASTERN)
+    missed = await scheduler.mark_missed(
+        missed_slot,
+        now=datetime(2026, 8, 28, 10, 27, tzinfo=EASTERN),
+    )
+    assert missed["status"] == "MISSED"
+    assert service.store.events[-1].event_type == "RADAR_RUN"
+    assert service.store.events[-1].payload["status"] == "MISSED"
+
+
+@pytest.mark.asyncio
 async def test_weekend_and_holiday_make_no_provider_calls(tmp_path: Path):
     scheduler, _service, screener = _scheduler(tmp_path, [_row("AAPL")])
     weekend = datetime(2026, 8, 29, 9, 50, tzinfo=EASTERN)

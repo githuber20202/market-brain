@@ -58,6 +58,18 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     await store.set_runtime_status("stream_connected", True)
     await store.set_runtime_status("stream_connected_since", connected_since.isoformat())
     await store.set_runtime_status("stream_last_message_at", (now - timedelta(seconds=2)).isoformat())
+    await store.set_runtime_status(
+        "shadow_wallet",
+        {"mode": "virtual", "source": "SHADOW_VIRTUAL"},
+    )
+    await store.append(
+        LedgerEvent(
+            "RADAR_RUN",
+            "radar:2026-08-28:1020",
+            {"status": "MISSED"},
+            occurred_at=now,
+        )
+    )
     shadow_trade = ShadowTrade(
         trade_id="digest-shadow",
         plan_id="digest-shadow-plan",
@@ -95,6 +107,9 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     assert alert.payload["shadow"]["today"]["signals"] == 2
     assert alert.payload["shadow"]["today"]["trades"] == 1
     assert alert.payload["shadow"]["today"]["unfinalized"] == 1
+    assert alert.payload["wallet"] == "virtual"
+    assert alert.payload["data_availability"]["slots_missed"] == 1
+    assert "Wallet: virtual" in alert.payload["text"]
     assert "Shadow today:" in alert.payload["text"]
     assert "Shadow by setup: {'" not in alert.payload["text"]
     assert (

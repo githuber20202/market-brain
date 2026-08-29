@@ -44,6 +44,7 @@ from market_brain.engines.liquidity import (
 from market_brain.engines.plan import build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.ranking import score_features
+from market_brain.engines.wallet import size_from_wallet
 from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import EventStore, InMemoryEventStore
 from market_brain.providers.base import DataUnavailable, MarketDataProvider
@@ -86,6 +87,8 @@ class DecisionService:
         self,
         plan: TradePlan,
         decision: ActivationDecision,
+        *,
+        now: datetime | None = None,
     ) -> ShadowTrade | None:
         if self.cfg.run_mode != "shadow":
             return None
@@ -94,7 +97,7 @@ class DecisionService:
             return existing
         if plan.stop is None or plan.tp1 is None or plan.tp2 is None:
             raise RuntimeError("SHADOW_LEVELS_MISSING")
-        opened_at = datetime.now(UTC)
+        opened_at = now or datetime.now(UTC)
         trade = ShadowTrade(
             trade_id=str(uuid4()),
             plan_id=plan.plan_id,
@@ -121,12 +124,29 @@ class DecisionService:
         return trade
 
     @transactional
-    async def seed_wallet(self, capital_base: float, cash_available: float) -> WalletState:
+    async def seed_wallet(
+        self,
+        capital_base: float,
+        cash_available: float,
+        *,
+        source: str | None = None,
+        now: datetime | None = None,
+    ) -> WalletState:
         if capital_base <= 0 or cash_available < 0 or cash_available > capital_base * 2:
             raise ValueError("INVALID_WALLET_SEED")
-        wallet = WalletState(capital_base=capital_base, cash_available=cash_available)
+        timestamp = now or datetime.now(UTC)
+        wallet = WalletState(
+            capital_base=capital_base,
+            cash_available=cash_available,
+            as_of=timestamp,
+        )
         await self.store.save_wallet(wallet)
-        await self.store.append(LedgerEvent("WALLET_SEEDED", "wallet", asdict(wallet)))
+        payload = asdict(wallet)
+        if source is not None:
+            payload["source"] = source
+        await self.store.append(
+            LedgerEvent("WALLET_SEEDED", "wallet", payload, occurred_at=timestamp)
+        )
         return wallet
 
     @transactional
@@ -570,7 +590,12 @@ class DecisionService:
         local = timestamp.astimezone(eastern)
         session_start_local = local.replace(hour=9, minute=30, second=0, microsecond=0)
         session_start = session_start_local.astimezone(UTC)
-        lag_cutoff = timestamp - timedelta(minutes=self.cfg.historical_lag_minutes)
+        lag_minutes = (
+            self.cfg.keyless_confirmed_lag_minutes
+            if self.cfg.data_plan == "keyless_delayed"
+            else self.cfg.historical_lag_minutes
+        )
+        lag_cutoff = timestamp - timedelta(minutes=lag_minutes)
         confirmed_through = lag_cutoff.replace(second=0, microsecond=0)
         if confirmed_through <= session_start:
             return {}
@@ -714,6 +739,7 @@ class DecisionService:
             lane,
             structure_score,
             rr_score,
+            now=now,
         )
 
     async def prepare_plan_market_data(
@@ -789,6 +815,8 @@ class DecisionService:
         lane: StrategyLane,
         structure_score: float,
         rr_score: float,
+        *,
+        now: datetime | None = None,
     ) -> tuple[TradePlan, dict]:
         features = compute_features(snapshot)
         score = score_features(
@@ -799,8 +827,13 @@ class DecisionService:
             score=score,
             quality=quality,
             lane=lane,
-            plan_ttl_seconds=self.cfg.plan_ttl_seconds,
+            plan_ttl_seconds=(
+                self.cfg.keyless_plan_ttl_seconds
+                if self.cfg.data_plan == "keyless_delayed"
+                else self.cfg.plan_ttl_seconds
+            ),
             speculative_enabled=self.cfg.strategy_speculative_enabled,
+            now=now,
         )
         await self.store.save_plan(plan)
         await self.store.append(
@@ -817,8 +850,12 @@ class DecisionService:
         return plan, {"features": asdict(features), "score": asdict(score)}
 
     @transactional
-    async def sweep_expired(self) -> dict[str, int]:
-        now = datetime.now(UTC)
+    async def sweep_expired(
+        self,
+        *,
+        now: datetime | None = None,
+    ) -> dict[str, int]:
+        timestamp = now or datetime.now(UTC)
         expired_plans = 0
         released_reservations = 0
 
@@ -829,11 +866,15 @@ class DecisionService:
                 PlanStatus.EXPIRED,
             }:
                 continue
-            if now <= plan.expires_at:
+            if timestamp <= plan.expires_at:
                 continue
             if (
                 await self.store.get_reservation(plan.plan_id) is not None
-                and await self.release_reservation(plan.plan_id, reason="PLAN_EXPIRED")
+                and await self.release_reservation(
+                    plan.plan_id,
+                    reason="PLAN_EXPIRED",
+                    now=timestamp,
+                )
             ):
                 released_reservations += 1
             plan.status = PlanStatus.EXPIRED
@@ -849,9 +890,11 @@ class DecisionService:
 
         for reservation in await self.store.list_reservations():
             if (
-                now > reservation.expires_at
+                timestamp > reservation.expires_at
                 and await self.release_reservation(
-                    reservation.plan_id, reason="RESERVATION_EXPIRED"
+                    reservation.plan_id,
+                    reason="RESERVATION_EXPIRED",
+                    now=timestamp,
                 )
             ):
                 released_reservations += 1
@@ -885,12 +928,96 @@ class DecisionService:
         await self.store.save_alert(alert)
         return alert
 
-    async def activate(self, plan_id: str) -> ActivationDecision:
-        await self.sweep_expired()
+    @transactional
+    async def record_trigger_hit(
+        self,
+        plan_id: str,
+        *,
+        last: float,
+        triggered_at: datetime,
+        source: str,
+    ) -> bool:
+        plan = await self.store.get_plan(plan_id)
+        timestamp = triggered_at.astimezone(UTC)
+        if (
+            plan is None
+            or plan.status != PlanStatus.ACTIVE
+            or plan.triggered_at is not None
+            or timestamp > plan.expires_at
+        ):
+            return False
+        wallet = await self.store.get_wallet()
+        quantity = 0
+        if wallet is not None:
+            sizing = size_from_wallet(
+                wallet,
+                plan,
+                max_trade_risk_pct=self.cfg.max_trade_risk_pct,
+                max_daily_loss_pct=self.cfg.max_daily_loss_pct,
+                max_position_notional_pct=self.cfg.max_position_notional_pct,
+            )
+            if sizing.allowed:
+                quantity = sizing.quantity
+        ticket = {
+            "symbol": plan.symbol,
+            "side": "BUY",
+            "quantity": quantity,
+            "limit_price": plan.entry_zone_high,
+            "stop_price": plan.stop,
+            "tp1": plan.tp1,
+            "tp2": plan.tp2,
+            "expires_at": plan.expires_at.isoformat(),
+            "text": (
+                f"TRIGGER {plan.symbol} {plan.entry_trigger:.2f} | "
+                f"LMT {plan.entry_zone_high:.2f} STOP {plan.stop:.2f} | "
+                f"TP1 {plan.tp1:.2f} TP2 {plan.tp2:.2f} | QTY {quantity}"
+            ),
+        }
+        alert = AlertRecord(
+            kind="TRIGGER_HIT",
+            payload={
+                "action": "TRIGGER_HIT",
+                "plan_id": plan.plan_id,
+                "symbol": plan.symbol,
+                "last": last,
+                "source": source,
+                "order_ticket": ticket,
+                "text": ticket["text"],
+            },
+            created_at=timestamp,
+        )
+        plan.triggered_at = timestamp
+        await self.store.save_plan(plan)
+        await self.store.save_alert(alert)
+        await self.store.append(
+            LedgerEvent(
+                "TRIGGER_HIT",
+                plan.plan_id,
+                {
+                    "alert_id": alert.alert_id,
+                    "order_ticket": ticket,
+                    "last": last,
+                    "source": source,
+                    "plan": asdict(plan),
+                },
+                occurred_at=timestamp,
+            )
+        )
+        await self._notify_state_change(plan.symbol)
+        return True
+
+    async def activate(
+        self,
+        plan_id: str,
+        *,
+        now: datetime | None = None,
+    ) -> ActivationDecision:
+        timestamp = now or datetime.now(UTC)
+        await self.sweep_expired(now=timestamp)
         plan = await self.store.get_plan(plan_id)
         if plan is None:
             return ActivationDecision(plan_id, "UNKNOWN", SignalState.INVALID, ["PLAN_NOT_FOUND"])
-        if plan.status == PlanStatus.EXPIRED or datetime.now(UTC) > plan.expires_at:
+        if plan.status == PlanStatus.EXPIRED or timestamp > plan.expires_at:
             await self._notify_state_change(plan.symbol)
             return ActivationDecision(plan_id, plan.symbol, SignalState.EXPIRED, ["PLAN_EXPIRED"])
         if plan.status == PlanStatus.FILLED:
@@ -902,8 +1029,14 @@ class DecisionService:
             raise RuntimeError("MARKET_DATA_PROVIDER_NOT_CONFIGURED")
 
         snapshot = await self.market_data.snapshot(plan.symbol, decision=True)
-        liquidity_reasons = await self._market_liquidity_reasons(snapshot)
-        retest_valid, retest_reasons, retest_state = await self.server_retest(plan)
+        liquidity_reasons = await self._market_liquidity_reasons(
+            snapshot,
+            now=timestamp,
+        )
+        retest_valid, retest_reasons, retest_state = await self.server_retest(
+            plan,
+            now=timestamp,
+        )
         return await self._activate_with_context(
             plan_id,
             snapshot=snapshot,
@@ -911,6 +1044,7 @@ class DecisionService:
             retest_valid=retest_valid,
             retest_reasons=retest_reasons,
             retest_state=retest_state,
+            now=timestamp,
         )
 
     @transactional
@@ -923,13 +1057,19 @@ class DecisionService:
         retest_valid: bool,
         retest_reasons: list[str],
         retest_state: str,
+        now: datetime | None = None,
     ) -> ActivationDecision:
+        timestamp = now or datetime.now(UTC)
         plan = await self.store.get_plan(plan_id)
         if plan is None:
             return ActivationDecision(plan_id, "UNKNOWN", SignalState.INVALID, ["PLAN_NOT_FOUND"])
-        if plan.status == PlanStatus.EXPIRED or datetime.now(UTC) > plan.expires_at:
+        if plan.status == PlanStatus.EXPIRED or timestamp > plan.expires_at:
             if await self.store.get_reservation(plan_id) is not None:
-                await self.release_reservation(plan_id, reason="PLAN_EXPIRED")
+                await self.release_reservation(
+                    plan_id,
+                    reason="PLAN_EXPIRED",
+                    now=timestamp,
+                )
             plan.status = PlanStatus.EXPIRED
             await self.store.save_plan(plan)
             await self._notify_state_change(plan.symbol)
@@ -947,7 +1087,11 @@ class DecisionService:
         same_plan_open = any(row.plan_id == plan_id for row in open_positions)
         if len(open_positions) >= self.cfg.max_concurrent_positions and not same_plan_open:
             if await self.store.get_reservation(plan_id) is not None:
-                await self.release_reservation(plan_id, reason="MAX_CONCURRENT_POSITIONS_REACHED")
+                await self.release_reservation(
+                    plan_id,
+                    reason="MAX_CONCURRENT_POSITIONS_REACHED",
+                    now=timestamp,
+                )
             return ActivationDecision(
                 plan_id, plan.symbol, SignalState.WATCH, ["MAX_CONCURRENT_POSITIONS_REACHED"]
             )
@@ -956,7 +1100,7 @@ class DecisionService:
         common_reasons = list(dict.fromkeys([*liquidity_reasons, *retest_reasons]))
         existing = await self.store.get_reservation(plan_id)
         if existing is not None:
-            if datetime.now(UTC) <= existing.expires_at:
+            if timestamp <= existing.expires_at:
                 if not retest_valid or (
                     (snapshot.source_id == "ALPACA_IEX" or _is_keyless_source(snapshot.source_id))
                     and not snapshot.authoritative
@@ -1041,10 +1185,14 @@ class DecisionService:
                         },
                     )
                 )
-                await self._open_shadow_trade(plan, decision)
+                await self._open_shadow_trade(plan, decision, now=timestamp)
                 await self._notify_state_change(plan.symbol)
                 return decision
-            await self.release_reservation(plan_id, reason="RESERVATION_EXPIRED")
+            await self.release_reservation(
+                plan_id,
+                reason="RESERVATION_EXPIRED",
+                now=timestamp,
+            )
             wallet = await self.store.get_wallet()
             assert wallet is not None
 
@@ -1062,6 +1210,7 @@ class DecisionService:
             max_trade_risk_pct=self.cfg.max_trade_risk_pct,
             max_daily_loss_pct=self.cfg.max_daily_loss_pct,
             max_position_notional_pct=self.cfg.max_position_notional_pct,
+            now=timestamp,
         )
         decision.reasons = list(dict.fromkeys([*common_reasons, *decision.reasons]))
         event_payload = asdict(decision)
@@ -1083,12 +1232,12 @@ class DecisionService:
                 quantity=decision.quantity,
                 reserved_cash=round(cash, 2),
                 reserved_risk=round(risk, 2),
-                expires_at=datetime.now(UTC) + timedelta(seconds=self.cfg.reservation_ttl_seconds),
+                expires_at=timestamp + timedelta(seconds=self.cfg.reservation_ttl_seconds),
             )
             wallet.reserved_cash += reservation.reserved_cash
             wallet.open_risk += reservation.reserved_risk
             wallet.version += 1
-            wallet.as_of = datetime.now(UTC)
+            wallet.as_of = timestamp
             plan.status = PlanStatus.RESERVED
             await self.store.save_wallet(wallet)
             await self.store.save_reservation(reservation)
@@ -1128,14 +1277,19 @@ class DecisionService:
                     },
                 )
             )
-            await self._open_shadow_trade(plan, decision)
+            await self._open_shadow_trade(plan, decision, now=timestamp)
         await self._notify_state_change(plan.symbol)
         return decision
 
     @transactional
     async def release_reservation(
-        self, plan_id: str, *, reason: str = "USER_RELEASED"
+        self,
+        plan_id: str,
+        *,
+        reason: str = "USER_RELEASED",
+        now: datetime | None = None,
     ) -> bool:
+        timestamp = now or datetime.now(UTC)
         reservation = await self.store.get_reservation(plan_id)
         wallet = await self.store.get_wallet()
         plan = await self.store.get_plan(plan_id)
@@ -1146,7 +1300,7 @@ class DecisionService:
         )
         wallet.open_risk = max(0.0, wallet.open_risk - reservation.reserved_risk)
         wallet.version += 1
-        wallet.as_of = datetime.now(UTC)
+        wallet.as_of = timestamp
         if plan is not None and plan.status == PlanStatus.RESERVED:
             partial_position = next(
                 (

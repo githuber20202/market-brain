@@ -316,7 +316,7 @@ async def test_shadow_missing_bars_backfills_once_then_marks_pending(tmp_path):
 
     assert await evaluator.run_pending(now=now) == 0
     assert await evaluator.run_pending(now=now + timedelta(minutes=1)) == 0
-    assert calls == [([trade.symbol], datetime(2026, 8, 28, 20, 20, tzinfo=UTC))]
+    assert calls == [([trade.symbol], datetime(2026, 8, 28, 20, 5, tzinfo=UTC))]
     pending = await store.get_runtime_status_key(
         f"shadow_finalize_pending:{trade.plan_id}"
     )

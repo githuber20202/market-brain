@@ -2,7 +2,7 @@ name: Shadow Radar
 
 on:
   schedule:
-    - cron: "20,50 13-19 * * 1-5"
+    - cron: "*/10 13-20 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -74,4 +74,3 @@ jobs:
       - name: Print duration
         if: always()
         run: echo "BATCH_DURATION_SECONDS=$(($(date +%s)-BATCH_STARTED_AT))"
-

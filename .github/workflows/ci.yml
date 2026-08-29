@@ -72,10 +72,18 @@ jobs:
           DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
         run: |
           psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f config/schema.sql
+          python scripts/seed_batch_smoke.py \
+            --dsn "$POSTGRES_DSN" \
+            --created-at 2026-08-28T13:34:00+00:00
           python -m market_brain.runtime.batch \
             --mode radar \
             --fixtures tests/fixtures \
-            --now 2026-08-28T13:50:00+00:00
+            --fixture-profile batch-plan-watch \
+            --now 2026-08-28T13:50:00+00:00 | tee /tmp/batch-smoke.log
+          grep -q '"buy_now": 1' /tmp/batch-smoke.log
+          grep -q '"shadow_trades": 1' /tmp/batch-smoke.log
+          echo "BUY_NOW=1"
+          echo "SHADOW_TRADES=1"
           pg_dump --format=custom --no-owner --no-privileges \
             --file /tmp/market-batch.dump "$POSTGRES_DSN"
           psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 \

@@ -50,6 +50,13 @@ class DailyDigest:
         ]
         positions.sort(key=lambda position: (position.symbol, position.position_id))
         runtime = await self.store.get_runtime_status()
+        wallet_status = runtime.get("shadow_wallet")
+        wallet_mode = (
+            "virtual"
+            if isinstance(wallet_status, dict)
+            and wallet_status.get("source") == "SHADOW_VIRTUAL"
+            else "unseeded"
+        )
         stream = _stream_status(runtime, timestamp)
         differences = await replay_check(self.store)
         shadow_trades = await self.store.list_shadow_trades()
@@ -81,6 +88,7 @@ class DailyDigest:
                 "cumulative": shadow_cumulative,
             },
             "data_availability": data_availability,
+            "wallet": wallet_mode,
             "reconcile_reminder": "RECONCILE_BROKER_HOLDINGS_WITH_POSITION_TWIN",
         }
         payload["text"] = _format_text(payload)
@@ -162,10 +170,12 @@ def _format_text(payload: dict[str, Any]) -> str:
             f"Open positions: {len(payload['open_positions'])}",
             *position_lines,
             f"Replay check: {replay}",
+            f"Wallet: {payload['wallet']}",
             (
                 "Data availability: "
                 f"slots_ok={payload['data_availability']['slots_ok']} "
-                f"slots_unavailable={payload['data_availability']['slots_unavailable']}"
+                f"slots_unavailable={payload['data_availability']['slots_unavailable']} "
+                f"slots_missed={payload['data_availability']['slots_missed']}"
             ),
             (
                 "Shadow today: "
@@ -197,14 +207,24 @@ def _duration(seconds: int | None) -> str:
 
 
 def _data_availability(events) -> dict[str, int]:
-    latest: dict[str, str] = {}
+    latest: dict[str, dict] = {}
     for event in events:
         if event.event_type == "RADAR_RUN":
-            latest[event.aggregate_id] = str(event.payload.get("status", "UNKNOWN"))
+            latest[event.aggregate_id] = event.payload
     return {
-        "slots_ok": sum(status == "COMPLETED" for status in latest.values()),
+        "slots_ok": sum(
+            row.get("status") == "COMPLETED" for row in latest.values()
+        ),
         "slots_unavailable": sum(
-            status == "DATA_UNAVAILABLE" for status in latest.values()
+            row.get("status") == "DATA_UNAVAILABLE"
+            or (
+                row.get("status") == "MISSED"
+                and row.get("previous_status") == "DATA_UNAVAILABLE"
+            )
+            for row in latest.values()
+        ),
+        "slots_missed": sum(
+            row.get("status") == "MISSED" for row in latest.values()
         ),
     }
 

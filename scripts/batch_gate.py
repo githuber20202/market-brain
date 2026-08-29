@@ -27,9 +27,9 @@ def should_run(mode: str, now: datetime, calendar_path: Path) -> bool:
         return False
     minute = local.time().replace(second=0, microsecond=0)
     if mode == "radar":
-        return time(9, 50) <= minute <= time(14, 50) and minute.minute in {20, 50}
+        return time(9, 50) <= minute < time(15, 20)
     if mode == "digest":
-        return minute == time(16, 20)
+        return time(16, 20) <= minute < time(23, 59)
     raise ValueError("BATCH_GATE_MODE_INVALID")
 
 

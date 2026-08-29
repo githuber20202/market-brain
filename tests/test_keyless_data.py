@@ -402,6 +402,7 @@ async def test_digest_reports_latest_slot_data_availability():
     assert alert.payload["data_availability"] == {
         "slots_ok": 1,
         "slots_unavailable": 1,
+        "slots_missed": 0,
     }
     assert "Data availability: slots_ok=1 slots_unavailable=1" in alert.payload["text"]
 

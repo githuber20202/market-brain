@@ -101,6 +101,8 @@ class Settings(BaseSettings):
     keyless_request_interval_seconds: float = 0.5
     keyless_retry_attempts: int = 3
     keyless_max_failure_ratio: float = 0.2
+    keyless_confirmed_lag_minutes: int = 2
+    keyless_plan_ttl_seconds: int = 1800
     stream_max_symbols: int = 30
     universe_dir: Path = DATA_DIR / "universe"
     quality_path: Path = DATA_DIR / "quality.csv"
@@ -108,6 +110,7 @@ class Settings(BaseSettings):
     plans_per_run: int = 5
     radar_poll_seconds: float = 5.0
     run_mode: Literal["shadow", "live"] = "shadow"
+    shadow_capital_base: float = 100_000.0
 
     postgres_dsn: str | None = None
     nats_url: str | None = None
@@ -188,12 +191,18 @@ class Settings(BaseSettings):
             raise ValueError("INVALID_KEYLESS_RETRY_ATTEMPTS")
         if self.keyless_max_failure_ratio < 0 or self.keyless_max_failure_ratio > 1:
             raise ValueError("INVALID_KEYLESS_MAX_FAILURE_RATIO")
+        if self.keyless_confirmed_lag_minutes < 0:
+            raise ValueError("INVALID_KEYLESS_CONFIRMED_LAG")
+        if self.keyless_plan_ttl_seconds < 600:
+            raise ValueError("INVALID_KEYLESS_PLAN_TTL")
         if self.stream_max_symbols <= 0:
             raise ValueError("INVALID_STREAM_SYMBOL_CAP")
         if self.plans_per_run <= 0 or self.plans_per_run > self.stream_max_symbols:
             raise ValueError("INVALID_PLANS_PER_RUN")
         if self.radar_poll_seconds <= 0:
             raise ValueError("INVALID_RADAR_POLL_SECONDS")
+        if self.shadow_capital_base <= 0:
+            raise ValueError("INVALID_SHADOW_CAPITAL_BASE")
         if self.stream_stale_alert_seconds <= 0:
             raise ValueError("INVALID_STREAM_STALE_ALERT_SECONDS")
         if self.max_trade_risk_pct <= 0 or self.max_trade_risk_pct > 1.0:

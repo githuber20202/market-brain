@@ -78,17 +78,53 @@ class RadarScheduler:
             return None
         catch_up_slot = await self._unavailable_catch_up_slot(session, slot)
         scheduled_slot = catch_up_slot or slot
+        return await self._run_slot(
+            scheduled_slot,
+            timestamp=timestamp,
+            attempt_slot=slot,
+        )
+
+    async def run_slot(
+        self,
+        slot: datetime,
+        *,
+        now: datetime | None = None,
+    ) -> dict | None:
+        if self.calendar is None or not self.universe:
+            raise RuntimeError("RADAR_SCHEDULER_NOT_VALIDATED")
+        scheduled_slot = _aware(slot).astimezone(EASTERN)
+        timestamp = _aware(now or self.now()).astimezone(EASTERN)
+        session = self.calendar.session_for(scheduled_slot.date())
+        if (
+            session is None
+            or scheduled_slot not in scheduled_slots(session)
+            or scheduled_slot > timestamp
+        ):
+            raise ValueError("RADAR_SLOT_INVALID")
+        return await self._run_slot(
+            scheduled_slot,
+            timestamp=timestamp,
+            attempt_slot=timestamp,
+        )
+
+    async def _run_slot(
+        self,
+        scheduled_slot: datetime,
+        *,
+        timestamp: datetime,
+        attempt_slot: datetime,
+    ) -> dict | None:
         run_id = (
             f"radar:{scheduled_slot.date().isoformat()}:{scheduled_slot.strftime('%H%M')}"
         )
-        attempt_key = (run_id, slot.isoformat())
+        attempt_key = (run_id, attempt_slot.isoformat())
         if attempt_key in self._attempted:
             return None
         existing = await self.service.store.get_runtime_status_key(f"radar_run:{run_id}")
-        if isinstance(existing, dict) and existing.get("status") == "COMPLETED":
-            self._attempted.add(attempt_key)
-            return None
-        if scheduled_slot == slot and existing is not None:
+        if isinstance(existing, dict) and existing.get("status") in {
+            "COMPLETED",
+            "MISSED",
+        }:
             self._attempted.add(attempt_key)
             return None
         self._attempted.add(attempt_key)
@@ -97,7 +133,8 @@ class RadarScheduler:
             {
                 "status": "STARTED",
                 "scheduled_for": scheduled_slot.isoformat(),
-                "attempt_slot": slot.isoformat(),
+                "attempt_slot": attempt_slot.isoformat(),
+                "started_at": timestamp.isoformat(),
             },
         )
         try:
@@ -114,7 +151,7 @@ class RadarScheduler:
                     "source_id": exc.source_id,
                     "resource": exc.resource,
                     "symbol": exc.symbol,
-                    "attempt_slot": slot.isoformat(),
+                    "attempt_slot": attempt_slot.isoformat(),
                 },
                 skipped_symbols=[
                     {"symbol": item.symbol, "error_type": item.error_type}
@@ -125,12 +162,50 @@ class RadarScheduler:
             LOGGER.exception("radar_run_failed run_id=%s", run_id)
             return await self._persist_result(
                 run_id,
-                slot,
+                scheduled_slot,
                 status="FAILED",
                 candidates=[],
                 plan_ids=[],
                 error_type=type(exc).__name__,
             )
+
+    async def mark_missed(
+        self,
+        slot: datetime,
+        *,
+        now: datetime,
+    ) -> dict:
+        scheduled_slot = _aware(slot).astimezone(EASTERN)
+        timestamp = _aware(now).astimezone(EASTERN)
+        run_id = (
+            f"radar:{scheduled_slot.date().isoformat()}:{scheduled_slot.strftime('%H%M')}"
+        )
+        key = f"radar_run:{run_id}"
+        existing = await self.service.store.get_runtime_status_key(key)
+        if isinstance(existing, dict) and existing.get("status") in {
+            "COMPLETED",
+            "MISSED",
+        }:
+            return existing
+        payload = {
+            "run_id": run_id,
+            "status": "MISSED",
+            "scheduled_for": scheduled_slot.isoformat(),
+            "missed_at": timestamp.isoformat(),
+            "previous_status": (
+                existing.get("status") if isinstance(existing, dict) else None
+            ),
+            "universe_size": len(self.universe),
+            "candidates": [],
+            "plan_ids": [],
+            "error_type": None,
+            "data_unavailable": None,
+            "skipped_symbols": [],
+        }
+        async with self.service.store.transaction():
+            await self.service.store.append(LedgerEvent("RADAR_RUN", run_id, payload))
+            await self.service.store.set_runtime_status(key, payload)
+        return payload
 
     async def _unavailable_catch_up_slot(
         self,

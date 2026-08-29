@@ -170,7 +170,10 @@ class GitHubIssueSink:
                 headers=self._headers(),
                 json={
                     "title": title,
-                    "body": f"Brokerless shadow-mode alerts for {session_date}.",
+                    "body": (
+                        f"Brokerless shadow-mode alerts for {session_date}. "
+                        "Measurement only; not advice or execution."
+                    ),
                     "labels": ["shadow"],
                 },
             )
@@ -196,6 +199,13 @@ class GitHubIssueSink:
             json={"body": f"@{self.mention}\n\n{text}"},
         )
         response.raise_for_status()
+        if str(payload.get("run_id", "")).startswith("daily_digest:"):
+            response = await self._client().patch(
+                f"https://api.github.com/repos/{self.repository}/issues/{issue_number}",
+                headers=self._headers(),
+                json={"state": "closed"},
+            )
+            response.raise_for_status()
         return True
 
     async def aclose(self) -> None:
