@@ -235,7 +235,6 @@ class BatchRuntime:
             row
             for row in plans
             if row.status in {PlanStatus.ACTIVE, PlanStatus.RESERVED}
-            and timestamp <= row.expires_at
         ]
         symbols = sorted({row.symbol.upper() for row in active_plans} | active_shadow)
         backfill_failures: list[dict] = []
@@ -259,7 +258,6 @@ class BatchRuntime:
             if (
                 plan.status != PlanStatus.ACTIVE
                 or plan.triggered_at is not None
-                or timestamp > plan.expires_at
                 or plan.symbol.upper() in failed_symbols
             ):
                 continue

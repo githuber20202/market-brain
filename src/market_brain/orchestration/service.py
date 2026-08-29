@@ -946,6 +946,10 @@ class DecisionService:
             or timestamp > plan.expires_at
         ):
             return False
+        activation_deadline = timestamp + timedelta(
+            minutes=self.cfg.retest_window_minutes + 5
+        )
+        plan.expires_at = max(plan.expires_at, activation_deadline)
         wallet = await self.store.get_wallet()
         quantity = 0
         if wallet is not None:
@@ -981,6 +985,7 @@ class DecisionService:
                 "symbol": plan.symbol,
                 "last": last,
                 "source": source,
+                "extended_expires_at": plan.expires_at.isoformat(),
                 "order_ticket": ticket,
                 "text": ticket["text"],
             },
@@ -998,6 +1003,7 @@ class DecisionService:
                     "order_ticket": ticket,
                     "last": last,
                     "source": source,
+                    "extended_expires_at": plan.expires_at.isoformat(),
                     "plan": asdict(plan),
                 },
                 occurred_at=timestamp,

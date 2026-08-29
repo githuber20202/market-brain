@@ -40,6 +40,12 @@ Trade intent:
 
 `ISSUED → FILLED | CANCELLED | EXPIRED`
 
+חלון ההפעלה נגזר מחלון ה־retest שלאחר הפריצה: כאשר נרשם `TRIGGER_HIT`,
+תוקף ה־Plan מוארך, אם נדרש, עד חמש דקות לאחר סוף
+`RETEST_WINDOW_MINUTES`. Plan שלא נרשם עבורו `TRIGGER_HIT` ממשיך לפוג לפי
+ה־TTL המקורי. ההארכה נשמרת בתוך ה־Plan ובשדה `extended_expires_at` של אירוע
+`TRIGGER_HIT`, ולכן היא דטרמיניסטית וניתנת לשחזור.
+
 Position:
 
 `ACTIVE → HOLD | TRIM_NOW | TAKE_PROFIT | SELL_NOW → ACKNOWLEDGED`
