@@ -1,0 +1,20 @@
+name: Dispatch Task 27 Weekly
+
+on:
+  push:
+    branches: [task27-plan-geometry-work]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Shadow Weekly on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run shadow-weekly.yml --ref main --repo "$GITHUB_REPOSITORY"
+          echo "WEEKLY_DISPATCH=PASS"
