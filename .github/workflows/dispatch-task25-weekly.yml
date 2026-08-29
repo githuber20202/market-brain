@@ -48,31 +48,32 @@ jobs:
               continue
             fi
             python - "$symbol" "$output" <<'PY'
-import json
-import sys
+          import json
+          import sys
 
-symbol, path = sys.argv[1:]
-payload = json.load(open(path, encoding="utf-8"))
-rows = payload.get("timeseries", {}).get("result", [])
-counts = {}
-for row in rows:
-    metric = row.get("meta", {}).get("type") or row.get("type")
-    if metric:
-        counts[metric] = len(row.get("timestamp", []))
-for metric in (
-    "annualTotalRevenue",
-    "quarterlyTotalRevenue",
-    "annualOperatingIncome",
-    "quarterlyOperatingIncome",
-    "annualTotalDebt",
-    "annualCashAndCashEquivalents",
-    "annualFreeCashFlow",
-    "quarterlyFreeCashFlow",
-    "annualDilutedAverageShares",
-    "quarterlyDilutedAverageShares",
-):
-    print(f"YAHOO_{symbol}_{metric}_POINTS={counts.get(metric, 0)}")
-PY
+          symbol, path = sys.argv[1:]
+          with open(path, encoding="utf-8") as handle:
+              payload = json.load(handle)
+          rows = payload.get("timeseries", {}).get("result", [])
+          counts = {}
+          for row in rows:
+              metric = row.get("meta", {}).get("type") or row.get("type")
+              if metric:
+                  counts[metric] = len(row.get("timestamp", []))
+          for metric in (
+              "annualTotalRevenue",
+              "quarterlyTotalRevenue",
+              "annualOperatingIncome",
+              "quarterlyOperatingIncome",
+              "annualTotalDebt",
+              "annualCashAndCashEquivalents",
+              "annualFreeCashFlow",
+              "quarterlyFreeCashFlow",
+              "annualDilutedAverageShares",
+              "quarterlyDilutedAverageShares",
+          ):
+              print(f"YAHOO_{symbol}_{metric}_POINTS={counts.get(metric, 0)}")
+          PY
           done
 
           nvda_status="$(grep -o '"symbol":"NVDA"' yahoo_NVDA.json 2>/dev/null | head -1 || true)"
