@@ -169,7 +169,7 @@ class BatchRuntime:
 
         assert self.scheduler.calendar is not None
         universe = sorted(self.scheduler.universe, key=lambda entry: entry.symbol)
-        symbols = [entry.symbol for entry in universe]
+        symbols = [entry.symbol for entry in universe if entry.ranking_eligible]
         quality_symbols = [
             entry.symbol for entry in universe if entry.instrument_type == "EQUITY"
         ]

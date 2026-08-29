@@ -243,9 +243,16 @@ async def test_batch_digest_catches_up_after_1620_and_writes_report(tmp_path):
 async def test_weekly_batch_refreshes_quality_into_state(tmp_path, monkeypatch):
     runtime, scheduler = _runtime(tmp_path)
     scheduler.universe = (
-        SimpleNamespace(symbol="FULL", instrument_type="EQUITY"),
-        SimpleNamespace(symbol="PART", instrument_type="EQUITY"),
-        SimpleNamespace(symbol="SPY", instrument_type="ETF"),
+        SimpleNamespace(
+            symbol="FULL", instrument_type="EQUITY", ranking_eligible=True
+        ),
+        SimpleNamespace(
+            symbol="PART", instrument_type="EQUITY", ranking_eligible=True
+        ),
+        SimpleNamespace(symbol="SPY", instrument_type="ETF", ranking_eligible=True),
+        SimpleNamespace(
+            symbol="CHG", instrument_type="UNRESOLVED", ranking_eligible=False
+        ),
     )
     calls: dict[str, object] = {}
 
@@ -289,8 +296,12 @@ async def test_weekly_batch_refreshes_quality_into_state(tmp_path, monkeypatch):
         tmp_path / "state" / "quality.csv",
         now,
         "yahoo",
-        [{"symbol": "SPY", "instrument_type": "ETF"}],
+        [
+            {"symbol": "CHG", "instrument_type": "UNRESOLVED"},
+            {"symbol": "SPY", "instrument_type": "ETF"},
+        ],
     )
+    assert calls["replay"]["symbols"] == ["FULL", "PART", "SPY"]
     latest = json.loads((tmp_path / "state" / "latest.json").read_text())
     assert latest["quality"] == {"status": "COMPLETED", "rows": 2}
 

@@ -128,7 +128,11 @@ async def main() -> None:
         settings.market_calendar_path,
         required_years={timestamp.year},
     )
-    symbols = sorted(entry.symbol for entry in load_universe(settings.universe_dir))
+    symbols = sorted(
+        entry.symbol
+        for entry in load_universe(settings.universe_dir)
+        if entry.ranking_eligible
+    )
     path = await create_replay_report(
         days=args.days,
         symbols=symbols,
