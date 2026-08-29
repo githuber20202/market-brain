@@ -72,7 +72,7 @@ async def test_bar_touching_stop_and_target_counts_as_stop():
             "reason": "STOP",
             "price": trade["stop"],
             "fraction": 1.0,
-            "at": "2026-08-28T13:38:00+00:00",
+            "at": "2026-08-28T13:38:40+00:00",
         }
     ]
     assert trade["r"] == -1.0
@@ -81,8 +81,8 @@ async def test_bar_touching_stop_and_target_counts_as_stop():
 @pytest.mark.asyncio
 async def test_trigger_bar_conflict_is_also_stop_first():
     fixture = _fixture()
-    bars = [dict(row) for row in fixture["symbols"]["LOSS"][:8]]
-    bars[-1].update({"o": 100.6, "h": 100.95, "l": 100.4, "c": 100.5})
+    bars = [dict(row) for row in fixture["symbols"]["LOSS"]]
+    bars[-1].update({"o": 100.65, "h": 102.3, "l": 99.7, "c": 100.5})
 
     report = await ReplayEngine().run(
         fixture["date"], ["LOSS"], bars_by_symbol={"LOSS": bars}, write_report=False

@@ -222,11 +222,13 @@ class ReplayEngine:
         retest_bar: dict,
     ) -> TradePlan:
         assert structure.opening_range_high is not None
+        assert structure.opening_range_low is not None
         created_at = _bar_stamp(retest_bar) + timedelta(minutes=1)
         snapshot = MarketSnapshot(
             symbol=symbol,
             last=_bar_price(retest_bar, "c", "close"),
             opening_range_high=structure.opening_range_high,
+            opening_range_low=structure.opening_range_low,
             retest_low=_bar_price(retest_bar, "l", "low"),
             source_id="ALPACA_SIP",
             authoritative=True,
@@ -250,6 +252,8 @@ class ReplayEngine:
             quality=quality,
             lane=StrategyLane.CORE_MOMENTUM,
             plan_ttl_seconds=self.cfg.plan_ttl_seconds,
+            min_risk_pct=self.cfg.min_risk_pct,
+            min_opening_range_pct=self.cfg.min_opening_range_pct,
             speculative_enabled=False,
             now=created_at,
         )

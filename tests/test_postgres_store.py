@@ -32,7 +32,7 @@ class FakeProvider:
         return MarketSnapshot(
             symbol=symbol,last=self.last,prior_close=98.0,bid=self.last-0.01,ask=self.last+0.01,
             volume=2_000_000,avg_volume=1_000_000,vwap=100.0,open_price=99.0,
-            opening_range_high=100.8,retest_low=100.0,benchmark_return_pct=0.5,
+            opening_range_high=100.8,opening_range_low=99.6,retest_low=100.0,benchmark_return_pct=0.5,
             catalyst_verified=True,catalyst_strength=0.9,data_age_seconds=1.0,
             source_id="ALPACA_SIP",authoritative=True,
         )
@@ -40,7 +40,7 @@ class FakeProvider:
 
 def planning_snapshot():
     return MarketSnapshot(symbol="TEST",last=100.8,prior_close=98.0,bid=100.79,ask=100.81,volume=2_000_000,
-        avg_volume=1_000_000,vwap=100.0,open_price=99.0,opening_range_high=100.8,retest_low=100.0,
+        avg_volume=1_000_000,vwap=100.0,open_price=99.0,opening_range_high=100.8,opening_range_low=99.6,retest_low=100.0,
         benchmark_return_pct=0.5,catalyst_verified=True,catalyst_strength=0.9)
 
 

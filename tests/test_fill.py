@@ -24,6 +24,7 @@ def snapshot() -> MarketSnapshot:
         vwap=100.0,
         open_price=99.0,
         opening_range_high=100.8,
+        opening_range_low=99.6,
         retest_low=100.0,
         benchmark_return_pct=0.5,
         catalyst_verified=True,
@@ -137,4 +138,3 @@ async def test_third_fill_after_full_quantity_is_rejected(monkeypatch):
 
     assert response.status_code == 422
     assert response.json()["detail"] == "PLAN_ALREADY_FILLED"
-

@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from market_brain.domain.models import StrategyLane, TradePlan
+from market_brain.engines.plan import PlanBuildError
 from market_brain.ledger.store import InMemoryEventStore
 from market_brain.orchestration.screener import ScreenResult
 from market_brain.orchestration.universe import load_universe
@@ -99,6 +100,12 @@ class KeylessFailureRatioService(FakeService):
             data_plan="keyless_delayed",
             keyless_max_failure_ratio=0.2,
         )
+
+
+class RejectingService(FakeService):
+    async def build_plan_from_market(self, **kwargs):
+        self.plan_calls.append(kwargs)
+        raise PlanBuildError("RISK_TOO_SMALL")
 
 
 class PartialScreener(FakeScreener):
@@ -312,6 +319,28 @@ async def test_symbol_without_quality_gets_no_core_plan(tmp_path: Path):
     assert result is not None
     assert service.plan_calls == []
     assert result["candidates"][0]["reason"] == "QUALITY_MISSING_CORE_BLOCKED"
+
+
+@pytest.mark.asyncio
+async def test_plan_floor_rejection_is_recorded_in_radar_run(tmp_path: Path):
+    paths = _files(tmp_path, symbols=("AAPL",), quality=("AAPL",))
+    service = RejectingService()
+    scheduler = RadarScheduler(
+        service=service,
+        screener=FakeScreener([_row("AAPL")]),
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    slot = datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    scheduler.validate_startup(now=slot)
+
+    result = await scheduler.run_pending(now=slot)
+
+    assert result is not None
+    assert result["candidates"][0]["reason"] == "RISK_TOO_SMALL"
+    assert service.store.events[-1].event_type == "RADAR_RUN"
+    assert service.store.events[-1].payload["candidates"][0]["reason"] == "RISK_TOO_SMALL"
 
 
 @pytest.mark.asyncio

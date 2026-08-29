@@ -30,6 +30,7 @@ def market_snapshot(**overrides) -> MarketSnapshot:
         "vwap": 100.0,
         "open_price": 99.0,
         "opening_range_high": 100.8,
+        "opening_range_low": 99.6,
         "retest_low": 100.0,
         "benchmark_return_pct": 0.5,
         "catalyst_verified": True,
@@ -89,4 +90,3 @@ async def test_sweep_expired_releases_expired_reservation():
     assert wallet is not None
     assert wallet.reserved_cash == 0
     assert wallet.open_risk == 0
-

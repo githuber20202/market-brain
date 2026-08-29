@@ -37,6 +37,7 @@ def planning_snapshot() -> MarketSnapshot:
         vwap=100.0,
         open_price=99.0,
         opening_range_high=100.8,
+        opening_range_low=99.6,
         retest_low=100.0,
         benchmark_return_pct=0.5,
         catalyst_verified=True,
@@ -262,4 +263,3 @@ async def test_existing_iex_reservation_re_evaluation_records_liquidity_reason()
     ]
     assert len(after) == len(before) + 1
     assert "LIQUIDITY_GATE_PASS" in after[-1].payload["reasons"]
-

@@ -138,6 +138,8 @@ class Settings(BaseSettings):
     min_adv_keyless: float = 5_000_000.0
     max_delayed_age_minutes: float = 20.0
     keyless_max_bar_range_pct: float = 3.0
+    min_risk_pct: float = 0.5
+    min_opening_range_pct: float = 0.3
     min_price: float = 5.0
     max_spread_bps: float = 20.0
     iex_mid_tolerance_pct: float = 0.75
@@ -250,6 +252,10 @@ class Settings(BaseSettings):
             raise ValueError("INVALID_MAX_DELAYED_AGE_MINUTES")
         if self.keyless_max_bar_range_pct <= 0:
             raise ValueError("INVALID_KEYLESS_MAX_BAR_RANGE_PCT")
+        if self.min_risk_pct <= 0 or self.min_risk_pct > 10.0:
+            raise ValueError("INVALID_MIN_RISK_PCT")
+        if self.min_opening_range_pct <= 0 or self.min_opening_range_pct > 10.0:
+            raise ValueError("INVALID_MIN_OPENING_RANGE_PCT")
         if self.min_price <= 0:
             raise ValueError("INVALID_MIN_PRICE")
         if self.max_spread_bps <= 0:

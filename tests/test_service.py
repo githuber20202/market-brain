@@ -32,6 +32,7 @@ def snapshot(**overrides):
         "vwap": 100.0,
         "open_price": 99.0,
         "opening_range_high": 100.8,
+        "opening_range_low": 99.6,
         "retest_low": 100.0,
         "benchmark_return_pct": 0.5,
         "catalyst_verified": True,
@@ -136,4 +137,3 @@ async def test_reservation_release_restores_wallet_capacity():
     released = await store.get_wallet()
     assert released.reserved_cash == 0
     assert released.open_risk == 0
-

@@ -66,6 +66,22 @@ Radar מעתיקה אותו אל `data/quality.csv` רק כאשר גיל כל ש
 דילול YoY מפחית 0 נקודות כאשר אינו חיובי, ואז 2/5/10/15 נקודות בספים
 ≤2%/≤5%/≤10%/>10%. נתון דילול חסר אינו מקבל קנס אך מסמן את הציון כחלקי.
 
+## Plan geometry floors
+
+`build_trade_plan` אוכף את אותן רצפות ב־Radar וב־Replay, לפני שמותר לשמור Plan:
+
+- `MIN_RISK_PCT=0.5`: ‏`(entry − stop) / entry` חייב להיות לפחות 0.5%. כך
+  slippage של 10bps אינו עולה על `0.2R`. הרצפה נגזרת מכלל העלויות ואינה
+  מכוילת לפי טרייד היסטורי יחיד.
+- `MIN_OPENING_RANGE_PCT=0.3`: ‏`(opening_range_high − opening_range_low) /
+  opening_range_high` חייב להיות לפחות 0.3%.
+- `TP1` חייב להיות גבוה מ־`entry_zone_high` גם לאחר rounding.
+
+הפרות נכשלות סגור עם `RISK_TOO_SMALL`, ‏`OPENING_RANGE_TOO_NARROW` או
+`TARGET_BELOW_ENTRY`. הסיבה נשמרת במועמד של אירוע `RADAR_RUN`, וה־Daily Digest
+מציג `plan_rejections` לפי reason. הרצפות מסננות רעש בלבד; הן אינן משנות את
+גאומטריית `entry=OR high`, ‏`stop=retest low`, ‏`TP1=1.5R`, ‏`TP2=2R`.
+
 ## State machines
 
 Candidate:

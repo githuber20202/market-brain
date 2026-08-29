@@ -74,6 +74,22 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
             occurred_at=now,
         )
     )
+    await store.append(
+        LedgerEvent(
+            "RADAR_RUN",
+            "radar:2026-08-28:1050",
+            {
+                "status": "COMPLETED",
+                "candidates": [
+                    {"symbol": "LHX", "reason": "RISK_TOO_SMALL"},
+                    {"symbol": "MS", "reason": "RISK_TOO_SMALL"},
+                    {"symbol": "QUIET", "reason": "OPENING_RANGE_TOO_NARROW"},
+                    {"symbol": "PASS", "reason": None},
+                ],
+            },
+            occurred_at=now,
+        )
+    )
     shadow_trade = ShadowTrade(
         trade_id="digest-shadow",
         plan_id="digest-shadow-plan",
@@ -114,8 +130,13 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     assert alert.payload["wallet"] == "virtual"
     assert alert.payload["quality"]["status"] == "QUALITY_STALE"
     assert alert.payload["data_availability"]["slots_missed"] == 1
+    assert alert.payload["plan_rejections"] == {
+        "OPENING_RANGE_TOO_NARROW": 1,
+        "RISK_TOO_SMALL": 2,
+    }
     assert "Wallet: virtual" in alert.payload["text"]
     assert "Quality: QUALITY_STALE rows=58" in alert.payload["text"]
+    assert "- RISK_TOO_SMALL: count=2" in alert.payload["text"]
     assert "Shadow today:" in alert.payload["text"]
     assert "Shadow by setup: {'" not in alert.payload["text"]
     assert (

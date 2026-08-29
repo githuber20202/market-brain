@@ -44,6 +44,7 @@ def snapshot(**overrides):
         "vwap": 100.0,
         "open_price": 99.0,
         "opening_range_high": 100.8,
+        "opening_range_low": 99.6,
         "retest_low": 100.0,
         "benchmark_return_pct": 0.5,
         "catalyst_verified": True,
@@ -176,4 +177,3 @@ async def test_manual_truth_import_is_not_hidden_by_concurrency_limit():
             stop_order_price=9.0,
         )
     assert len(await store.list_positions()) == total
-

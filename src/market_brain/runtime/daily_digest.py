@@ -69,6 +69,7 @@ class DailyDigest:
         shadow_today = shadow_metrics(shadow_trades, all_events, session_date=session_date)
         shadow_cumulative = shadow_metrics(shadow_trades, all_events)
         data_availability = _data_availability(events)
+        plan_rejections = _plan_rejections(events)
         open_positions = [
             {
                 "symbol": position.symbol,
@@ -94,6 +95,7 @@ class DailyDigest:
                 "cumulative": shadow_cumulative,
             },
             "data_availability": data_availability,
+            "plan_rejections": plan_rejections,
             "wallet": wallet_mode,
             "quality": quality,
             "reconcile_reminder": "RECONCILE_BROKER_HOLDINGS_WITH_POSITION_TWIN",
@@ -165,6 +167,12 @@ def _format_text(payload: dict[str, Any]) -> str:
     ]
     if not setup_lines:
         setup_lines = ["- none"]
+    rejection_lines = [
+        f"- {reason}: count={count}"
+        for reason, count in payload["plan_rejections"].items()
+    ]
+    if not rejection_lines:
+        rejection_lines = ["- none"]
     return "\n".join(
         [
             f"Market Brain daily digest — {payload['session_date']} ET",
@@ -188,6 +196,8 @@ def _format_text(payload: dict[str, Any]) -> str:
                 f"slots_unavailable={payload['data_availability']['slots_unavailable']} "
                 f"slots_missed={payload['data_availability']['slots_missed']}"
             ),
+            "Plan rejections:",
+            *rejection_lines,
             (
                 "Shadow today: "
                 f"signals={today['signals']} trades={today['trades']} "
@@ -238,6 +248,20 @@ def _data_availability(events) -> dict[str, int]:
             row.get("status") == "MISSED" for row in latest.values()
         ),
     }
+
+
+def _plan_rejections(events) -> dict[str, int]:
+    latest: dict[str, dict] = {}
+    for event in events:
+        if event.event_type == "RADAR_RUN":
+            latest[event.aggregate_id] = event.payload
+    counts: dict[str, int] = {}
+    for payload in latest.values():
+        for candidate in payload.get("candidates", []):
+            reason = candidate.get("reason")
+            if isinstance(reason, str) and reason:
+                counts[reason] = counts.get(reason, 0) + 1
+    return dict(sorted(counts.items()))
 
 
 def _runtime_datetime(value) -> datetime | None:

@@ -43,6 +43,7 @@ async def build_position(*, stop=95.0):
         vwap=100.0,
         open_price=99.0,
         opening_range_high=100.8,
+        opening_range_low=99.6,
         retest_low=100.0,
         benchmark_return_pct=0.5,
         catalyst_verified=True,
@@ -159,6 +160,7 @@ async def test_trigger_hit_is_persisted_and_not_reemitted_after_restart():
         vwap=100.0,
         open_price=99.0,
         opening_range_high=100.8,
+        opening_range_low=99.6,
         retest_low=100.0,
         benchmark_return_pct=0.5,
         catalyst_verified=True,
@@ -366,4 +368,3 @@ async def test_service_hook_invalidates_symbol_cache_immediately():
     await service._notify_state_change("TEST")
     assert "TEST" not in monitor._positions_by_symbol
     assert "TEST" not in monitor._plans_by_symbol
-

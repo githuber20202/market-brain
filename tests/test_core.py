@@ -24,6 +24,7 @@ def snapshot(**overrides):
         "vwap": 100.0,
         "open_price": 99.0,
         "opening_range_high": 100.8,
+        "opening_range_low": 99.6,
         "retest_low": 100.0,
         "benchmark_return_pct": 0.5,
         "catalyst_verified": True,
@@ -72,6 +73,73 @@ def test_plan_is_deterministic_and_has_15_20_targets():
     risk = plan.entry_trigger - plan.stop
     assert plan.tp1 == pytest.approx(plan.entry_trigger + risk * 1.5)
     assert plan.tp2 == pytest.approx(plan.entry_trigger + risk * 2.0)
+
+
+@pytest.mark.parametrize(
+    ("symbol", "entry", "stop", "opening_low"),
+    [
+        ("LHX", 263.2468, 263.14, 262.0),
+        ("ONDS", 8.1718, 8.15, 8.10),
+        ("MS", 215.3546, 215.21, 214.0),
+        ("NOW", 140.6593, 140.0, 139.0),
+    ],
+)
+def test_live_replay_micro_risk_examples_are_rejected(
+    symbol: str,
+    entry: float,
+    stop: float,
+    opening_low: float,
+):
+    with pytest.raises(PlanBuildError, match="RISK_TOO_SMALL"):
+        make_plan(
+            snapshot(
+                symbol=symbol,
+                opening_range_high=entry,
+                opening_range_low=opening_low,
+                retest_low=stop,
+            )
+        )
+
+
+def test_synthetic_eight_tenths_percent_risk_passes():
+    plan = make_plan(
+        snapshot(
+            symbol="SYNTHETIC",
+            opening_range_high=100.0,
+            opening_range_low=99.0,
+            retest_low=99.2,
+        )
+    )
+    assert plan.entry_trigger == 100.0
+    assert plan.stop == 99.2
+
+
+def test_narrow_opening_range_is_rejected():
+    with pytest.raises(PlanBuildError, match="OPENING_RANGE_TOO_NARROW"):
+        make_plan(
+            snapshot(
+                opening_range_high=100.0,
+                opening_range_low=99.8,
+                retest_low=99.2,
+            )
+        )
+
+
+def test_rounded_target_must_remain_above_entry_zone():
+    with pytest.raises(PlanBuildError, match="TARGET_BELOW_ENTRY"):
+        build_trade_plan(
+            snapshot=snapshot(
+                opening_range_high=100.0,
+                opening_range_low=99.0,
+                retest_low=99.99999,
+            ),
+            score=score_features(
+                compute_features(snapshot()), structure_score=15, rr_score=10
+            ),
+            quality=classify_quality("TEST", 90, datetime.now(UTC)),
+            lane=StrategyLane.CORE_MOMENTUM,
+            min_risk_pct=0.0,
+        )
 
 
 def test_authoritative_market_data_required_for_buy_now():
@@ -134,4 +202,3 @@ def test_stop_widening_is_forbidden():
 
 def test_unknown_position_fails_closed():
     assert evaluate_position(None, last=100) == "UNKNOWN_POSITION"
-

@@ -342,7 +342,9 @@ class DecisionService:
         return result
 
     @staticmethod
-    def _opening_structure(bars: list[dict], session_start: datetime, closed_before: datetime) -> tuple[float, float, int]:
+    def _opening_structure(
+        bars: list[dict], session_start: datetime, closed_before: datetime
+    ) -> tuple[float, float, float, int]:
         parsed: list[tuple[datetime, float, float]] = []
         for row in bars:
             raw_ts = row.get("t") or row.get("timestamp")
@@ -377,8 +379,9 @@ class DecisionService:
         if not retest:
             raise ValueError("STRUCTURE_DATA_MISSING")
         opening_range_high = max(row[1] for row in opening)
+        opening_range_low = min(row[2] for row in opening)
         retest_low = min(row[2] for row in retest)
-        return opening_range_high, retest_low, opening_count
+        return opening_range_high, opening_range_low, retest_low, opening_count
 
     async def refresh_liquidity_profile(
         self,
@@ -791,12 +794,13 @@ class DecisionService:
             session_start,
             closed_before,
         )
-        opening_high, retest_low, opening_count = self._opening_structure(
+        opening_high, opening_low, retest_low, opening_count = self._opening_structure(
             bars,
             session_start,
             closed_before,
         )
         snapshot.opening_range_high = opening_high
+        snapshot.opening_range_low = opening_low
         snapshot.retest_low = retest_low
         snapshot.metadata = {
             **snapshot.metadata,
@@ -832,6 +836,8 @@ class DecisionService:
                 if self.cfg.data_plan == "keyless_delayed"
                 else self.cfg.plan_ttl_seconds
             ),
+            min_risk_pct=self.cfg.min_risk_pct,
+            min_opening_range_pct=self.cfg.min_opening_range_pct,
             speculative_enabled=self.cfg.strategy_speculative_enabled,
             now=now,
         )
