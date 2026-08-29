@@ -1,0 +1,21 @@
+name: Dispatch Task 26 Radar
+
+on:
+  push:
+    branches:
+      - task26-supervised-run-work
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Shadow Radar on main with force
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run shadow-radar.yml --ref main --repo "$GITHUB_REPOSITORY" -f force=true
+          echo "RADAR_FORCE_DISPATCH=PASS"
