@@ -23,7 +23,7 @@ from market_brain.domain.models import (
 )
 from market_brain.engines.activation import activate_plan
 from market_brain.engines.intraday import compute_structure
-from market_brain.engines.plan import build_trade_plan
+from market_brain.engines.plan import PlanBuildError, build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.quality import classify_quality
 from market_brain.settings import ROOT, Settings, settings
@@ -168,7 +168,10 @@ class ReplayEngine:
             )
             if structure.state != IntradayStructureState.RETEST_VALID:
                 continue
-            plan = self._build_plan(symbol, day, structure, bars[index])
+            try:
+                plan = self._build_plan(symbol, day, structure, bars[index])
+            except PlanBuildError:
+                continue
             plan_bar_index = index
             break
         if plan is None or structure is None:

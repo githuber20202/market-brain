@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from market_brain.engines.plan import PlanBuildError
 from market_brain.replay.engine import ReplayEngine, replay_summary, synthesize_bar_ticks
 
 FIXTURE = Path(__file__).parent / "fixtures" / "replay_bars.json"
@@ -36,6 +37,26 @@ async def test_fixture_replay_is_deterministic_and_writes_report(tmp_path: Path)
     assert first["trade_count"] == 2
     assert first["wins"] == 1
     assert first["hit_rate"] == 0.5
+
+
+@pytest.mark.asyncio
+async def test_invalid_structure_is_no_trade_not_replay_failure(monkeypatch):
+    fixture = _fixture()
+    engine = ReplayEngine()
+
+    def reject_structure(*_args, **_kwargs):
+        raise PlanBuildError("INVALID_STRUCTURE")
+
+    monkeypatch.setattr(engine, "_build_plan", reject_structure)
+    report = await engine.run(
+        fixture["date"],
+        ["WIN"],
+        bars_by_symbol=fixture["symbols"],
+        write_report=False,
+    )
+
+    assert report["trades"] == []
+    assert report["trade_count"] == 0
 
 
 @pytest.mark.asyncio
@@ -157,4 +178,3 @@ def test_summary_reports_expectancy_and_peak_to_trough_drawdown():
         "expectancy_r": 0.375,
         "max_drawdown_r": 1.5,
     }
-
