@@ -57,9 +57,13 @@ jobs:
           rows = payload.get("timeseries", {}).get("result", [])
           counts = {}
           for row in rows:
-              metric = row.get("meta", {}).get("type") or row.get("type")
-              if metric:
-                  counts[metric] = len(row.get("timestamp", []))
+              raw_types = row.get("meta", {}).get("type") or row.get("type") or []
+              metrics = raw_types if isinstance(raw_types, list) else [raw_types]
+              for metric in metrics:
+                  if not metric:
+                      continue
+                  points = row.get(metric)
+                  counts[metric] = len(points) if isinstance(points, list) else len(row.get("timestamp", []))
           for metric in (
               "annualTotalRevenue",
               "quarterlyTotalRevenue",
