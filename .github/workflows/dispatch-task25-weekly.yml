@@ -1,20 +1,21 @@
-name: Dispatch Task 25 Weekly
+name: Probe SEC from GitHub Runner
 
 on:
   push:
     branches: [task25-edgar-quality-work]
 
 permissions:
-  actions: write
   contents: read
 
 jobs:
-  dispatch:
+  probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Dispatch Shadow Weekly on main
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Probe SEC endpoints
         run: |
-          gh workflow run shadow-weekly.yml --ref main --repo "$GITHUB_REPOSITORY"
-          echo "WEEKLY_DISPATCH=PASS"
+          ua='market-brain/1.0 (github.com/githuber20202/market-brain)'
+          tickers_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 --user-agent "$ua" https://www.sec.gov/files/company_tickers.json || true)"
+          facts_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 --user-agent "$ua" https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json || true)"
+          echo "SEC_COMPANY_TICKERS_HTTP=$tickers_status"
+          echo "SEC_COMPANYFACTS_HTTP=$facts_status"
+          test "$facts_status" = "200"
