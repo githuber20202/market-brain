@@ -184,6 +184,11 @@ jobs:
           grep -q 'REHEARSAL_EXCEPTIONS=0' /tmp/rehearsal.log
           grep -q 'REHEARSAL_ISSUE=PASS' /tmp/rehearsal.log
           echo "REHEARSAL_RUN=PASS session=2026-08-28"
+      - name: Reset temporary database for second session
+        run: |
+          psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 \
+            -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+          psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f config/schema.sql
       - name: Run optional second-session rehearsal
         run: |
           set -o pipefail
