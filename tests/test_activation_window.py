@@ -16,11 +16,14 @@ from market_brain.settings import Settings
 
 
 class ActivationProvider:
+    def __init__(self, last: float = 100.25) -> None:
+        self.last = last
+
     async def snapshot(self, symbol: str, decision: bool = False) -> MarketSnapshot:
         assert decision is True
         return MarketSnapshot(
             symbol=symbol,
-            last=100.25,
+            last=self.last,
             prior_close=98.0,
             bid=100.24,
             ask=100.26,
@@ -106,3 +109,30 @@ async def test_untriggered_plan_keeps_original_expiry() -> None:
     assert expired.expires_at == original_expiry
     assert expired.status == PlanStatus.EXPIRED
     assert not any(row.event_type == "TRIGGER_HIT" for row in store.events)
+
+
+@pytest.mark.asyncio
+async def test_live_activation_still_uses_current_detection_price() -> None:
+    store = InMemoryEventStore()
+    cfg = Settings(run_mode="live")
+    service = DecisionService(store, cfg=cfg, market_data=ActivationProvider(last=101.0))
+    plan = _plan()
+    await store.save_plan(plan)
+    await service.seed_wallet(100_000, 100_000, now=plan.created_at)
+    await store.set_runtime_status(
+        structure_key(plan.symbol, "2026-08-28"),
+        {
+            "symbol": plan.symbol,
+            "session_date": "2026-08-28",
+            "state": "RETEST_VALID",
+            "reasons": ["SERVER_RETEST_VALID"],
+        },
+    )
+
+    decision = await service.activate(
+        plan.plan_id,
+        now=datetime(2026, 8, 28, 14, 0, tzinfo=UTC),
+    )
+
+    assert decision.state != SignalState.BUY_NOW
+    assert "NO_CHASE_ENTRY_ZONE_EXCEEDED" in decision.reasons

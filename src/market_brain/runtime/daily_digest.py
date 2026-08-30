@@ -71,6 +71,7 @@ class DailyDigest:
         data_availability = _data_availability(events)
         plan_rejections = _plan_rejections(events)
         score_histogram = _score_histogram(events)
+        shadow_entries = _shadow_entries(events)
         open_positions = [
             {
                 "symbol": position.symbol,
@@ -98,6 +99,7 @@ class DailyDigest:
             "data_availability": data_availability,
             "plan_rejections": plan_rejections,
             "score_histogram": score_histogram,
+            "shadow_entries": shadow_entries,
             "wallet": wallet_mode,
             "quality": quality,
             "reconcile_reminder": "RECONCILE_BROKER_HOLDINGS_WITH_POSITION_TWIN",
@@ -175,6 +177,16 @@ def _format_text(payload: dict[str, Any]) -> str:
     ]
     if not rejection_lines:
         rejection_lines = ["- none"]
+    entry_lines = [
+        (
+            f"- {row['symbol']}: virtual_entry={row['virtual_entry']:.4f} "
+            f"current_price={row['current_price']:.4f} "
+            f"gap={row['price_gap_pct']:+.3f}%"
+        )
+        for row in payload["shadow_entries"]
+    ]
+    if not entry_lines:
+        entry_lines = ["- none"]
     return "\n".join(
         [
             f"Market Brain daily digest — {payload['session_date']} ET",
@@ -223,6 +235,8 @@ def _format_text(payload: dict[str, Any]) -> str:
             ),
             "Shadow by setup:",
             *setup_lines,
+            "Shadow delayed entries:",
+            *entry_lines,
             "Reminder: reconcile broker holdings with the Position Twin.",
         ]
     )
@@ -271,6 +285,30 @@ def _plan_rejections(events) -> dict[str, int]:
             if isinstance(reason, str) and reason:
                 counts[reason] = counts.get(reason, 0) + 1
     return dict(sorted(counts.items()))
+
+
+def _shadow_entries(events) -> list[dict[str, Any]]:
+    output: list[dict[str, Any]] = []
+    for event in events:
+        if event.event_type != "BUY_NOW_EMITTED":
+            continue
+        context = event.payload.get("activation_context")
+        if not isinstance(context, dict) or context.get("activation_basis") != "RETEST_BAR":
+            continue
+        try:
+            output.append(
+                {
+                    "symbol": str(event.payload["decision"]["symbol"]),
+                    "virtual_entry": float(context["virtual_entry"]),
+                    "current_price": float(context["current_price"]),
+                    "price_gap_pct": float(context["price_gap_pct"]),
+                    "retest_bar_ts": str(context["retest_bar_ts"]),
+                    "detected_at": str(context["detected_at"]),
+                }
+            )
+        except (KeyError, TypeError, ValueError):
+            continue
+    return output
 
 
 def _score_histogram(events) -> dict[str, int]:

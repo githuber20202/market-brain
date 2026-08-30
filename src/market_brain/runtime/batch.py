@@ -332,7 +332,11 @@ class BatchRuntime:
                 continue
             retest_valid += 1
             try:
-                decision = await self.service.activate(plan.plan_id, now=timestamp)
+                decision = await self.service.activate_shadow_retest(
+                    plan.plan_id,
+                    structure=structure,
+                    detected_at=timestamp,
+                )
             except (DataUnavailable, OSError, RuntimeError, TypeError, ValueError) as exc:
                 error_type = (
                     exc.error_type if isinstance(exc, DataUnavailable) else type(exc).__name__

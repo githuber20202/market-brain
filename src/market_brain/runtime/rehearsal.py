@@ -262,6 +262,7 @@ async def _shadow_rows(store) -> list[dict]:
             "plan_id": row.plan_id,
             "symbol": row.symbol,
             "status": str(row.status),
+            "virtual_entry": row.fill,
             "realized_r": row.realized_r,
             "opened_at": row.opened_at.isoformat(),
             "closed_at": row.closed_at.isoformat() if row.closed_at else None,

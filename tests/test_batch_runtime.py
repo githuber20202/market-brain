@@ -109,14 +109,15 @@ class FakeProvider:
 class PlanWatchProvider:
     configured = True
 
-    def __init__(self, bars):
+    def __init__(self, bars, *, current_last: float = 100.55):
         self.bars = list(bars)
+        self.current_last = current_last
 
     async def snapshot(self, symbol: str, decision: bool = False):
         del decision
         return MarketSnapshot(
             symbol=symbol,
-            last=100.55,
+            last=self.current_last,
             prior_close=98.0,
             bid=100.50,
             ask=100.60,
@@ -423,6 +424,151 @@ async def test_batch_plan_watch_full_shadow_path_is_idempotent(tmp_path):
     assert await shadow.evaluate_now(now=second_now) == 1
     trade = await store.get_shadow_trade(plan.plan_id)
     assert trade is not None and trade.status == ShadowTradeStatus.STOPPED
+
+
+@pytest.mark.asyncio
+async def test_batch_shadow_activates_at_retest_bar_not_delayed_detection_price(tmp_path):
+    calendar_path = tmp_path / "calendar.csv"
+    calendar_path.write_text(
+        "date,status,open_time,close_time,source\n"
+        "2026-09-07,CLOSED,,,NYSE\n"
+        "2027-01-01,CLOSED,,,NYSE\n"
+    )
+    cfg = Settings(market_calendar_path=calendar_path, run_mode="shadow")
+    store = InMemoryEventStore()
+    bars = [
+        _plan_watch_bar(0, high=99.6, low=99.0, close=99.4),
+        _plan_watch_bar(1, high=99.7, low=99.2, close=99.5),
+        _plan_watch_bar(2, high=99.8, low=99.3, close=99.6),
+        _plan_watch_bar(3, high=99.9, low=99.4, close=99.7),
+        _plan_watch_bar(4, high=100.0, low=99.5, close=99.8),
+        _plan_watch_bar(36, high=100.7, low=100.1, close=100.5),
+        _plan_watch_bar(37, high=100.35, low=99.95, close=100.2),
+    ]
+    provider = PlanWatchProvider(bars, current_last=102.0)
+    service = DecisionService(store, cfg=cfg, market_data=provider)
+    created_at = datetime(2026, 8, 28, 13, 50, tzinfo=UTC)
+    plan = TradePlan(
+        symbol="SPY",
+        lane=StrategyLane.CORE_MOMENTUM,
+        entry_trigger=100.0,
+        entry_zone_high=100.3,
+        stop=99.0,
+        tp1=101.5,
+        tp2=102.0,
+        max_spread_pct=0.25,
+        max_slippage_pct=0.30,
+        created_at=created_at,
+        expires_at=created_at + timedelta(minutes=30),
+        quality_risk_multiplier=0.5,
+        plan_id="retest-basis-plan",
+    )
+    await store.save_plan(plan)
+    await store.append(
+        LedgerEvent("PLAN_ISSUED", plan.plan_id, {"plan": asdict(plan)}, occurred_at=created_at)
+    )
+    await store.save_liquidity_profile(
+        LiquidityProfile(
+            symbol="SPY",
+            adv20=10_000_000,
+            close=98.0,
+            as_of=created_at - timedelta(days=1),
+            refreshed_at=created_at,
+        )
+    )
+    shadow = ShadowEvaluator(store, cfg=cfg, backfill=service.backfill_intraday_structures)
+    detected_at = datetime(2026, 8, 28, 14, 15, tzinfo=UTC)
+    shadow.validate_startup(now=detected_at)
+    runtime = BatchRuntime(
+        store=store,
+        service=service,
+        provider=provider,
+        scheduler=FakeScheduler(),
+        shadow=shadow,
+        digest=FakeDigest(),
+        dispatcher=FakeDispatcher(),
+        issue_sink=FakeIssueSink(),
+        cfg=cfg,
+        output_dir=tmp_path / "reports",
+        state_dir=tmp_path / "state",
+    )
+    await runtime._ensure_shadow_wallet(detected_at)
+
+    result = await runtime._run_plan_watch(detected_at)
+
+    assert result["buy_now"] == 1, result
+    trade = await store.get_shadow_trade(plan.plan_id)
+    assert trade is not None
+    assert trade.opened_at == datetime(2026, 8, 28, 14, 7, 59, tzinfo=UTC)
+    assert trade.fill == pytest.approx(100.3002)
+    emitted = next(event for event in store.events if event.event_type == "BUY_NOW_EMITTED")
+    context = emitted.payload["activation_context"]
+    assert context["activation_basis"] == "RETEST_BAR"
+    assert context["current_price"] == 102.0
+    assert context["virtual_entry"] == pytest.approx(100.3002)
+    alert = next(row for row in await store.list_alerts() if row.kind == "BUY_NOW")
+    assert "virtual_entry=100.3002" in alert.payload["text"]
+    assert "current_price=102.0000" in alert.payload["text"]
+
+    provider.bars.append(_plan_watch_bar(38, high=100.25, low=98.8, close=99.0))
+    await service.backfill_intraday_structures(["SPY"], now=detected_at)
+    assert await shadow.evaluate_now(now=detected_at) == 1
+    trade = await store.get_shadow_trade(plan.plan_id)
+    assert trade is not None and trade.status == ShadowTradeStatus.STOPPED
+    assert trade.last_bar_at == datetime(2026, 8, 28, 14, 8, tzinfo=UTC)
+
+
+@pytest.mark.asyncio
+async def test_shadow_retest_close_above_entry_zone_is_no_chase(tmp_path):
+    calendar_path = tmp_path / "calendar.csv"
+    calendar_path.write_text(
+        "date,status,open_time,close_time,source\n"
+        "2026-09-07,CLOSED,,,NYSE\n"
+        "2027-01-01,CLOSED,,,NYSE\n"
+    )
+    cfg = Settings(market_calendar_path=calendar_path, run_mode="shadow")
+    store = InMemoryEventStore()
+    bars = [
+        _plan_watch_bar(0, high=99.6, low=99.0, close=99.4),
+        _plan_watch_bar(1, high=99.7, low=99.2, close=99.5),
+        _plan_watch_bar(2, high=99.8, low=99.3, close=99.6),
+        _plan_watch_bar(3, high=99.9, low=99.4, close=99.7),
+        _plan_watch_bar(4, high=100.0, low=99.5, close=99.8),
+        _plan_watch_bar(36, high=100.8, low=100.1, close=100.6),
+        _plan_watch_bar(37, high=100.6, low=99.95, close=100.4),
+    ]
+    provider = PlanWatchProvider(bars, current_last=100.1)
+    service = DecisionService(store, cfg=cfg, market_data=provider)
+    created_at = datetime(2026, 8, 28, 13, 50, tzinfo=UTC)
+    plan = TradePlan(
+        symbol="SPY", lane=StrategyLane.CORE_MOMENTUM,
+        entry_trigger=100.0, entry_zone_high=100.3, stop=99.0,
+        tp1=101.5, tp2=102.0, max_spread_pct=0.25, max_slippage_pct=0.30,
+        created_at=created_at, expires_at=created_at + timedelta(minutes=30),
+        quality_risk_multiplier=0.5, plan_id="retest-no-chase",
+    )
+    await store.save_plan(plan)
+    await store.append(
+        LedgerEvent("PLAN_ISSUED", plan.plan_id, {"plan": asdict(plan)}, occurred_at=created_at)
+    )
+    await store.save_liquidity_profile(
+        LiquidityProfile(
+            symbol="SPY", adv20=10_000_000, close=98.0,
+            as_of=created_at - timedelta(days=1), refreshed_at=created_at,
+        )
+    )
+    detected_at = datetime(2026, 8, 28, 14, 15, tzinfo=UTC)
+    await service.seed_wallet(100_000, 100_000, source="SHADOW_VIRTUAL", now=detected_at)
+    await service.backfill_intraday_structures(["SPY"], now=detected_at)
+    structure = await service.get_intraday_structure("SPY", now=detected_at)
+    assert structure is not None and structure.state == "RETEST_VALID"
+
+    decision = await service.activate_shadow_retest(
+        plan.plan_id, structure=structure, detected_at=detected_at
+    )
+
+    assert decision.state != "BUY_NOW"
+    assert "NO_CHASE_ENTRY_ZONE_EXCEEDED" in decision.reasons
 
 
 @pytest.mark.asyncio

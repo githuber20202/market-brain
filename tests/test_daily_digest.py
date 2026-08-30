@@ -49,7 +49,24 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     await store.append(
         LedgerEvent("POSITION_IMPORTED", position.position_id, {"position": asdict(position)}, occurred_at=opened)
     )
-    await store.append(LedgerEvent("BUY_NOW_EMITTED", "plan-1", {}, occurred_at=now))
+    await store.append(
+        LedgerEvent(
+            "BUY_NOW_EMITTED",
+            "plan-1",
+            {
+                "decision": {"symbol": "NVDA"},
+                "activation_context": {
+                    "activation_basis": "RETEST_BAR",
+                    "virtual_entry": 100.1,
+                    "current_price": 101.0,
+                    "price_gap_pct": 0.8991,
+                    "retest_bar_ts": (now - timedelta(minutes=8)).isoformat(),
+                    "detected_at": now.isoformat(),
+                },
+            },
+            occurred_at=now,
+        )
+    )
     await store.append(LedgerEvent("BUY_NOW_EMITTED", "plan-2", {}, occurred_at=now))
     await store.append(LedgerEvent("ALERT_DELIVERED", "alert-1", {"sink": "telegram"}, occurred_at=now))
     await store.append(LedgerEvent("ALERT_DELIVERED", "alert-1", {"sink": "webhook"}, occurred_at=now))
@@ -146,6 +163,8 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
         "40-65": 3,
         "65+": 4,
     }
+    assert alert.payload["shadow_entries"][0]["symbol"] == "NVDA"
+    assert "virtual_entry=100.1000 current_price=101.0000 gap=+0.899%" in alert.payload["text"]
     assert "Wallet: virtual" in alert.payload["text"]
     assert "Quality: QUALITY_STALE rows=58" in alert.payload["text"]
     assert "- RISK_TOO_SMALL: count=2" in alert.payload["text"]

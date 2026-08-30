@@ -153,7 +153,13 @@ Shadow trade:
 `OPEN → STOPPED | TP1 → STOPPED | TP2 | TIME_STOP`
 
 `shadow_trades` היא ההטלה החומרית של טריידים וירטואליים שנפתחו מאירוע
-`BUY_NOW_EMITTED` כאשר `RUN_MODE=shadow`. מחיר המילוי הוא Trigger ועוד 10 bps.
+`BUY_NOW_EMITTED` כאשר `RUN_MODE=shadow`. במסלול batch המושהה בלבד, החלטת
+ההפעלה נבחנת כאילו התקבלה בסגירת נר ה-retest: המחיר וה-VWAP הם הערכים המצטברים
+באותו נר, המילוי הווירטואלי הוא סגירת הנר ועוד 10 bps, וזמן הפתיחה הוא סוף הנר.
+ההתראה שומרת גם את מחיר הגילוי המאוחר ואת הפער ממנו. מסלול live ממשיך לבחון את
+מחיר השוק העדכני בזמן ההפעלה. מאחר שנרות Yahoo אינם כוללים VWAP לכל נר,
+ה־running VWAP במסלול זה נגזר מ־volume-weighted typical price, באותה נוסחה שבה
+משתמש snapshot של Yahoo; נר ללא volume נשאר ללא תרומת VWAP.
 כללי היציאה משותפים ל־Replay ול־Shadow, כולל Stop-first בנר שנוגע גם ב־Stop וגם
 ב־Target. הטבלה אינה מייצגת פוזיציה אצל ברוקר ואינה מפעילה פקודה.
 

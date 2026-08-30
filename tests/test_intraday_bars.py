@@ -121,6 +121,21 @@ async def test_backfill_is_batched_and_advances_sip_coverage():
         assert coverage["source"] == "SIP"
 
 
+@pytest.mark.asyncio
+async def test_backfill_derives_running_vwap_when_yahoo_bar_has_no_vwap():
+    now = datetime(2026, 8, 28, 15, 0, tzinfo=UTC)
+    day = now.astimezone(EASTERN).date()
+    rows = [
+        {key: value for key, value in row(day, minute).items() if key != "vw"}
+        for minute in range(5)
+    ]
+    store = InMemoryEventStore()
+    service = DecisionService(store, market_data=BackfillProvider({"AAA": rows}))
+
+    result = await service.backfill_intraday_structures(["AAA"], now=now)
+
+    assert result["AAA"].running_vwap == pytest.approx(100.1)
+
+
 def test_backfill_setting_is_five_minutes():
     assert Settings().intraday_backfill_interval_seconds == 300
-
