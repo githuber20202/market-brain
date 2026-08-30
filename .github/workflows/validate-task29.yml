@@ -170,7 +170,7 @@ jobs:
           git fetch origin shadow-state:refs/remotes/origin/shadow-state
           mkdir -p state
           git show origin/shadow-state:state/quality.csv > state/quality.csv
-          echo "REHEARSAL_QUALITY_ROWS=$(($(wc -l < data/quality.csv)-1))"
+          echo "REHEARSAL_QUALITY_ROWS=$(($(wc -l < state/quality.csv)-1))"
       - name: Initialize temporary rehearsal database
         run: psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f config/schema.sql
       - name: Run production-path rehearsal and prove Issue sink
@@ -184,3 +184,12 @@ jobs:
           grep -q 'REHEARSAL_EXCEPTIONS=0' /tmp/rehearsal.log
           grep -q 'REHEARSAL_ISSUE=PASS' /tmp/rehearsal.log
           echo "REHEARSAL_RUN=PASS session=2026-08-28"
+      - name: Run optional second-session rehearsal
+        run: |
+          set -o pipefail
+          python -m market_brain.runtime.batch \
+            --mode rehearsal \
+            --session 2026-08-27 | tee /tmp/rehearsal-2026-08-27.log
+          grep -q '"status": "CLEAN"' /tmp/rehearsal-2026-08-27.log
+          grep -q 'REHEARSAL_EXCEPTIONS=0' /tmp/rehearsal-2026-08-27.log
+          echo "REHEARSAL_RUN=PASS session=2026-08-27"
