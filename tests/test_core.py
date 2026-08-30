@@ -186,6 +186,66 @@ def test_buy_now_requires_wallet_and_market_gates_only():
     assert decision.quantity > 0
 
 
+def test_keyless_activation_does_not_require_bbo_after_liquidity_gate_passes():
+    plan = make_plan()
+    market = snapshot(
+        last=plan.entry_trigger,
+        bid=None,
+        ask=None,
+        source_id="YAHOO_DELAYED",
+        authoritative=True,
+    )
+    decision = activate_plan(
+        plan,
+        market,
+        WalletState(10_000, 10_000),
+        retest_valid=True,
+        above_vwap=True,
+    )
+    assert decision.state == "BUY_NOW"
+    assert "BBO_MISSING" not in decision.reasons
+
+
+def test_keyless_activation_rejects_wide_bbo_when_present():
+    plan = make_plan()
+    market = snapshot(
+        last=plan.entry_trigger,
+        bid=plan.entry_trigger - 1.0,
+        ask=plan.entry_trigger + 1.0,
+        source_id="CBOE_DELAYED",
+        authoritative=True,
+    )
+    decision = activate_plan(
+        plan,
+        market,
+        WalletState(10_000, 10_000),
+        retest_valid=True,
+        above_vwap=True,
+    )
+    assert decision.state == "ARMED"
+    assert "SPREAD_TOO_WIDE" in decision.reasons
+
+
+def test_iex_activation_still_requires_bbo():
+    plan = make_plan()
+    market = snapshot(
+        last=plan.entry_trigger,
+        bid=None,
+        ask=None,
+        source_id="ALPACA_IEX",
+        authoritative=True,
+    )
+    decision = activate_plan(
+        plan,
+        market,
+        WalletState(10_000, 10_000),
+        retest_valid=True,
+        above_vwap=True,
+    )
+    assert decision.state == "ARMED"
+    assert "BBO_MISSING" in decision.reasons
+
+
 def test_expired_plan_cannot_activate():
     plan = make_plan()
     plan.expires_at = datetime.now(UTC) - timedelta(seconds=1)

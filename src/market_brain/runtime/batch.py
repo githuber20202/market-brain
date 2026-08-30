@@ -267,6 +267,7 @@ class BatchRuntime:
                 backfill_failures.append({"symbol": symbol, "error_type": error_type})
 
         triggers = 0
+        retest_valid = 0
         activations = 0
         rejected = 0
         rejected_by_reason: dict[str, int] = {}
@@ -329,6 +330,7 @@ class BatchRuntime:
                     rejected += 1
                     self._count_rejection_reasons(rejected_by_reason, reasons)
                 continue
+            retest_valid += 1
             try:
                 decision = await self.service.activate(plan.plan_id, now=timestamp)
             except (DataUnavailable, OSError, RuntimeError, TypeError, ValueError) as exc:
@@ -361,6 +363,7 @@ class BatchRuntime:
             "symbols": len(symbols),
             "backfill_failures": backfill_failures,
             "trigger_hits": triggers,
+            "retest_valid": retest_valid,
             "buy_now": activations,
             "activation_rejected": rejected,
             "activation_rejected_by_reason": dict(sorted(rejected_by_reason.items())),

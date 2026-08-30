@@ -9,6 +9,7 @@ from market_brain.domain.models import (
     TradePlan,
     WalletState,
 )
+from market_brain.engines.liquidity import _is_keyless_source
 from market_brain.engines.wallet import size_from_wallet
 from market_brain.settings import settings as runtime_settings
 
@@ -43,12 +44,18 @@ def activate_plan(
         reasons.append("AUTHORITATIVE_MARKET_FEED_REQUIRED")
     if snapshot.data_age_seconds is None or snapshot.data_age_seconds > data_age_limit:
         reasons.append("MARKET_DATA_STALE")
-    if snapshot.bid is None or snapshot.ask is None or snapshot.ask < snapshot.bid:
-        reasons.append("BBO_MISSING")
-    else:
+    has_valid_bbo = (
+        snapshot.bid is not None
+        and snapshot.ask is not None
+        and snapshot.bid > 0
+        and snapshot.ask >= snapshot.bid
+    )
+    if has_valid_bbo:
         spread_pct = (snapshot.ask - snapshot.bid) / snapshot.last * 100.0
         if spread_pct > plan.max_spread_pct:
             reasons.append("SPREAD_TOO_WIDE")
+    elif not _is_keyless_source(snapshot.source_id):
+        reasons.append("BBO_MISSING")
     if not above_vwap:
         reasons.append("ABOVE_VWAP_REQUIRED")
     if not retest_valid:
@@ -83,4 +90,3 @@ def activate_plan(
         tp1=plan.tp1,
         tp2=plan.tp2,
     )
-

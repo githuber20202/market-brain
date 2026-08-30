@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from dataclasses import asdict
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -113,6 +113,86 @@ def test_bar_below_orh_minus_point25r_invalidates_structure():
     )
     assert structure.state == IntradayStructureState.INVALID
     assert "RETEST_INVALIDATED_BELOW_ORH_BUFFER" in structure.reasons
+
+
+def _compute_and_stream(rows, cfg, day):
+    computed = compute_structure(
+        "TEST",
+        day.isoformat(),
+        rows,
+        cfg,
+        now=datetime.combine(day, datetime.min.time(), EASTERN).replace(hour=15),
+    )
+    streamed = new_intraday_structure(
+        "TEST",
+        datetime.combine(day, datetime.min.time(), EASTERN).replace(hour=9, minute=30),
+    )
+    for row in rows:
+        streamed = update_intraday_structure(streamed, row, cfg)
+    assert streamed.state == computed.state
+    assert streamed.reasons == computed.reasons
+    assert streamed.opening_range_high == computed.opening_range_high
+    assert streamed.opening_range_low == computed.opening_range_low
+    assert streamed.breakout_at == computed.breakout_at
+    assert streamed.retest_at == computed.retest_at
+    return computed
+
+
+def _parity_opening_rows(day):
+    return [
+        bar(day, 0, high=100.2, low=99.6, close=100.0, vwap=99.9),
+        bar(day, 1, high=100.4, low=99.8, close=100.2, vwap=100.0),
+        bar(day, 2, high=100.5, low=99.9, close=100.3, vwap=100.1),
+        bar(day, 3, high=100.7, low=100.0, close=100.5, vwap=100.2),
+        bar(day, 4, high=100.8, low=100.1, close=100.6, vwap=100.3),
+    ]
+
+
+def test_compute_and_stream_keep_normal_in_range_bars_armed_before_breakout():
+    cfg = Settings()
+    day = date(2026, 8, 28)
+    rows = _parity_opening_rows(day) + [
+        bar(day, 5, high=100.5, low=99.72, close=100.0, vwap=100.2),
+    ]
+    structure = _compute_and_stream(rows, cfg, day)
+    assert structure.state == IntradayStructureState.ARMED
+    assert structure.reasons == ["OPENING_RANGE_ESTABLISHED"]
+
+
+def test_compute_and_stream_agree_on_breakout_then_valid_retest():
+    cfg = Settings()
+    day = date(2026, 8, 28)
+    rows = _parity_opening_rows(day) + [
+        bar(day, 5, high=100.5, low=99.72, close=100.0, vwap=100.2),
+        bar(day, 6, high=101.2, low=100.75, close=101.0, vwap=100.5),
+        bar(day, 7, high=101.0, low=100.70, close=100.9, vwap=100.6),
+    ]
+    structure = _compute_and_stream(rows, cfg, day)
+    assert structure.state == IntradayStructureState.RETEST_VALID
+    assert structure.reasons == ["SERVER_RETEST_VALID"]
+
+
+def test_compute_and_stream_agree_on_failed_breakout_invalidation():
+    cfg = Settings()
+    day = date(2026, 8, 28)
+    rows = _parity_opening_rows(day) + [
+        bar(day, 5, high=101.2, low=100.75, close=101.0, vwap=100.5),
+        bar(day, 6, high=100.8, low=100.49, close=100.7, vwap=100.6),
+    ]
+    structure = _compute_and_stream(rows, cfg, day)
+    assert structure.state == IntradayStructureState.INVALID
+    assert structure.reasons == ["RETEST_INVALIDATED_BELOW_ORH_BUFFER"]
+
+
+def test_compute_and_stream_agree_on_pre_breakout_range_breakdown():
+    cfg = Settings()
+    day = date(2026, 8, 28)
+    rows = _parity_opening_rows(day) + [
+        bar(day, 5, high=100.2, low=99.29, close=99.5, vwap=100.0),
+    ]
+    structure = _compute_and_stream(rows, cfg, day)
+    assert structure.state == IntradayStructureState.INVALID
+    assert structure.reasons == ["RANGE_BREAKDOWN"]
 
 
 class SnapshotProvider:

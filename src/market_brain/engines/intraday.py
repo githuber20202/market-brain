@@ -107,7 +107,6 @@ def compute_structure(
         structure.state = IntradayStructureState.INVALID
         structure.reasons = ["OPENING_RANGE_INVALID"]
         return structure
-    invalidation = orh - cfg.retest_invalidation_buffer_r * r_value
     tolerance = cfg.retest_touch_tolerance_pct / 100.0
 
     for bar in ordered:
@@ -122,9 +121,16 @@ def compute_structure(
         if stamp < session_start + timedelta(minutes=cfg.intraday_opening_range_minutes):
             previous_close = close
             continue
-        if low < invalidation:
+        invalidation_reason = _structure_invalidation_reason(
+            structure.state,
+            low=low,
+            orh=orh,
+            orl=orl,
+            buffer_r=cfg.retest_invalidation_buffer_r,
+        )
+        if invalidation_reason is not None:
             structure.state = IntradayStructureState.INVALID
-            structure.reasons = ["RETEST_INVALIDATED_BELOW_ORH_BUFFER"]
+            structure.reasons = [invalidation_reason]
             return structure
         if structure.state == IntradayStructureState.RETEST_VALID:
             previous_close = close
@@ -253,10 +259,16 @@ def update_intraday_structure(
         structure.state = IntradayStructureState.INVALID
         structure.reasons = ["OPENING_RANGE_INVALID"]
         return structure
-    invalidation = orh - cfg.retest_invalidation_buffer_r * r_value
-    if low < invalidation:
+    invalidation_reason = _structure_invalidation_reason(
+        structure.state,
+        low=low,
+        orh=orh,
+        orl=structure.opening_range_low,
+        buffer_r=cfg.retest_invalidation_buffer_r,
+    )
+    if invalidation_reason is not None:
         structure.state = IntradayStructureState.INVALID
-        structure.reasons = ["RETEST_INVALIDATED_BELOW_ORH_BUFFER"]
+        structure.reasons = [invalidation_reason]
         return structure
     if structure.state == IntradayStructureState.RETEST_VALID:
         return structure
@@ -298,6 +310,30 @@ def update_intraday_structure(
         structure.breakout_at = stamp
         structure.reasons = ["ORH_BREAKOUT_CONFIRMED"]
     return structure
+
+
+def _structure_invalidation_reason(
+    state: IntradayStructureState,
+    *,
+    low: float,
+    orh: float,
+    orl: float,
+    buffer_r: float,
+) -> str | None:
+    r_value = orh - orl
+    if state == IntradayStructureState.ARMED:
+        range_breakdown = orl - buffer_r * r_value
+        if low < range_breakdown:
+            return "RANGE_BREAKDOWN"
+        return None
+    if state in {
+        IntradayStructureState.BREAKOUT_SEEN,
+        IntradayStructureState.RETEST_VALID,
+    }:
+        failed_breakout = orh - buffer_r * r_value
+        if low < failed_breakout:
+            return "RETEST_INVALIDATED_BELOW_ORH_BUFFER"
+    return None
 
 
 def _merged_bars(bars: list[dict]) -> list[dict]:
@@ -346,4 +382,3 @@ def _float(value) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
-

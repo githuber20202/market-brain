@@ -93,6 +93,11 @@ Radar מעתיקה אותו אל `data/quality.csv` רק כאשר גיל כל ש
 ציטוט Cboe אינו משמש בחזרה, כדי שמחיר מסגירת היום לא יאומת מול מחיר מוקדם יותר.
 מצב זה הוא כלי בדיקה למסלול הייצור ואינו משנה את תוצאות ה־Replay האסטרטגי.
 
+במצב `keyless_delayed`, שער ההפעלה אינו דורש BBO כאשר הוא חסר: סמכות הנתון
+נקבעת בשער ה־keyless, וה־ADV המחמיר נשאר תנאי חובה. כאשר bid/ask תקינים כן
+קיימים (למשל מ־Cboe), ה־spread נבדק מול `max_spread_pct`. במסלול Alpaca/IEX
+BBO נשאר חובה, וחסרונו מחזיר `BBO_MISSING`.
+
 ## Ranking inputs and Radar/Replay parity
 
 ציון ה־Radar משתמש בנתוני ייצור מלאים ולא בערכי ברירת מחדל שמוזנים רק בטסטים:
@@ -117,6 +122,17 @@ Plan שלא הגיע לציון 65 בפועל נפסל בדיוק כמו ב־Rad
 Candidate:
 
 `RADAR → QUALIFIED → ENTRY_READY → BUY_NOW | NO_TRADE | EXPIRED`
+
+מכונת ה־Intraday Retest מפרידה בין פסילה לפני ואחרי פריצה:
+
+- במצב `ARMED`, מסחר רגיל בתוך ה־Opening Range אינו פסילה. רק
+  `low < ORL − RETEST_INVALIDATION_BUFFER_R × (ORH − ORL)` מעביר ל־`INVALID`
+  עם `RANGE_BREAKDOWN`.
+- במצבים `BREAKOUT_SEEN` ו־`RETEST_VALID`, ‏failed breakout נשאר טרמינלי:
+  `low < ORH − RETEST_INVALIDATION_BUFFER_R × (ORH − ORL)` מעביר ל־`INVALID`
+  עם `RETEST_INVALIDATED_BELOW_ORH_BUFFER`.
+- `compute_structure` והעדכון האינקרמנטלי `update_intraday_structure` משתמשים
+  באותה פונקציית פסילה, כדי ש־Replay, Batch והמסלול הרציף יפיקו אותו state.
 
 Trade intent:
 

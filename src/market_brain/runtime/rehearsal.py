@@ -206,6 +206,10 @@ async def run_rehearsal(
         },
         "skipped_symbols": skipped_symbols,
         "trigger_hits": sum(row.event_type == "TRIGGER_HIT" for row in events),
+        "retest_valid": sum(
+            int(report.get("plan_watch", {}).get("retest_valid", 0))
+            for report in tick_reports
+        ),
         "buy_now": sum(row.event_type == "BUY_NOW_EMITTED" for row in events),
         "activation_rejected": sum(
             row.event_type == "ACTIVATION_REJECTED" for row in events
@@ -276,7 +280,8 @@ def _issue_summary(summary: dict[str, Any]) -> str:
         ),
         (
             f"plans={summary['plans']} trigger_hits={summary['trigger_hits']} "
-            f"buy_now={summary['buy_now']} activation_rejected={summary['activation_rejected']}"
+            f"retest_valid={summary['retest_valid']} buy_now={summary['buy_now']} "
+            f"activation_rejected={summary['activation_rejected']}"
         ),
         f"skipped_symbols={summary['skipped_symbols']} http_requests={summary['http_requests']}",
         (
