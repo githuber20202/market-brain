@@ -8,6 +8,8 @@ from typing import Any
 
 from market_brain.orchestration.universe import EASTERN
 from market_brain.runtime.radar_scheduler import scheduled_slots
+from market_brain.runtime.state import activate_quality_from_state
+from market_brain.settings import ROOT
 
 
 class MutableClock:
@@ -52,6 +54,14 @@ async def run_rehearsal(
     publish_issue: bool = False,
 ) -> dict[str, Any]:
     first_tick = rehearsal_ticks(session_date)[0]
+    quality_status = await activate_quality_from_state(
+        ROOT,
+        runtime.cfg.quality_path,
+        runtime.store,
+        now=datetime.now(UTC),
+    )
+    if quality_status.get("status") != "READY":
+        raise RuntimeError(str(quality_status.get("status", "QUALITY_STATE_INVALID")))
     runtime.scheduler.validate_startup(now=first_tick)
     assert runtime.scheduler.calendar is not None
     session = runtime.scheduler.calendar.session_for(session_date)
@@ -198,6 +208,7 @@ async def run_rehearsal(
         "http_requests": provider.request_count,
         "exceptions": exceptions,
         "digest": digest_result,
+        "quality": quality_status,
     }
     print(
         "REHEARSAL_SUMMARY="
@@ -261,6 +272,10 @@ def _issue_summary(summary: dict[str, Any]) -> str:
             f"buy_now={summary['buy_now']} activation_rejected={summary['activation_rejected']}"
         ),
         f"skipped_symbols={summary['skipped_symbols']} http_requests={summary['http_requests']}",
+        (
+            f"quality={summary['quality']['status']} "
+            f"rows={summary['quality']['rows']} as_of={summary['quality'].get('as_of')}"
+        ),
         "plan_rejections="
         + json.dumps(summary["plan_rejections"], sort_keys=True, ensure_ascii=False),
         "shadow_trades="

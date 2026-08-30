@@ -168,8 +168,9 @@ jobs:
       - name: Load quality only from shadow-state
         run: |
           git fetch origin shadow-state:refs/remotes/origin/shadow-state
-          git show origin/shadow-state:state/quality.csv > data/quality.csv
-          echo "REHEARSAL_QUALITY_ROWS=$(($(wc -l < data/quality.csv)-1))"
+          mkdir -p state
+          git show origin/shadow-state:state/quality.csv > state/quality.csv
+          echo "REHEARSAL_QUALITY_ROWS=$(($(wc -l < state/quality.csv)-1))"
       - name: Initialize temporary rehearsal database
         run: psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f config/schema.sql
       - name: Run production-path rehearsal and prove Issue sink

@@ -137,6 +137,8 @@ async def test_github_issue_sink_posts_one_rehearsal_comment_and_closes_issue():
             return httpx.Response(200, json={"name": "shadow"})
         if request.method == "GET" and request.url.path.endswith("/issues"):
             return httpx.Response(200, json=[])
+        if request.method == "GET" and request.url.path.endswith("/comments"):
+            return httpx.Response(200, json=[])
         if request.method == "POST" and request.url.path.endswith("/issues"):
             return httpx.Response(201, json={"number": 28})
         return httpx.Response(200, json={"id": 1})
@@ -156,10 +158,67 @@ async def test_github_issue_sink_posts_one_rehearsal_comment_and_closes_issue():
         if method == "POST" and path.endswith("/issues")
     )
     assert issue["title"] == "Shadow rehearsal 2026-08-28"
-    comments = [body for method, path, body in requests if path.endswith("/comments")]
+    comments = [
+        body
+        for method, path, body in requests
+        if method == "POST" and path.endswith("/comments")
+    ]
     assert comments == [{"body": "@githuber20202\n\nCLEAN"}]
     assert any(
         method == "PATCH" and path.endswith("/issues/28") and body == {"state": "closed"}
         for method, path, body in requests
     )
     assert "test-token" not in json.dumps(requests)
+
+
+@pytest.mark.asyncio
+async def test_github_issue_sink_updates_existing_rehearsal_comment():
+    requests: list[tuple[str, str, dict | None]] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content) if request.content else None
+        requests.append((request.method, request.url.path, body))
+        if request.url.path.endswith("/labels/shadow"):
+            return httpx.Response(200, json={"name": "shadow"})
+        if request.url.path.endswith("/issues"):
+            return httpx.Response(
+                200,
+                json=[{"number": 28, "title": "Shadow rehearsal 2026-08-28"}],
+            )
+        if request.method == "GET" and request.url.path.endswith("/comments"):
+            return httpx.Response(
+                200,
+                json=[
+                    {
+                        "id": 91,
+                        "body": "@githuber20202\n\nShadow rehearsal 2026-08-28: CLEAN",
+                    }
+                ],
+            )
+        return httpx.Response(200, json={"id": 91})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        sink = GitHubIssueSink("test-token", "githuber20202/market-brain", client)
+        assert (
+            await sink.send_rehearsal_summary(
+                "2026-08-28",
+                "Shadow rehearsal 2026-08-28: CLEAN updated",
+            )
+            == 28
+        )
+
+    assert not any(
+        method == "POST" and path.endswith("/comments") for method, path, _ in requests
+    )
+    assert any(
+        method == "PATCH"
+        and path.endswith("/issues/comments/91")
+        and body
+        == {
+            "body": (
+                "@githuber20202\n\n"
+                "Shadow rehearsal 2026-08-28: CLEAN updated"
+            )
+        }
+        for method, path, body in requests
+    )

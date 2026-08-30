@@ -244,11 +244,34 @@ class GitHubIssueSink:
             )
             response.raise_for_status()
             issue_number = int(response.json()["number"])
-        response = await client.post(
+        comment_body = f"@{self.mention}\n\n{text}"
+        response = await client.get(
             f"{base}/issues/{issue_number}/comments",
             headers=self._headers(),
-            json={"body": f"@{self.mention}\n\n{text}"},
+            params={"per_page": 100},
         )
+        response.raise_for_status()
+        marker = f"@{self.mention}\n\nShadow rehearsal {session_date}:"
+        existing_comment = next(
+            (
+                row
+                for row in response.json()
+                if isinstance(row.get("body"), str) and row["body"].startswith(marker)
+            ),
+            None,
+        )
+        if existing_comment is None:
+            response = await client.post(
+                f"{base}/issues/{issue_number}/comments",
+                headers=self._headers(),
+                json={"body": comment_body},
+            )
+        else:
+            response = await client.patch(
+                f"{base}/issues/comments/{int(existing_comment['id'])}",
+                headers=self._headers(),
+                json={"body": comment_body},
+            )
         response.raise_for_status()
         response = await client.patch(
             f"{base}/issues/{issue_number}",
