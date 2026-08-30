@@ -250,3 +250,30 @@ async def test_postgres_shadow_trade_round_trip_and_event_replay(pg_store):
     assert await pg_store.get_shadow_trade(trade.plan_id) == trade
     assert await pg_store.list_shadow_trades() == [trade]
     assert await replay_check(pg_store) == []
+
+
+@pytest.mark.asyncio
+async def test_postgres_events_with_same_timestamp_keep_append_order(pg_store):
+    occurred_at = datetime(2026, 8, 28, 13, 50, tzinfo=UTC)
+    first = LedgerEvent(
+        "FIRST",
+        "order-test",
+        {},
+        event_id="ffffffff-ffff-4fff-8fff-ffffffffffff",
+        occurred_at=occurred_at,
+    )
+    second = LedgerEvent(
+        "SECOND",
+        "order-test",
+        {},
+        event_id="00000000-0000-4000-8000-000000000000",
+        occurred_at=occurred_at,
+    )
+
+    await pg_store.append(first)
+    await pg_store.append(second)
+
+    assert [event.event_type for event in await pg_store.read_events()] == [
+        "FIRST",
+        "SECOND",
+    ]

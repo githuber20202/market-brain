@@ -1,10 +1,13 @@
 CREATE TABLE IF NOT EXISTS decision_events (
   event_id UUID PRIMARY KEY,
+  event_sequence BIGINT GENERATED ALWAYS AS IDENTITY,
   event_type TEXT NOT NULL,
   aggregate_id TEXT NOT NULL,
   occurred_at TIMESTAMPTZ NOT NULL,
   payload JSONB NOT NULL
 );
+ALTER TABLE decision_events ADD COLUMN IF NOT EXISTS event_sequence BIGINT GENERATED ALWAYS AS IDENTITY;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_decision_events_sequence ON decision_events(event_sequence);
 CREATE INDEX IF NOT EXISTS idx_decision_events_aggregate ON decision_events(aggregate_id, occurred_at);
 
 CREATE TABLE IF NOT EXISTS trade_plans (

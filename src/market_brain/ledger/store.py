@@ -288,7 +288,7 @@ class PostgresEventStore:
     async def read_events(self, after_event_id: str | None = None) -> list[LedgerEvent]:
         rows = await self._fetch(
             "SELECT event_id,event_type,aggregate_id,occurred_at,payload "
-            "FROM decision_events ORDER BY occurred_at,event_id"
+            "FROM decision_events ORDER BY event_sequence"
         )
         events = [
             LedgerEvent(
