@@ -1162,6 +1162,19 @@ class DecisionService:
             return ActivationDecision(
                 plan_id, plan.symbol, SignalState.ARMED, ["RETEST_TIMESTAMP_MISSING"]
             )
+        retest_minute = structure.retest_at.astimezone(UTC).replace(second=0, microsecond=0)
+        retest_closed_at = retest_minute + timedelta(seconds=59)
+        activation_eligible_after = max(
+            plan.created_at.astimezone(UTC),
+            (plan.triggered_at or plan.created_at).astimezone(UTC),
+        )
+        if retest_closed_at <= activation_eligible_after:
+            return ActivationDecision(
+                plan_id,
+                plan.symbol,
+                SignalState.INVALID,
+                ["RETEST_PRECEDES_PLAN_TRIGGER"],
+            )
         wallet = await self.store.get_wallet()
         if wallet is None:
             return ActivationDecision(plan_id, plan.symbol, SignalState.WATCH, ["WALLET_NOT_SEEDED"])
@@ -1178,7 +1191,6 @@ class DecisionService:
             )
         liquidity_reasons = await self._market_liquidity_reasons(current, now=timestamp)
         rows = await self.store.list_intraday_bars(plan.symbol, structure.session_date)
-        retest_minute = structure.retest_at.astimezone(UTC).replace(second=0, microsecond=0)
         prefix = [row for row in rows if row.minute_ts <= retest_minute]
         retest_bar = next((row for row in prefix if row.minute_ts == retest_minute), None)
         if retest_bar is None:

@@ -160,6 +160,9 @@ Shadow trade:
 מחיר השוק העדכני בזמן ההפעלה. מאחר שנרות Yahoo אינם כוללים VWAP לכל נר,
 ה־running VWAP במסלול זה נגזר מ־volume-weighted typical price, באותה נוסחה שבה
 משתמש snapshot של Yahoo; נר ללא volume נשאר ללא תרומת VWAP.
+נר retest זכאי להפעלת Shadow רק אם נסגר אחרי יצירת ה-plan ואחרי ה-TRIGGER_HIT
+שלו. Retest מוקדם יותר נדחה כ-`RETEST_PRECEDES_PLAN_TRIGGER`; אסור לפתוח טרייד
+וירטואלי רטרואקטיבית על מבנה שהושלם לפני שה-plan היה קיים.
 כללי היציאה משותפים ל־Replay ול־Shadow, כולל Stop-first בנר שנוגע גם ב־Stop וגם
 ב־Target. הטבלה אינה מייצגת פוזיציה אצל ברוקר ואינה מפעילה פקודה.
 

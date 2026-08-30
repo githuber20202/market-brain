@@ -572,6 +572,51 @@ async def test_shadow_retest_close_above_entry_zone_is_no_chase(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_shadow_retest_must_follow_plan_trigger(tmp_path):
+    calendar_path = tmp_path / "calendar.csv"
+    calendar_path.write_text(
+        "date,status,open_time,close_time,source\n"
+        "2026-09-07,CLOSED,,,NYSE\n"
+        "2027-01-01,CLOSED,,,NYSE\n"
+    )
+    cfg = Settings(market_calendar_path=calendar_path, run_mode="shadow")
+    store = InMemoryEventStore()
+    bars = [
+        _plan_watch_bar(0, high=99.6, low=99.0, close=99.4),
+        _plan_watch_bar(1, high=99.7, low=99.2, close=99.5),
+        _plan_watch_bar(2, high=99.8, low=99.3, close=99.6),
+        _plan_watch_bar(3, high=99.9, low=99.4, close=99.7),
+        _plan_watch_bar(4, high=100.0, low=99.5, close=99.8),
+        _plan_watch_bar(36, high=100.4, low=100.1, close=100.2),
+        _plan_watch_bar(37, high=100.25, low=99.95, close=100.2),
+    ]
+    provider = PlanWatchProvider(bars, current_last=100.2)
+    service = DecisionService(store, cfg=cfg, market_data=provider)
+    created_at = datetime(2026, 8, 28, 14, 10, tzinfo=UTC)
+    plan = TradePlan(
+        symbol="SPY", lane=StrategyLane.CORE_MOMENTUM,
+        entry_trigger=100.0, entry_zone_high=100.3, stop=99.0,
+        tp1=101.5, tp2=102.0, max_spread_pct=0.25, max_slippage_pct=0.30,
+        created_at=created_at, expires_at=created_at + timedelta(minutes=30),
+        triggered_at=created_at + timedelta(minutes=1),
+        quality_risk_multiplier=0.5, plan_id="retest-before-plan",
+    )
+    await store.save_plan(plan)
+    detected_at = datetime(2026, 8, 28, 14, 15, tzinfo=UTC)
+    await service.backfill_intraday_structures(["SPY"], now=detected_at)
+    structure = await service.get_intraday_structure("SPY", now=detected_at)
+    assert structure is not None and structure.state == "RETEST_VALID"
+
+    decision = await service.activate_shadow_retest(
+        plan.plan_id, structure=structure, detected_at=detected_at
+    )
+
+    assert decision.state == "INVALID"
+    assert decision.reasons == ["RETEST_PRECEDES_PLAN_TRIGGER"]
+    assert await store.get_shadow_trade(plan.plan_id) is None
+
+
+@pytest.mark.asyncio
 async def test_batch_activation_rejection_is_transition_only_and_labels_extension(tmp_path):
     runtime, _scheduler = _runtime(tmp_path)
     now = datetime(2026, 8, 28, 14, 0, tzinfo=UTC)
