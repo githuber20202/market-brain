@@ -29,7 +29,11 @@ from market_brain.domain.models import (
     WalletState,
 )
 from market_brain.engines.activation import activate_plan
-from market_brain.engines.features import compute_features
+from market_brain.engines.features import (
+    apply_ranking_context,
+    compute_features,
+    price_return_pct,
+)
 from market_brain.engines.intraday import (
     compute_structure,
     session_date_for,
@@ -433,9 +437,42 @@ class DecisionService:
                     "LIQUIDITY_PROFILE_REFRESHED",
                     profile.symbol,
                     {"profile": asdict(profile)},
+                    occurred_at=timestamp,
                 )
             )
         return profile
+
+    async def refresh_liquidity_profiles_for_symbols(
+        self,
+        symbols: list[str],
+        *,
+        now: datetime,
+    ) -> dict[str, object]:
+        refreshed: list[str] = []
+        failed: list[dict[str, str]] = []
+        for symbol in sorted(dict.fromkeys(value.upper() for value in symbols)):
+            try:
+                await self.ensure_liquidity_profile(symbol, now=now)
+                refreshed.append(symbol)
+            except (DataUnavailable, RuntimeError, ValueError, TypeError) as exc:
+                failed.append({"symbol": symbol, "error_type": type(exc).__name__})
+                await self.store.append(
+                    LedgerEvent(
+                        "LIQUIDITY_PROFILE_REFRESH_FAILED",
+                        symbol,
+                        {"error_type": type(exc).__name__},
+                        occurred_at=now,
+                    )
+                )
+        result: dict[str, object] = {
+            "session_date": now.astimezone(ZoneInfo("America/New_York")).date().isoformat(),
+            "refreshed": len(refreshed),
+            "failed": failed,
+        }
+        await self.store.set_runtime_status(
+            f"liquidity_refresh:{result['session_date']}", result
+        )
+        return result
 
     async def ensure_liquidity_profile(
         self,
@@ -731,9 +768,14 @@ class DecisionService:
         catalyst_strength: float,
         structure_score: float,
         rr_score: float,
+        benchmark_return_pct: float | None = None,
         now: datetime | None = None,
     ) -> tuple[TradePlan, dict]:
-        snapshot = await self.prepare_plan_market_data(symbol, now=now)
+        snapshot = await self.prepare_plan_market_data(
+            symbol,
+            benchmark_return_pct=benchmark_return_pct,
+            now=now,
+        )
         snapshot.catalyst_verified = catalyst_verified
         snapshot.catalyst_strength = catalyst_strength
         return await self.build_plan(
@@ -749,6 +791,7 @@ class DecisionService:
         self,
         symbol: str,
         *,
+        benchmark_return_pct: float | None = None,
         now: datetime | None = None,
     ) -> MarketSnapshot:
         if self.market_data is None:
@@ -759,6 +802,7 @@ class DecisionService:
         snapshot = await self.market_data.snapshot(normalized, decision=False)
 
         timestamp = now or datetime.now(UTC)
+        profile = await self.ensure_liquidity_profile(normalized, now=timestamp)
         liquidity_reasons = (
             await self._market_liquidity_reasons(snapshot, now=timestamp)
             if _is_keyless_source(snapshot.source_id)
@@ -781,6 +825,20 @@ class DecisionService:
                     error_type=blocking[0],
                 )
             raise ValueError(blocking[0])
+        benchmark = benchmark_return_pct
+        if benchmark is None:
+            anchor = (
+                snapshot
+                if normalized == "SPY"
+                else await self.market_data.snapshot("SPY", decision=False)
+            )
+            benchmark = price_return_pct(anchor)
+        apply_ranking_context(
+            snapshot,
+            profile,
+            benchmark_return_pct=benchmark,
+            now=timestamp,
+        )
         eastern = ZoneInfo("America/New_York")
         local = timestamp.astimezone(eastern)
         session_local = local.replace(hour=9, minute=30, second=0, microsecond=0)

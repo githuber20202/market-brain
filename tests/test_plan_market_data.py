@@ -20,6 +20,17 @@ def market_transport(seen: list[tuple[str, dict]]):
         {"t": "2026-08-28T13:32:00+00:00", "o": 100.4, "h": 100.8, "l": 100.1, "c": 100.7, "v": 1400},
         {"t": "2026-08-28T13:33:00+00:00", "o": 100.7, "h": 100.75, "l": 99.7, "c": 100.2, "v": 900},
     ]
+    daily_bars = [
+        {
+            "t": f"2026-07-{day:02d}T00:00:00+00:00",
+            "o": 98.0,
+            "h": 101.0,
+            "l": 97.0,
+            "c": 98.0,
+            "v": 20_000_000,
+        }
+        for day in range(1, 25)
+    ]
 
     async def handler(request: httpx.Request) -> httpx.Response:
         seen.append((request.url.path, dict(request.url.params)))
@@ -38,7 +49,8 @@ def market_transport(seen: list[tuple[str, dict]]):
                 },
             )
         if request.url.path.endswith('/v2/stocks/TEST/bars'):
-            return httpx.Response(200, json={"bars": bars})
+            selected = daily_bars if request.url.params.get("timeframe") == "1Day" else bars
+            return httpx.Response(200, json={"bars": selected})
         return httpx.Response(404)
 
     return httpx.MockTransport(handler)
@@ -99,15 +111,6 @@ async def test_build_plan_from_market_fetches_snapshot_and_derives_structure():
     )
     async with httpx.AsyncClient(transport=market_transport(seen)) as client:
         provider = AlpacaMarketData(cfg, client)
-        original_snapshot = provider.snapshot
-
-        async def enriched_snapshot(symbol: str, decision: bool = False):
-            snapshot = await original_snapshot(symbol, decision=decision)
-            snapshot.avg_volume = 1_000_000
-            snapshot.benchmark_return_pct = 0.0
-            return snapshot
-
-        provider.snapshot = enriched_snapshot
         store = InMemoryEventStore()
         service = DecisionService(store, cfg=cfg, market_data=provider)
         quality = classify_quality("TEST", 90, datetime.now(UTC))
@@ -119,6 +122,7 @@ async def test_build_plan_from_market_fetches_snapshot_and_derives_structure():
             catalyst_strength=0.9,
             structure_score=15,
             rr_score=10,
+            benchmark_return_pct=0.0,
             now=datetime(2026, 8, 28, 13, 34, 30, tzinfo=UTC),
         )
     assert plan.symbol == "TEST"

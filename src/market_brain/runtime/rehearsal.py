@@ -180,9 +180,11 @@ async def run_rehearsal(
     events = await runtime.store.read_events()
     radar_events = [row for row in events if row.event_type == "RADAR_RUN"]
     rejection_counts: Counter[str] = Counter()
+    score_histogram: Counter[str] = Counter()
     skipped_symbols = 0
     for event in radar_events:
         skipped_symbols += len(event.payload.get("skipped_symbols", []))
+        score_histogram.update(event.payload.get("score_histogram", {}))
         for candidate in event.payload.get("candidates", []):
             reason = candidate.get("reason")
             if isinstance(reason, str) and reason:
@@ -198,6 +200,10 @@ async def run_rehearsal(
         ),
         "plans": len(await runtime.store.list_plans()),
         "plan_rejections": dict(sorted(rejection_counts.items())),
+        "score_histogram": {
+            bucket: score_histogram[bucket]
+            for bucket in ("0-20", "20-40", "40-65", "65+")
+        },
         "skipped_symbols": skipped_symbols,
         "trigger_hits": sum(row.event_type == "TRIGGER_HIT" for row in events),
         "buy_now": sum(row.event_type == "BUY_NOW_EMITTED" for row in events),
@@ -239,6 +245,7 @@ def _discovery_report(payload: dict) -> dict:
         "candidates": candidates,
         "plans_created": len(payload.get("plan_ids", [])),
         "plan_rejections": dict(sorted(rejection_counts.items())),
+        "score_histogram": payload.get("score_histogram", {}),
         "skipped_symbols": payload.get("skipped_symbols", []),
         "error_type": payload.get("error_type"),
     }
@@ -278,6 +285,8 @@ def _issue_summary(summary: dict[str, Any]) -> str:
         ),
         "plan_rejections="
         + json.dumps(summary["plan_rejections"], sort_keys=True, ensure_ascii=False),
+        "score_histogram="
+        + json.dumps(summary["score_histogram"], sort_keys=True, ensure_ascii=False),
         "shadow_trades="
         + json.dumps(summary["shadow_trades"], sort_keys=True, default=str, ensure_ascii=False),
         "Measurement only; not advice or execution.",

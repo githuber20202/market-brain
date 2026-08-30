@@ -34,7 +34,7 @@ class StrictModel(BaseModel):
 store = PostgresEventStore(settings.postgres_dsn) if settings.postgres_dsn else InMemoryEventStore()
 market_data = build_market_data_provider(event_store=store)
 service = DecisionService(store, market_data=market_data)
-screener = MarketScreener(market_data)
+screener = MarketScreener(market_data, store=store)
 radar_scheduler = RadarScheduler(
     service=service,
     screener=screener,

@@ -543,7 +543,7 @@ async def build_runtime(
             fixture_profile=fixture_profile,
         )
     service = DecisionService(store, cfg=cfg, market_data=provider)
-    screener = MarketScreener(provider)
+    screener = MarketScreener(provider, store=store)
     scheduler = RadarScheduler(
         service=service,
         screener=screener,

@@ -70,6 +70,7 @@ class DailyDigest:
         shadow_cumulative = shadow_metrics(shadow_trades, all_events)
         data_availability = _data_availability(events)
         plan_rejections = _plan_rejections(events)
+        score_histogram = _score_histogram(events)
         open_positions = [
             {
                 "symbol": position.symbol,
@@ -96,6 +97,7 @@ class DailyDigest:
             },
             "data_availability": data_availability,
             "plan_rejections": plan_rejections,
+            "score_histogram": score_histogram,
             "wallet": wallet_mode,
             "quality": quality,
             "reconcile_reminder": "RECONCILE_BROKER_HOLDINGS_WITH_POSITION_TWIN",
@@ -199,6 +201,13 @@ def _format_text(payload: dict[str, Any]) -> str:
             "Plan rejections:",
             *rejection_lines,
             (
+                "Score histogram: "
+                f"0-20={payload['score_histogram']['0-20']} "
+                f"20-40={payload['score_histogram']['20-40']} "
+                f"40-65={payload['score_histogram']['40-65']} "
+                f"65+={payload['score_histogram']['65+']}"
+            ),
+            (
                 "Shadow today: "
                 f"signals={today['signals']} trades={today['trades']} "
                 f"unfinalized={today['unfinalized']} no_trigger={today['no_trigger']} "
@@ -262,6 +271,22 @@ def _plan_rejections(events) -> dict[str, int]:
             if isinstance(reason, str) and reason:
                 counts[reason] = counts.get(reason, 0) + 1
     return dict(sorted(counts.items()))
+
+
+def _score_histogram(events) -> dict[str, int]:
+    latest: dict[str, dict] = {}
+    for event in events:
+        if event.event_type == "RADAR_RUN":
+            latest[event.aggregate_id] = event.payload
+    output = {"0-20": 0, "20-40": 0, "40-65": 0, "65+": 0}
+    for payload in latest.values():
+        histogram = payload.get("score_histogram", {})
+        for bucket in output:
+            try:
+                output[bucket] += int(histogram.get(bucket, 0))
+            except (TypeError, ValueError):
+                continue
+    return output
 
 
 def _runtime_datetime(value) -> datetime | None:

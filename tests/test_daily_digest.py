@@ -86,6 +86,12 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
                     {"symbol": "QUIET", "reason": "OPENING_RANGE_TOO_NARROW"},
                     {"symbol": "PASS", "reason": None},
                 ],
+                "score_histogram": {
+                    "0-20": 1,
+                    "20-40": 2,
+                    "40-65": 3,
+                    "65+": 4,
+                },
             },
             occurred_at=now,
         )
@@ -134,9 +140,16 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
         "OPENING_RANGE_TOO_NARROW": 1,
         "RISK_TOO_SMALL": 2,
     }
+    assert alert.payload["score_histogram"] == {
+        "0-20": 1,
+        "20-40": 2,
+        "40-65": 3,
+        "65+": 4,
+    }
     assert "Wallet: virtual" in alert.payload["text"]
     assert "Quality: QUALITY_STALE rows=58" in alert.payload["text"]
     assert "- RISK_TOO_SMALL: count=2" in alert.payload["text"]
+    assert "Score histogram: 0-20=1 20-40=2 40-65=3 65+=4" in alert.payload["text"]
     assert "Shadow today:" in alert.payload["text"]
     assert "Shadow by setup: {'" not in alert.payload["text"]
     assert (

@@ -236,8 +236,19 @@ class RadarScheduler:
 
     async def _execute(self, run_id: str, slot: datetime, timestamp: datetime) -> dict:
         symbols = [entry.symbol for entry in self.universe if entry.ranking_eligible]
-        screen_result = await self.screener.screen(symbols, top_n=len(symbols))
+        liquidity_refresh = await self.service.refresh_liquidity_profiles_for_symbols(
+            symbols,
+            now=timestamp.astimezone(UTC),
+        )
+        screen_result = await self.screener.screen(
+            symbols,
+            top_n=len(symbols),
+            now=timestamp.astimezone(UTC),
+            structure_score=15.0,
+            rr_score=10.0,
+        )
         rows = list(screen_result)
+        score_histogram = _score_histogram(rows)
         skipped = tuple(getattr(screen_result, "skipped_symbols", ()))
         cfg = getattr(self.service, "cfg", None)
         if getattr(cfg, "data_plan", None) == "keyless_delayed" and skipped:
@@ -291,6 +302,15 @@ class RadarScheduler:
             candidate = {
                 "symbol": symbol,
                 "rank_score": score.get("discovery_total"),
+                "score_components": {
+                    "catalyst": score.get("catalyst_or_continuation"),
+                    "momentum": score.get("price_momentum"),
+                    "volume": score.get("volume_liquidity"),
+                    "relative": score.get("relative_strength_sector"),
+                    "structure": score.get("entry_invalidation_structure"),
+                    "rr": score.get("risk_reward"),
+                    "total": score.get("total"),
+                },
                 "lane": None,
                 "quality_source": None,
                 "plan_id": None,
@@ -348,6 +368,7 @@ class RadarScheduler:
                     catalyst_strength=catalyst_strength,
                     structure_score=15.0,
                     rr_score=10.0,
+                    benchmark_return_pct=snapshot.get("benchmark_return_pct"),
                     now=timestamp.astimezone(UTC),
                 )
             except DataUnavailable:
@@ -376,6 +397,8 @@ class RadarScheduler:
                 {"symbol": item.symbol, "error_type": item.error_type}
                 for item in skipped
             ],
+            score_histogram=score_histogram,
+            liquidity_refresh=liquidity_refresh,
             occurred_at=timestamp,
         )
 
@@ -390,6 +413,8 @@ class RadarScheduler:
         error_type: str | None = None,
         unavailable: dict | None = None,
         skipped_symbols: list[dict] | None = None,
+        score_histogram: dict[str, int] | None = None,
+        liquidity_refresh: dict | None = None,
         occurred_at: datetime | None = None,
     ) -> dict:
         payload = {
@@ -402,6 +427,8 @@ class RadarScheduler:
             "error_type": error_type,
             "data_unavailable": unavailable,
             "skipped_symbols": skipped_symbols or [],
+            "score_histogram": score_histogram or _empty_score_histogram(),
+            "liquidity_refresh": liquidity_refresh,
         }
         async with self.service.store.transaction():
             await self.service.store.append(
@@ -480,6 +507,28 @@ def scheduled_slots(session: MarketSession) -> tuple[datetime, ...]:
 def _matching_slot(timestamp: datetime, session: MarketSession) -> datetime | None:
     minute = timestamp.replace(second=0, microsecond=0)
     return minute if minute in scheduled_slots(session) else None
+
+
+def _empty_score_histogram() -> dict[str, int]:
+    return {"0-20": 0, "20-40": 0, "40-65": 0, "65+": 0}
+
+
+def _score_histogram(rows: list[dict]) -> dict[str, int]:
+    output = _empty_score_histogram()
+    for row in rows:
+        try:
+            total = float(row["score"]["total"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if total < 20.0:
+            output["0-20"] += 1
+        elif total < 40.0:
+            output["20-40"] += 1
+        elif total < 65.0:
+            output["40-65"] += 1
+        else:
+            output["65+"] += 1
+    return output
 
 
 def _aware(value: datetime) -> datetime:

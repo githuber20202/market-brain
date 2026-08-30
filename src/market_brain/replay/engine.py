@@ -11,21 +11,27 @@ from zoneinfo import ZoneInfo
 from market_brain.domain.models import (
     IntradayStructure,
     IntradayStructureState,
+    LiquidityProfile,
     MarketSnapshot,
     PositionAction,
     PositionState,
     ProtectionState,
     ReconciliationState,
-    ScoreCard,
     StrategyLane,
     TradePlan,
     WalletState,
 )
 from market_brain.engines.activation import activate_plan
+from market_brain.engines.features import (
+    apply_ranking_context,
+    compute_features,
+    price_return_pct,
+)
 from market_brain.engines.intraday import compute_structure
 from market_brain.engines.plan import PlanBuildError, build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.quality import classify_quality
+from market_brain.engines.ranking import score_features
 from market_brain.settings import ROOT, Settings, settings
 
 EASTERN = ZoneInfo("America/New_York")
@@ -108,12 +114,17 @@ class ReplayEngine:
         symbols: list[str],
         *,
         bars_by_symbol: dict[str, list[dict]] | None = None,
+        scoring_context: dict[str, dict[str, float]] | None = None,
         write_report: bool = True,
     ) -> dict[str, Any]:
         day = date.fromisoformat(session_date) if isinstance(session_date, str) else session_date
         normalized = sorted(dict.fromkeys(symbol.strip().upper() for symbol in symbols if symbol.strip()))
         if not normalized:
             raise ValueError("REPLAY_SYMBOLS_EMPTY")
+        context = {
+            symbol.upper(): dict(values)
+            for symbol, values in (scoring_context or {}).items()
+        }
         if bars_by_symbol is None:
             if day >= self.now().astimezone(EASTERN).date():
                 raise ValueError("REPLAY_REQUIRES_PRIOR_SESSION")
@@ -121,16 +132,31 @@ class ReplayEngine:
                 raise RuntimeError("REPLAY_MARKET_DATA_PROVIDER_NOT_CONFIGURED")
             session_start = datetime.combine(day, time(9, 30), EASTERN).astimezone(UTC)
             session_end = datetime.combine(day, time(16, 0), EASTERN).astimezone(UTC)
+            fetch_symbols = sorted(set(normalized) | {"SPY"})
             bars_by_symbol = await self.provider.bars_batch(
-                normalized,
+                fetch_symbols,
                 "1Min",
                 session_start,
                 session_end,
             )
+            daily_start = session_start - timedelta(days=45)
+            daily = await self.provider.bars_batch(
+                fetch_symbols,
+                "1Day",
+                daily_start,
+                session_start,
+            )
+            context.update(_scoring_context_from_daily(day, daily))
 
         trades: list[dict[str, Any]] = []
         for symbol in normalized:
-            trade = self._run_symbol(day, symbol, bars_by_symbol.get(symbol, []))
+            trade = self._run_symbol(
+                day,
+                symbol,
+                bars_by_symbol.get(symbol, []),
+                benchmark_bars=bars_by_symbol.get("SPY", []),
+                scoring_context=context,
+            )
             if trade is not None:
                 trades.append(trade)
         trades.sort(key=lambda row: (row["entry_at"], row["symbol"]))
@@ -149,11 +175,20 @@ class ReplayEngine:
             path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
         return report
 
-    def _run_symbol(self, day: date, symbol: str, raw_bars: list[dict]) -> dict[str, Any] | None:
+    def _run_symbol(
+        self,
+        day: date,
+        symbol: str,
+        raw_bars: list[dict],
+        *,
+        benchmark_bars: list[dict],
+        scoring_context: dict[str, dict[str, float]],
+    ) -> dict[str, Any] | None:
         bars = _session_bars(day, raw_bars)
         if not bars:
             return None
         plan: TradePlan | None = None
+        plan_score: dict[str, Any] | None = None
         structure: IntradayStructure | None = None
         plan_bar_index = -1
         for index in range(len(bars)):
@@ -169,12 +204,20 @@ class ReplayEngine:
             if structure.state != IntradayStructureState.RETEST_VALID:
                 continue
             try:
-                plan = self._build_plan(symbol, day, structure, bars[index])
+                plan, plan_score = self._build_plan(
+                    symbol,
+                    day,
+                    structure,
+                    prefix,
+                    bars[index],
+                    benchmark_bars=benchmark_bars,
+                    scoring_context=scoring_context,
+                )
             except PlanBuildError:
                 continue
             plan_bar_index = index
             break
-        if plan is None or structure is None:
+        if plan is None or structure is None or plan_score is None:
             return None
 
         wallet = WalletState(capital_base=100_000.0, cash_available=100_000.0)
@@ -205,6 +248,7 @@ class ReplayEngine:
                 return self._manage_trade(
                     symbol=symbol,
                     plan=plan,
+                    score=plan_score,
                     fill=fill,
                     entry_at=tick.at,
                     quantity=decision.quantity,
@@ -219,31 +263,65 @@ class ReplayEngine:
         symbol: str,
         day: date,
         structure: IntradayStructure,
+        prefix: list[dict],
         retest_bar: dict,
-    ) -> TradePlan:
+        *,
+        benchmark_bars: list[dict],
+        scoring_context: dict[str, dict[str, float]],
+    ) -> tuple[TradePlan, dict[str, Any]]:
         assert structure.opening_range_high is not None
         assert structure.opening_range_low is not None
         created_at = _bar_stamp(retest_bar) + timedelta(minutes=1)
+        symbol_context = scoring_context.get(symbol, {})
+        benchmark_context = scoring_context.get("SPY", {})
+        prior_close = _positive_optional(symbol_context.get("prior_close"))
+        benchmark_prior_close = _positive_optional(
+            benchmark_context.get("prior_close")
+        )
+        benchmark_snapshot = _snapshot_from_prefix(
+            "SPY",
+            _bars_through(benchmark_bars, created_at),
+            prior_close=benchmark_prior_close,
+        )
         snapshot = MarketSnapshot(
             symbol=symbol,
             last=_bar_price(retest_bar, "c", "close"),
+            prior_close=prior_close,
+            volume=_total_volume(prefix),
+            vwap=_bars_vwap(prefix),
+            open_price=_bar_price(prefix[0], "o", "open"),
             opening_range_high=structure.opening_range_high,
             opening_range_low=structure.opening_range_low,
             retest_low=_bar_price(retest_bar, "l", "low"),
             source_id="ALPACA_SIP",
             authoritative=True,
         )
-        score = ScoreCard(
-            symbol=symbol,
-            catalyst_or_continuation=20.0,
-            price_momentum=15.0,
-            volume_liquidity=5.0,
-            relative_strength_sector=0.0,
-            entry_invalidation_structure=15.0,
-            risk_reward=10.0,
-            total=65.0,
-            discovery_total=0.0,
-            reasons=["REPLAY_STRUCTURE_VALIDATED"],
+        adv20 = _positive_optional(symbol_context.get("adv20"))
+        profile = (
+            LiquidityProfile(
+                symbol=symbol,
+                adv20=adv20,
+                close=prior_close or snapshot.last,
+                as_of=created_at,
+                refreshed_at=created_at,
+            )
+            if adv20 is not None
+            else None
+        )
+        apply_ranking_context(
+            snapshot,
+            profile,
+            benchmark_return_pct=(
+                price_return_pct(benchmark_snapshot)
+                if benchmark_snapshot is not None
+                else None
+            ),
+            now=created_at,
+        )
+        score = score_features(
+            compute_features(snapshot),
+            structure_score=15.0,
+            rr_score=10.0,
         )
         quality = classify_quality(symbol, 100.0, created_at)
         plan = build_trade_plan(
@@ -260,13 +338,22 @@ class ReplayEngine:
         seed = f"{day.isoformat()}:{symbol}:{created_at.isoformat()}"
         plan.plan_id = "replay-" + hashlib.sha256(seed.encode()).hexdigest()[:20]
         plan.reasons.append("REPLAY_QUALITY_NEUTRAL")
-        return plan
+        return plan, {
+            "catalyst": score.catalyst_or_continuation,
+            "momentum": score.price_momentum,
+            "volume": score.volume_liquidity,
+            "relative": score.relative_strength_sector,
+            "structure": score.entry_invalidation_structure,
+            "rr": score.risk_reward,
+            "total": score.total,
+        }
 
     def _manage_trade(
         self,
         *,
         symbol: str,
         plan: TradePlan,
+        score: dict[str, Any],
         fill: float,
         entry_at: datetime,
         quantity: int,
@@ -296,6 +383,7 @@ class ReplayEngine:
         return {
             "symbol": symbol,
             "plan_id": plan.plan_id,
+            "score": score,
             "entry_at": entry_at.isoformat(),
             "trigger": plan.entry_trigger,
             "fill": fill,
@@ -440,6 +528,101 @@ def replay_summary(trades: list[dict[str, Any]]) -> dict[str, Any]:
         "expectancy_r": round(sum(values) / count, 6) if count else 0.0,
         "max_drawdown_r": round(drawdown, 6),
     }
+
+
+def _scoring_context_from_daily(
+    day: date,
+    rows_by_symbol: dict[str, list[dict]],
+) -> dict[str, dict[str, float]]:
+    output: dict[str, dict[str, float]] = {}
+    for symbol, rows in rows_by_symbol.items():
+        parsed: list[tuple[datetime, float, float]] = []
+        for row in rows:
+            try:
+                stamp = _bar_stamp(row)
+                volume = float(row.get("v", row.get("volume")))
+                close = _bar_price(row, "c", "close")
+            except (TypeError, ValueError):
+                continue
+            if stamp.astimezone(EASTERN).date() >= day or volume < 0:
+                continue
+            parsed.append((stamp, volume, close))
+        parsed.sort(key=lambda value: value[0])
+        if not parsed:
+            continue
+        values: dict[str, float] = {"prior_close": parsed[-1][2]}
+        if len(parsed) >= 20:
+            values["adv20"] = sum(row[1] for row in parsed[-20:]) / 20.0
+        output[symbol.upper()] = values
+    return output
+
+
+def _bars_through(rows: list[dict], before: datetime) -> list[dict]:
+    output = [row for row in rows if _bar_stamp(row) < before]
+    output.sort(key=_bar_stamp)
+    return output
+
+
+def _snapshot_from_prefix(
+    symbol: str,
+    rows: list[dict],
+    *,
+    prior_close: float | None,
+) -> MarketSnapshot | None:
+    if not rows:
+        return None
+    return MarketSnapshot(
+        symbol=symbol,
+        last=_bar_price(rows[-1], "c", "close"),
+        prior_close=prior_close,
+        volume=_total_volume(rows),
+        vwap=_bars_vwap(rows),
+        open_price=_bar_price(rows[0], "o", "open"),
+        source_id="ALPACA_SIP",
+        authoritative=True,
+    )
+
+
+def _total_volume(rows: list[dict]) -> float | None:
+    values: list[float] = []
+    for row in rows:
+        raw = row.get("v", row.get("volume"))
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            continue
+        if value >= 0:
+            values.append(value)
+    return sum(values) if values else None
+
+
+def _bars_vwap(rows: list[dict]) -> float | None:
+    weighted = 0.0
+    total = 0.0
+    for row in rows:
+        raw_volume = row.get("v", row.get("volume"))
+        try:
+            volume = float(raw_volume)
+            price = (
+                _bar_price(row, "h", "high")
+                + _bar_price(row, "l", "low")
+                + _bar_price(row, "c", "close")
+            ) / 3.0
+        except (TypeError, ValueError):
+            continue
+        if volume <= 0:
+            continue
+        weighted += price * volume
+        total += volume
+    return weighted / total if total > 0 else None
+
+
+def _positive_optional(value: object) -> float | None:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed > 0 else None
 
 
 def _session_bars(day: date, rows: list[dict]) -> list[dict]:

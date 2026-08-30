@@ -42,6 +42,7 @@ async def create_replay_report(
     output_dir: Path,
     now: datetime | None = None,
     fixture_bars: dict[str, dict[str, list[dict]]] | None = None,
+    fixture_scoring_context: dict[str, dict[str, float]] | None = None,
 ) -> Path:
     timestamp = (now or datetime.now(UTC)).astimezone(EASTERN)
     sessions = last_trading_days(calendar, days=days, before=timestamp.date())
@@ -55,6 +56,7 @@ async def create_replay_report(
                 session_date,
                 symbols,
                 bars_by_symbol=bars,
+                scoring_context=fixture_scoring_context,
                 write_report=False,
             )
         )

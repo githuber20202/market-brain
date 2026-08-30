@@ -26,7 +26,7 @@ class FakeScreener:
         self.rows = rows
         self.calls: list[tuple[list[str], int]] = []
 
-    async def screen(self, symbols: list[str], top_n: int):
+    async def screen(self, symbols: list[str], top_n: int, **_kwargs):
         self.calls.append((symbols, top_n))
         return self.rows[:top_n]
 
@@ -36,7 +36,7 @@ class RecoveringScreener(FakeScreener):
         super().__init__(rows)
         self.unavailable = True
 
-    async def screen(self, symbols: list[str], top_n: int):
+    async def screen(self, symbols: list[str], top_n: int, **_kwargs):
         self.calls.append((symbols, top_n))
         if self.unavailable:
             self.unavailable = False
@@ -53,6 +53,13 @@ class FakeService:
     def __init__(self):
         self.store = InMemoryEventStore()
         self.plan_calls: list[dict] = []
+
+    async def refresh_liquidity_profiles_for_symbols(self, symbols, *, now):
+        return {
+            "session_date": now.astimezone(EASTERN).date().isoformat(),
+            "refreshed": len(symbols),
+            "failed": [],
+        }
 
     async def build_plan_from_market(self, **kwargs):
         self.plan_calls.append(kwargs)
@@ -113,7 +120,7 @@ class PartialScreener(FakeScreener):
         super().__init__(rows)
         self.skipped = skipped
 
-    async def screen(self, symbols: list[str], top_n: int):
+    async def screen(self, symbols: list[str], top_n: int, **_kwargs):
         self.calls.append((symbols, top_n))
         return ScreenResult(tuple(self.rows[:top_n]), self.skipped)
 
@@ -125,7 +132,16 @@ def _row(symbol: str, score: float = 90.0, *, catalyst: bool = False) -> dict:
             "catalyst_verified": catalyst,
             "catalyst_strength": 0.9 if catalyst else 0.0,
         },
-        "score": {"discovery_total": score},
+        "score": {
+            "catalyst_or_continuation": 0.0,
+            "price_momentum": 20.0,
+            "volume_liquidity": 15.0,
+            "relative_strength_sector": 10.0,
+            "entry_invalidation_structure": 15.0,
+            "risk_reward": 10.0,
+            "total": score,
+            "discovery_total": score,
+        },
     }
 
 
@@ -191,6 +207,13 @@ async def test_fake_clock_fires_at_0950_once_and_creates_digest(tmp_path: Path):
     result = await scheduler.run_pending(now=slot)
     assert result is not None
     assert result["status"] == "COMPLETED"
+    assert result["score_histogram"] == {
+        "0-20": 0,
+        "20-40": 0,
+        "40-65": 0,
+        "65+": 1,
+    }
+    assert result["candidates"][0]["score_components"]["total"] == 90.0
     assert len(screener.calls) == 1
     assert len(service.plan_calls) == 1
     assert service.plan_calls[0]["lane"] == StrategyLane.CORE_MOMENTUM

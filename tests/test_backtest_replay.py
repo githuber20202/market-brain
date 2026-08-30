@@ -16,6 +16,13 @@ def _fixture():
     return json.loads(FIXTURE.read_text())
 
 
+def _kwargs(fixture, bars=None):
+    return {
+        "bars_by_symbol": bars or fixture["symbols"],
+        "scoring_context": fixture["scoring_context"],
+    }
+
+
 def test_synthesized_tick_order_follows_candle_direction():
     bullish = {"t": "2026-08-28T13:30:00+00:00", "o": 10, "h": 12, "l": 9, "c": 11}
     bearish = {"t": "2026-08-28T13:30:00+00:00", "o": 11, "h": 12, "l": 9, "c": 10}
@@ -29,14 +36,29 @@ async def test_fixture_replay_is_deterministic_and_writes_report(tmp_path: Path)
     fixture = _fixture()
     engine = ReplayEngine(output_dir=tmp_path)
 
-    first = await engine.run(fixture["date"], ["WIN", "LOSS"], bars_by_symbol=fixture["symbols"])
-    second = await engine.run(fixture["date"], ["LOSS", "WIN"], bars_by_symbol=fixture["symbols"])
+    first = await engine.run(fixture["date"], ["WIN", "LOSS"], **_kwargs(fixture))
+    second = await engine.run(fixture["date"], ["LOSS", "WIN"], **_kwargs(fixture))
 
     assert first == second
     assert json.loads((tmp_path / "replay_2026-08-28.json").read_text()) == first
     assert first["trade_count"] == 2
     assert first["wins"] == 1
     assert first["hit_rate"] == 0.5
+    assert all(trade["score"]["total"] >= 65.0 for trade in first["trades"])
+
+
+@pytest.mark.asyncio
+async def test_replay_fails_score_gate_without_real_scoring_context():
+    fixture = _fixture()
+
+    report = await ReplayEngine().run(
+        fixture["date"],
+        ["WIN"],
+        bars_by_symbol=fixture["symbols"],
+        write_report=False,
+    )
+
+    assert report["trade_count"] == 0
 
 
 @pytest.mark.asyncio
@@ -51,7 +73,7 @@ async def test_invalid_structure_is_no_trade_not_replay_failure(monkeypatch):
     report = await engine.run(
         fixture["date"],
         ["WIN"],
-        bars_by_symbol=fixture["symbols"],
+        **_kwargs(fixture),
         write_report=False,
     )
 
@@ -63,7 +85,7 @@ async def test_invalid_structure_is_no_trade_not_replay_failure(monkeypatch):
 async def test_bar_touching_stop_and_target_counts_as_stop():
     fixture = _fixture()
     report = await ReplayEngine().run(
-        fixture["date"], ["LOSS"], bars_by_symbol=fixture["symbols"], write_report=False
+        fixture["date"], ["LOSS"], **_kwargs(fixture), write_report=False
     )
 
     trade = report["trades"][0]
@@ -85,7 +107,10 @@ async def test_trigger_bar_conflict_is_also_stop_first():
     bars[-1].update({"o": 100.65, "h": 102.3, "l": 99.7, "c": 100.5})
 
     report = await ReplayEngine().run(
-        fixture["date"], ["LOSS"], bars_by_symbol={"LOSS": bars}, write_report=False
+        fixture["date"],
+        ["LOSS"],
+        **_kwargs(fixture, {"LOSS": bars, "SPY": fixture["symbols"]["SPY"]}),
+        write_report=False,
     )
 
     assert report["trades"][0]["exit_legs"][0]["reason"] == "STOP"
@@ -96,7 +121,7 @@ async def test_trigger_bar_conflict_is_also_stop_first():
 async def test_tp1_and_tp2_are_half_and_half():
     fixture = _fixture()
     report = await ReplayEngine().run(
-        fixture["date"], ["WIN"], bars_by_symbol=fixture["symbols"], write_report=False
+        fixture["date"], ["WIN"], **_kwargs(fixture), write_report=False
     )
 
     trade = report["trades"][0]
@@ -126,7 +151,10 @@ async def test_time_stop_uses_current_tick_price():
         )
 
     report = await ReplayEngine().run(
-        fixture["date"], ["FLAT"], bars_by_symbol={"FLAT": bars}, write_report=False
+        fixture["date"],
+        ["FLAT"],
+        **_kwargs(fixture, {"FLAT": bars, "SPY": fixture["symbols"]["SPY"]}),
+        write_report=False,
     )
 
     trade = report["trades"][0]
@@ -135,32 +163,57 @@ async def test_time_stop_uses_current_tick_price():
 
 
 class FakeSipProvider:
-    def __init__(self, bars):
+    def __init__(self, bars, daily):
         self.bars = bars
+        self.daily = daily
         self.calls = []
 
     async def bars_batch(self, symbols, timeframe, start, end):
         self.calls.append((symbols, timeframe, start, end))
-        return self.bars
+        source = self.daily if timeframe == "1Day" else self.bars
+        return {symbol: source.get(symbol, []) for symbol in symbols}
+
+
+def _daily_bars(symbols):
+    output = {}
+    for symbol in symbols:
+        close = 100.0 if symbol == "SPY" else 97.0
+        volume = 10_000_000 if symbol == "SPY" else 1_000_000
+        output[symbol] = [
+            {
+                "t": (datetime(2026, 7, 29, 16, tzinfo=UTC) + timedelta(days=index)).isoformat(),
+                "o": close,
+                "h": close,
+                "l": close,
+                "c": close,
+                "v": volume,
+            }
+            for index in range(20)
+        ]
+    return output
 
 
 @pytest.mark.asyncio
 async def test_prior_session_fetches_one_minute_sip_pipeline_without_network():
     fixture = _fixture()
-    provider = FakeSipProvider(fixture["symbols"])
+    provider = FakeSipProvider(
+        fixture["symbols"],
+        _daily_bars(["WIN", "SPY"]),
+    )
     now = lambda: datetime(2026, 8, 29, 12, tzinfo=UTC)
     report = await ReplayEngine(provider, now=now).run(
         fixture["date"], ["WIN"], write_report=False
     )
 
     assert report["bar_feed"] == "SIP"
-    assert provider.calls[0][0:2] == (["WIN"], "1Min")
+    assert provider.calls[0][0:2] == (["SPY", "WIN"], "1Min")
+    assert provider.calls[1][0:2] == (["SPY", "WIN"], "1Day")
 
 
 @pytest.mark.asyncio
 async def test_current_session_fails_closed_before_provider_call():
     fixture = _fixture()
-    provider = FakeSipProvider(fixture["symbols"])
+    provider = FakeSipProvider(fixture["symbols"], {})
     now = lambda: datetime(2026, 8, 29, 12, tzinfo=UTC)
 
     with pytest.raises(ValueError, match="REPLAY_REQUIRES_PRIOR_SESSION"):

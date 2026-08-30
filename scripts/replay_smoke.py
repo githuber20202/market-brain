@@ -17,8 +17,9 @@ async def main() -> None:
     with TemporaryDirectory() as directory:
         report = await ReplayEngine(output_dir=Path(directory)).run(
             fixture["date"],
-            sorted(fixture["symbols"]),
+            fixture["trade_symbols"],
             bars_by_symbol=fixture["symbols"],
+            scoring_context=fixture["scoring_context"],
         )
     if report["trade_count"] == 0 or not any(row["r"] != 0 for row in report["trades"]):
         raise SystemExit("REPLAY_SMOKE=FAIL")
@@ -27,4 +28,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-

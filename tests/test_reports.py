@@ -36,6 +36,7 @@ async def test_replay_report_fixture_writes_markdown_without_network(tmp_path):
         output_dir=tmp_path,
         now=datetime(2026, 8, 29, 12, tzinfo=UTC),
         fixture_bars={fixture["date"]: fixture["symbols"]},
+        fixture_scoring_context=fixture["scoring_context"],
     )
 
     text = path.read_text()
