@@ -1,0 +1,20 @@
+name: Dispatch Task 30 Weekly
+
+on:
+  push:
+    branches: [task30-weekly-dispatch]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Shadow Weekly on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run shadow-weekly.yml --repo githuber20202/market-brain --ref main
+          echo "SHADOW_WEEKLY_DISPATCH=PASS"
