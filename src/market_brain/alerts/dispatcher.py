@@ -121,6 +121,7 @@ class AlertDispatcher:
                         self._event_payload(
                             {"alert_id": alert.alert_id, "sink": sink.name}
                         ),
+                        occurred_at=attempt_time,
                     )
                 )
             return True
@@ -150,6 +151,7 @@ class AlertDispatcher:
                                 "last_error": failed.last_error,
                             }
                         ),
+                        occurred_at=attempt_time,
                     )
                 )
             return False

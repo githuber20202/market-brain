@@ -162,6 +162,7 @@ class RadarScheduler:
                     {"symbol": item.symbol, "error_type": item.error_type}
                     for item in exc.skipped_symbols
                 ],
+                occurred_at=timestamp,
             )
         except Exception as exc:
             LOGGER.exception("radar_run_failed run_id=%s", run_id)
@@ -172,6 +173,7 @@ class RadarScheduler:
                 candidates=[],
                 plan_ids=[],
                 error_type=type(exc).__name__,
+                occurred_at=timestamp,
             )
 
     async def mark_missed(
@@ -208,7 +210,9 @@ class RadarScheduler:
             "skipped_symbols": [],
         }
         async with self.service.store.transaction():
-            await self.service.store.append(LedgerEvent("RADAR_RUN", run_id, payload))
+            await self.service.store.append(
+                LedgerEvent("RADAR_RUN", run_id, payload, occurred_at=timestamp)
+            )
             await self.service.store.set_runtime_status(key, payload)
         return payload
 
@@ -372,6 +376,7 @@ class RadarScheduler:
                 {"symbol": item.symbol, "error_type": item.error_type}
                 for item in skipped
             ],
+            occurred_at=timestamp,
         )
 
     async def _persist_result(
@@ -385,6 +390,7 @@ class RadarScheduler:
         error_type: str | None = None,
         unavailable: dict | None = None,
         skipped_symbols: list[dict] | None = None,
+        occurred_at: datetime | None = None,
     ) -> dict:
         payload = {
             "run_id": run_id,
@@ -398,10 +404,22 @@ class RadarScheduler:
             "skipped_symbols": skipped_symbols or [],
         }
         async with self.service.store.transaction():
-            await self.service.store.append(LedgerEvent("RADAR_RUN", run_id, payload))
+            await self.service.store.append(
+                LedgerEvent(
+                    "RADAR_RUN",
+                    run_id,
+                    payload,
+                    occurred_at=occurred_at or slot,
+                )
+            )
             if status == "DATA_UNAVAILABLE":
                 await self.service.store.append(
-                    LedgerEvent("DATA_UNAVAILABLE", run_id, payload)
+                    LedgerEvent(
+                        "DATA_UNAVAILABLE",
+                        run_id,
+                        payload,
+                        occurred_at=occurred_at or slot,
+                    )
                 )
             await self.service.store.save_alert(AlertRecord(kind="RADAR_DIGEST", payload=payload))
             await self.service.store.set_runtime_status(f"radar_run:{run_id}", payload)

@@ -4,7 +4,7 @@ import argparse
 import asyncio
 import json
 import os
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 
 import httpx
@@ -269,6 +269,7 @@ class BatchRuntime:
         triggers = 0
         activations = 0
         rejected = 0
+        rejected_by_reason: dict[str, int] = {}
         released = recovered_releases
         session_date = timestamp.astimezone(EASTERN).date().isoformat()
         for plan in await self.store.list_plans():
@@ -319,12 +320,14 @@ class BatchRuntime:
             }:
                 continue
             if structure.state != IntradayStructureState.RETEST_VALID:
+                reasons = [*structure.reasons] or ["RETEST_INVALID"]
                 if await self._record_activation_rejected(
                     plan.plan_id,
-                    [*structure.reasons] or ["RETEST_INVALID"],
+                    reasons,
                     timestamp,
                 ):
                     rejected += 1
+                    self._count_rejection_reasons(rejected_by_reason, reasons)
                 continue
             try:
                 decision = await self.service.activate(plan.plan_id, now=timestamp)
@@ -338,14 +341,17 @@ class BatchRuntime:
                     timestamp,
                 ):
                     rejected += 1
+                    self._count_rejection_reasons(rejected_by_reason, [error_type])
                 continue
             if decision.state != SignalState.BUY_NOW:
+                reasons = decision.reasons or [str(decision.state)]
                 if await self._record_activation_rejected(
                     plan.plan_id,
-                    decision.reasons or [str(decision.state)],
+                    reasons,
                     timestamp,
                 ):
                     rejected += 1
+                    self._count_rejection_reasons(rejected_by_reason, reasons)
                 continue
             activations += 1
             if await self._release_shadow_reservation(plan.plan_id, timestamp):
@@ -357,6 +363,7 @@ class BatchRuntime:
             "trigger_hits": triggers,
             "buy_now": activations,
             "activation_rejected": rejected,
+            "activation_rejected_by_reason": dict(sorted(rejected_by_reason.items())),
             "reservations_released": released,
             "shadow_trades": len(await self.store.list_shadow_trades()),
         }
@@ -390,13 +397,7 @@ class BatchRuntime:
         reasons: list[str],
         timestamp: datetime,
     ) -> bool:
-        expanded: list[str] = []
-        for reason in reasons:
-            value = str(reason)
-            if value == "NO_CHASE_ENTRY_ZONE_EXCEEDED":
-                expanded.append("EXTENDED")
-            expanded.append(value)
-        normalized = list(dict.fromkeys(expanded))
+        normalized = self._normalized_activation_reasons(reasons)
         key = f"activation_rejected:{plan_id}"
         previous = await self.store.get_runtime_status_key(key)
         if isinstance(previous, dict) and previous.get("reasons") == normalized:
@@ -417,6 +418,25 @@ class BatchRuntime:
             )
             await self.store.set_runtime_status(key, payload)
         return True
+
+    @staticmethod
+    def _normalized_activation_reasons(reasons: list[str]) -> list[str]:
+        expanded: list[str] = []
+        for reason in reasons:
+            value = str(reason)
+            if value == "NO_CHASE_ENTRY_ZONE_EXCEEDED":
+                expanded.append("EXTENDED")
+            expanded.append(value)
+        return list(dict.fromkeys(expanded))
+
+    @classmethod
+    def _count_rejection_reasons(
+        cls,
+        counts: dict[str, int],
+        reasons: list[str],
+    ) -> None:
+        for reason in cls._normalized_activation_reasons(reasons):
+            counts[reason] = counts.get(reason, 0) + 1
 
     async def _write_latest(self, mode: str, timestamp: datetime, result: dict) -> None:
         runtime = await self.store.get_runtime_status()
@@ -502,12 +522,18 @@ async def build_runtime(
     now: datetime,
     fixture_dir: Path | None = None,
     fixture_profile: str | None = None,
+    provider_override=None,
+    dispatcher_sinks: list | None = None,
+    output_dir: Path | None = None,
+    state_dir: Path | None = None,
 ) -> tuple[BatchRuntime, httpx.AsyncClient | None]:
     if not cfg.postgres_dsn:
         raise RuntimeError("POSTGRES_DSN_MISSING")
     store = PostgresEventStore(cfg.postgres_dsn)
     fixture_client = None
-    if fixture_dir is None:
+    if provider_override is not None:
+        provider = provider_override
+    elif fixture_dir is None:
         provider = build_market_data_provider(cfg, event_store=store)
     else:
         provider, fixture_client = _fixture_provider(
@@ -534,7 +560,7 @@ async def build_runtime(
     )
     dispatcher = AlertDispatcher(
         store,
-        [issue_sink],
+        dispatcher_sinks if dispatcher_sinks is not None else [issue_sink],
         run_mode=cfg.run_mode,
         data_plan=cfg.data_plan,
         redact_values=(os.getenv("GITHUB_TOKEN", ""),),
@@ -549,20 +575,67 @@ async def build_runtime(
         dispatcher=dispatcher,
         issue_sink=issue_sink,
         cfg=cfg,
-        output_dir=ROOT / "reports",
+        output_dir=output_dir or ROOT / "reports",
+        state_dir=state_dir,
     )
     return runtime, fixture_client
 
 
 async def async_main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=("radar", "digest", "weekly"), required=True)
+    parser.add_argument(
+        "--mode",
+        choices=("radar", "digest", "weekly", "rehearsal"),
+        required=True,
+    )
     parser.add_argument("--fixtures", type=Path)
     parser.add_argument("--fixture-profile", choices=("batch-plan-watch",))
     parser.add_argument("--now", help="UTC/offset ISO timestamp; test and smoke use only")
+    parser.add_argument("--session", help="NYSE session date for rehearsal (YYYY-MM-DD)")
+    parser.add_argument(
+        "--publish-issue",
+        action="store_true",
+        help="Post the clean rehearsal summary to a closed GitHub issue",
+    )
     args = parser.parse_args()
     now = _aware(datetime.fromisoformat(args.now)) if args.now else datetime.now(UTC)
     cfg = Settings()
+    if args.mode == "rehearsal":
+        if not args.session:
+            parser.error("--session is required with --mode rehearsal")
+        from market_brain.providers.yahoo_replay import YahooReplayMarketData
+        from market_brain.runtime.rehearsal import (
+            MutableClock,
+            RehearsalConsoleSink,
+            rehearsal_ticks,
+            run_rehearsal,
+        )
+
+        session_date = date.fromisoformat(args.session)
+        first_tick = rehearsal_ticks(session_date)[0]
+        clock = MutableClock(first_tick)
+        provider = YahooReplayMarketData(session_date, cfg, now=clock.now)
+        runtime, _fixture_client = await build_runtime(
+            cfg,
+            now=first_tick,
+            provider_override=provider,
+            dispatcher_sinks=[RehearsalConsoleSink()],
+            output_dir=ROOT / "reports" / "rehearsal",
+            state_dir=ROOT / "rehearsal-state",
+        )
+        try:
+            await run_rehearsal(
+                runtime,
+                provider,
+                session_date=session_date,
+                clock=clock,
+                publish_issue=args.publish_issue,
+            )
+        finally:
+            await runtime.close()
+        return 0
+    if args.session or args.publish_issue:
+        parser.error("--session and --publish-issue require --mode rehearsal")
     runtime, fixture_client = await build_runtime(
         cfg,
         now=now,

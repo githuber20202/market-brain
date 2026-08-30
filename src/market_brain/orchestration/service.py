@@ -851,6 +851,7 @@ class DecisionService:
                     "features": asdict(features),
                     "score": asdict(score),
                 },
+                occurred_at=plan.created_at,
             )
         )
         return plan, {"features": asdict(features), "score": asdict(score)}
@@ -890,6 +891,7 @@ class DecisionService:
                     "PLAN_EXPIRED",
                     plan.plan_id,
                     {"expires_at": plan.expires_at.isoformat(), "plan": asdict(plan)},
+                    occurred_at=timestamp,
                 )
             )
             expired_plans += 1
@@ -929,8 +931,14 @@ class DecisionService:
             "text": text,
         }
 
-    async def _queue_alert(self, kind: str, payload: dict) -> AlertRecord:
-        alert = AlertRecord(kind=kind, payload=payload)
+    async def _queue_alert(
+        self,
+        kind: str,
+        payload: dict,
+        *,
+        created_at: datetime | None = None,
+    ) -> AlertRecord:
+        alert = AlertRecord(kind=kind, payload=payload, created_at=created_at or datetime.now(UTC))
         await self.store.save_alert(alert)
         return alert
 
@@ -1170,6 +1178,7 @@ class DecisionService:
                         "order_ticket": ticket,
                         "text": ticket["text"],
                     },
+                    created_at=timestamp,
                 )
                 decision.alert_id = alert.alert_id
                 await self.store.append(
@@ -1184,6 +1193,7 @@ class DecisionService:
                             "source_id": snapshot.source_id,
                             "data_age_seconds": snapshot.data_age_seconds,
                         },
+                        occurred_at=timestamp,
                     )
                 )
                 await self.store.append(
@@ -1195,6 +1205,7 @@ class DecisionService:
                             "order_ticket": ticket,
                             "decision": asdict(decision),
                         },
+                        occurred_at=timestamp,
                     )
                 )
                 await self._open_shadow_trade(plan, decision, now=timestamp)
@@ -1235,7 +1246,9 @@ class DecisionService:
                 "data_age_seconds": snapshot.data_age_seconds,
             }
         )
-        await self.store.append(LedgerEvent("PLAN_EVALUATED", plan_id, event_payload))
+        await self.store.append(
+            LedgerEvent("PLAN_EVALUATED", plan_id, event_payload, occurred_at=timestamp)
+        )
         if decision.state == SignalState.BUY_NOW:
             risk = decision.quantity * plan.risk_per_share
             cash = decision.quantity * plan.entry_zone_high
@@ -1259,6 +1272,7 @@ class DecisionService:
                     "CAPACITY_RESERVED",
                     plan_id,
                     {"reservation": asdict(reservation), "wallet": asdict(wallet), "plan": asdict(plan)},
+                    occurred_at=timestamp,
                 )
             )
             ticket = self._order_ticket(plan, decision.quantity, reservation.expires_at)
@@ -1276,7 +1290,9 @@ class DecisionService:
                 "order_ticket": ticket,
                 "text": ticket["text"],
             }
-            alert = await self._queue_alert("BUY_NOW", alert_payload)
+            alert = await self._queue_alert(
+                "BUY_NOW", alert_payload, created_at=timestamp
+            )
             decision.alert_id = alert.alert_id
             await self.store.append(
                 LedgerEvent(
@@ -1287,6 +1303,7 @@ class DecisionService:
                         "order_ticket": ticket,
                         "decision": asdict(decision),
                     },
+                    occurred_at=timestamp,
                 )
             )
             await self._open_shadow_trade(plan, decision, now=timestamp)
@@ -1334,6 +1351,7 @@ class DecisionService:
                 "CAPACITY_RELEASED",
                 plan_id,
                 {"reason": reason, "reservation": asdict(reservation), "reservation_deleted": True, "wallet": asdict(wallet), "plan": asdict(plan) if plan is not None else None},
+                occurred_at=timestamp,
             )
         )
         return True

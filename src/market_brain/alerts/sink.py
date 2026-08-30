@@ -48,7 +48,6 @@ class WebhookSink:
                 await client.aclose()
         return True
 
-
 class TelegramSink:
     name = "telegram"
 
@@ -207,6 +206,57 @@ class GitHubIssueSink:
             )
             response.raise_for_status()
         return True
+
+    async def send_rehearsal_summary(self, session_date: str, text: str) -> int:
+        """Post one supervised rehearsal summary to its own issue and close it."""
+        if not self.configured:
+            raise RuntimeError("GITHUB_ISSUE_SINK_NOT_CONFIGURED")
+        await self._ensure_label()
+        client = self._client()
+        base = f"https://api.github.com/repos/{self.repository}"
+        title = f"Shadow rehearsal {session_date}"
+        response = await client.get(
+            f"{base}/issues",
+            headers=self._headers(),
+            params={"state": "all", "labels": "shadow", "per_page": 100},
+        )
+        response.raise_for_status()
+        issue_number = next(
+            (
+                int(row["number"])
+                for row in response.json()
+                if "pull_request" not in row and row.get("title") == title
+            ),
+            None,
+        )
+        if issue_number is None:
+            response = await client.post(
+                f"{base}/issues",
+                headers=self._headers(),
+                json={
+                    "title": title,
+                    "body": (
+                        f"Brokerless production-path rehearsal for {session_date}. "
+                        "Measurement only; not advice or execution."
+                    ),
+                    "labels": ["shadow"],
+                },
+            )
+            response.raise_for_status()
+            issue_number = int(response.json()["number"])
+        response = await client.post(
+            f"{base}/issues/{issue_number}/comments",
+            headers=self._headers(),
+            json={"body": f"@{self.mention}\n\n{text}"},
+        )
+        response.raise_for_status()
+        response = await client.patch(
+            f"{base}/issues/{issue_number}",
+            headers=self._headers(),
+            json={"state": "closed"},
+        )
+        response.raise_for_status()
+        return issue_number
 
     async def aclose(self) -> None:
         if self._owned_client is not None:

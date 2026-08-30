@@ -31,6 +31,7 @@ class KeylessJsonClient:
         self.retry_attempts = retry_attempts
         self.user_agent = user_agent
         self.sleep = sleep
+        self.request_count = 0
 
     async def get_json(
         self,
@@ -49,6 +50,7 @@ class KeylessJsonClient:
                     self._owned_client = httpx.AsyncClient(timeout=10.0)
                 client = self._owned_client
             try:
+                self.request_count += 1
                 response = await client.get(
                     url,
                     params=params,

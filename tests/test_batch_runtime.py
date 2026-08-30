@@ -588,8 +588,11 @@ def test_batch_gate_selects_only_real_et_schedule(tmp_path):
     assert not should_run(
         "radar", datetime(2026, 8, 28, 13, 20, tzinfo=UTC), calendar
     )
-    assert not should_run(
+    assert should_run(
         "radar", datetime(2026, 8, 28, 19, 20, tzinfo=UTC), calendar
+    )
+    assert not should_run(
+        "radar", datetime(2026, 8, 28, 19, 21, tzinfo=UTC), calendar
     )
     assert should_run(
         "digest", datetime(2026, 8, 28, 20, 20, tzinfo=UTC), calendar

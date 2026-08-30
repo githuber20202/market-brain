@@ -7,5 +7,7 @@ __pycache__/
 reports/replay_*.json
 reports/replay_*.md
 reports/shadow_*.md
+reports/rehearsal/
+rehearsal-state/
 reports/digest_*.md
 state/

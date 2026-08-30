@@ -392,6 +392,7 @@ class ShadowEvaluator:
         return evaluated
 
     async def _persist(self, trade: ShadowTrade, event_type: str, extra: dict) -> None:
+        occurred_at = trade.closed_at or trade.last_bar_at or trade.opened_at
         async with self.store.transaction():
             await self.store.save_shadow_trade(trade)
             await self.store.append(
@@ -399,6 +400,7 @@ class ShadowEvaluator:
                     event_type,
                     trade.trade_id,
                     {**extra, "shadow_trade": asdict(trade)},
+                    occurred_at=occurred_at,
                 )
             )
 
