@@ -72,6 +72,7 @@ class DailyDigest:
         plan_rejections = _plan_rejections(events)
         score_histogram = _score_histogram(events)
         shadow_entries = _shadow_entries(events)
+        premarket = _premarket_learning(events)
         open_positions = [
             {
                 "symbol": position.symbol,
@@ -100,6 +101,7 @@ class DailyDigest:
             "plan_rejections": plan_rejections,
             "score_histogram": score_histogram,
             "shadow_entries": shadow_entries,
+            "premarket": premarket,
             "wallet": wallet_mode,
             "quality": quality,
             "reconcile_reminder": "RECONCILE_BROKER_HOLDINGS_WITH_POSITION_TWIN",
@@ -187,6 +189,18 @@ def _format_text(payload: dict[str, Any]) -> str:
     ]
     if not entry_lines:
         entry_lines = ["- none"]
+    premarket = payload["premarket"]
+    outcome = premarket["outcome_review"]
+    checkpoint_lines = [
+        (
+            f"- {checkpoint}: status={row['status']} "
+            f"audit={row['audit_rows']}/{row['required']} "
+            f"finalists={','.join(row['finalists']) or 'none'}"
+        )
+        for checkpoint, row in premarket["checkpoints"].items()
+    ]
+    if not checkpoint_lines:
+        checkpoint_lines = ["- none"]
     return "\n".join(
         [
             f"Market Brain daily digest — {payload['session_date']} ET",
@@ -237,6 +251,24 @@ def _format_text(payload: dict[str, Any]) -> str:
             *setup_lines,
             "Shadow delayed entries:",
             *entry_lines,
+            (
+                "Premarket learning: "
+                f"state={premarket['evaluation_state']} "
+                f"final_checkpoint={premarket['final_checkpoint'] or 'none'} "
+                f"predictions={','.join(premarket['final_predictions']) or 'none'} "
+                f"radar_seen={','.join(premarket['radar_seen']) or 'none'} "
+                f"confirmed={','.join(premarket['confirmed_after_open']) or 'none'}"
+            ),
+            (
+                "Premarket outcomes: "
+                f"state={outcome['data_state']} "
+                f"complete={outcome['complete_records']}/{outcome['records']} "
+                f"finalist_avg_mfe={_optional_percent(outcome['finalist_average_mfe_percent'])} "
+                f"finalist_avg_mae={_optional_percent(outcome['finalist_average_mae_percent'])} "
+                f"finalist_avg_eod={_optional_percent(outcome['finalist_average_eod_return_percent'])}"
+            ),
+            "Premarket checkpoints:",
+            *checkpoint_lines,
             "Reminder: reconcile broker holdings with the Position Twin.",
         ]
     )
@@ -325,6 +357,138 @@ def _score_histogram(events) -> dict[str, int]:
             except (TypeError, ValueError):
                 continue
     return output
+
+
+def _premarket_learning(events) -> dict[str, Any]:
+    order = {"T-30": 0, "T-12": 1, "T-3": 2}
+    checkpoints: dict[str, dict[str, Any]] = {}
+    radar_symbols: set[str] = set()
+    confirmed_symbols: set[str] = set()
+    radar_runs = 0
+    outcome_review: dict[str, Any] | None = None
+    for event in events:
+        if event.event_type == "PREMARKET_RUN":
+            checkpoint = str(event.payload.get("checkpoint") or "")
+            if checkpoint not in order:
+                continue
+            coverage = event.payload.get("coverage")
+            coverage = coverage if isinstance(coverage, dict) else {}
+            checkpoints[checkpoint] = {
+                "status": str(event.payload.get("status") or "UNKNOWN"),
+                "audit_rows": _safe_int(coverage.get("audit_rows")),
+                "required": _safe_int(coverage.get("required")),
+                "top10": _symbols_from(event.payload.get("top10")),
+                "finalists": _symbols_from(event.payload.get("finalists"))[:2],
+                "delta_state": str(
+                    event.payload.get("delta_state") or "DELTA_UNAVAILABLE"
+                ),
+            }
+        elif event.event_type == "RADAR_RUN":
+            radar_runs += 1
+            for candidate in event.payload.get("candidates", []):
+                if isinstance(candidate, dict):
+                    symbol = _symbol(candidate.get("symbol"))
+                    if symbol:
+                        radar_symbols.add(symbol)
+        elif event.event_type == "BUY_NOW_EMITTED":
+            decision = event.payload.get("decision")
+            if isinstance(decision, dict):
+                symbol = _symbol(decision.get("symbol"))
+                if symbol:
+                    confirmed_symbols.add(symbol)
+        elif event.event_type == "PREMARKET_LEARNING_REVIEW":
+            summary = event.payload.get("summary")
+            summary = summary if isinstance(summary, dict) else {}
+            outcome_review = {
+                "data_state": str(
+                    event.payload.get("data_state") or "LEARNING_DATA_INCOMPLETE"
+                ),
+                "records": _safe_int(summary.get("records")),
+                "complete_records": _safe_int(summary.get("complete_records")),
+                "finalist_records": _safe_int(summary.get("finalist_records")),
+                "finalist_average_mfe_percent": _safe_float(
+                    summary.get("finalist_average_mfe_percent")
+                ),
+                "finalist_average_mae_percent": _safe_float(
+                    summary.get("finalist_average_mae_percent")
+                ),
+                "finalist_average_eod_return_percent": _safe_float(
+                    summary.get("finalist_average_eod_return_percent")
+                ),
+            }
+
+    sorted_checkpoints = dict(
+        sorted(checkpoints.items(), key=lambda item: order[item[0]])
+    )
+    final_checkpoint = max(checkpoints, key=order.get) if checkpoints else None
+    final_predictions = (
+        list(checkpoints[final_checkpoint]["finalists"])
+        if final_checkpoint is not None
+        else []
+    )
+    predicted = set(final_predictions)
+    if not checkpoints:
+        evaluation_state = "NO_PREMARKET_DATA"
+    elif not final_predictions:
+        evaluation_state = "NO_FINAL_PREDICTIONS"
+    elif radar_runs == 0:
+        evaluation_state = "POSTOPEN_DATA_MISSING"
+    else:
+        evaluation_state = "MEASURED"
+    return {
+        "evaluation_state": evaluation_state,
+        "final_checkpoint": final_checkpoint,
+        "final_predictions": final_predictions,
+        "radar_seen": sorted(predicted & radar_symbols),
+        "confirmed_after_open": sorted(predicted & confirmed_symbols),
+        "not_confirmed_after_open": sorted(predicted - confirmed_symbols),
+        "checkpoints": sorted_checkpoints,
+        "outcome_review": outcome_review
+        or {
+            "data_state": "LEARNING_DATA_INCOMPLETE",
+            "records": 0,
+            "complete_records": 0,
+            "finalist_records": 0,
+            "finalist_average_mfe_percent": None,
+            "finalist_average_mae_percent": None,
+            "finalist_average_eod_return_percent": None,
+        },
+    }
+
+
+def _symbols_from(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    output: list[str] = []
+    for item in value:
+        symbol = _symbol(item)
+        if symbol and symbol not in output:
+            output.append(symbol)
+    return output
+
+
+def _symbol(value: Any) -> str | None:
+    symbol = str(value or "").strip().upper()
+    return symbol or None
+
+
+def _safe_int(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _safe_float(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _optional_percent(value: Any) -> str:
+    number = _safe_float(value)
+    return f"{number:+.3f}%" if number is not None else "N/A"
 
 
 def _runtime_datetime(value) -> datetime | None:
