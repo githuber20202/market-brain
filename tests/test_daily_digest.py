@@ -85,6 +85,21 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     )
     await store.append(
         LedgerEvent(
+            "PREMARKET_RUN",
+            "premarket:2026-08-28:T-3",
+            {
+                "checkpoint": "T-3",
+                "status": "COMPLETED",
+                "coverage": {"audit_rows": 61, "required": 61},
+                "top10": ["NVDA", "AAPL"],
+                "finalists": ["NVDA", "AAPL"],
+                "delta_state": "AVAILABLE",
+            },
+            occurred_at=now - timedelta(hours=7),
+        )
+    )
+    await store.append(
+        LedgerEvent(
             "RADAR_RUN",
             "radar:2026-08-28:1020",
             {"status": "MISSED"},
@@ -164,12 +179,42 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
         "65+": 4,
     }
     assert alert.payload["shadow_entries"][0]["symbol"] == "NVDA"
+    assert alert.payload["premarket"] == {
+        "evaluation_state": "MEASURED",
+        "final_checkpoint": "T-3",
+        "final_predictions": ["NVDA", "AAPL"],
+        "radar_seen": [],
+        "confirmed_after_open": ["NVDA"],
+        "not_confirmed_after_open": ["AAPL"],
+        "checkpoints": {
+            "T-3": {
+                "status": "COMPLETED",
+                "audit_rows": 61,
+                "required": 61,
+                "top10": ["NVDA", "AAPL"],
+                "finalists": ["NVDA", "AAPL"],
+                "delta_state": "AVAILABLE",
+            }
+        },
+        "outcome_review": {
+            "data_state": "LEARNING_DATA_INCOMPLETE",
+            "records": 0,
+            "complete_records": 0,
+            "finalist_records": 0,
+            "finalist_average_mfe_percent": None,
+            "finalist_average_mae_percent": None,
+            "finalist_average_eod_return_percent": None,
+        },
+    }
     assert "virtual_entry=100.1000 current_price=101.0000 gap=+0.899%" in alert.payload["text"]
     assert "Wallet: virtual" in alert.payload["text"]
     assert "Quality: QUALITY_STALE rows=58" in alert.payload["text"]
     assert "- RISK_TOO_SMALL: count=2" in alert.payload["text"]
     assert "Score histogram: 0-20=1 20-40=2 40-65=3 65+=4" in alert.payload["text"]
     assert "Shadow today:" in alert.payload["text"]
+    assert "Premarket learning: state=MEASURED" in alert.payload["text"]
+    assert "Premarket outcomes: state=LEARNING_DATA_INCOMPLETE" in alert.payload["text"]
+    assert "- T-3: status=COMPLETED audit=61/61 finalists=NVDA,AAPL" in alert.payload["text"]
     assert "Shadow by setup: {'" not in alert.payload["text"]
     assert (
         "- CORE_MOMENTUM: trades=1 hit_rate=0.00% expectancy=0.000R"

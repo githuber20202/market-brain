@@ -1,0 +1,12 @@
+{
+  "quotes": [],
+  "news": [
+    {
+      "title": "Company raises guidance after strong demand",
+      "publisher": "Business Wire",
+      "providerPublishTime": 1787920200,
+      "relatedTickers": ["TEST"],
+      "link": "https://example.test/news"
+    }
+  ]
+}

@@ -15,6 +15,46 @@ Instead, it maintains a credential-free **Portfolio Twin** from only two event c
 
 ## Decision authority
 
+### Premarket Prediction Funnel
+
+לפני הפתיחה המערכת מפיקה השערה מדידה, ולא אישור ביצוע. בכל יום מסחר נוצרים
+שלושה batches עצמאיים לפי `America/New_York`: ‏`T-30` ב־09:00, ‏`T-12` ב־09:18
+ו־`T-3` ב־09:27. כל batch מושך מחדש מחיר ונפח Premarket, חדשות ישירות לסימבול,
+פרופיל ADV והקשר SPY/sector. ה־Universe הקנוני נבדק תמיד ב־61 שורות audit,
+כולל `MRNA` ו־`MRVL`; גילוי מניות חיצוניות מ־Yahoo נשמר בנפרד ואינו מחליף שורת
+audit. מזהה `UNRESOLVED` נשאר `MISSING` ואינו נכנס לדירוג.
+
+הציון הוא 0–100, במשקלים קבועים:
+
+| רכיב | משקל |
+|---|---:|
+| Catalyst או continuation מאומת | 20 |
+| Gap ומומנטום מחיר | 20 |
+| נפח Premarket ונזילות | 20 |
+| חוזקה יחסית מול sector או SPY | 15 |
+| מבנה, VWAP והידרדרות | 15 |
+| Risk/Reward | 10 |
+
+לפני הפתיחה אין גאומטריית כניסה תקפה, לכן רכיב Risk/Reward נשאר `MISSING=0`
+והציון מוגבל ל־79. ללא Catalyst ישיר, מסווג וממקור אמין, הציון מוגבל ל־74.
+הפלט הוא Top 10 ועד שתי מועמדות `PREDICTION/WATCH`; הוא לעולם אינו `READY`,
+אינו כולל Trigger/Stop/Targets/quantity ואינו מאפשר פעולה אצל ברוקר.
+
+Premarket Deterioration מאושר כאשר מתקיימים לפחות שניים מהבאים: מרחק של 1% או
+יותר מהשיא, תשואת 15 דקות של ‎-0.5% או פחות, ושני lower highs. מועמד כזה חסום
+מהגמר. הידרדרות חמורה היא מרחק של 2% או יותר בצירוף תשואת 15 דקות של ‎-1% או
+פחות או שני lower highs. כל checkpoint משווה לציון ולמחיר של קודמו; אם batch
+קודם חסר, `delta_state=DELTA_UNAVAILABLE` ללא השלמה משוערת.
+
+נתוני Yahoo הציבוריים מסומנים `DELAYED`; כשל ב־SPY או שיעור כשל מעל 20% סוגר
+את ה־batch כ־`DATA_UNAVAILABLE`. לאחר הפתיחה בלבד רשאים שערי Opening Range,
+VWAP, ‏Retest, סמכות נתון ו־risk envelope להפיק `READY/BUY_NOW`. ה־Daily Digest
+מקשר את מועמדות checkpoint האחרון למניות שנראו ב־Radar ולאלו שאושרו לאחר
+הפתיחה, לצורך Shadow learning בלבד. לאחר סיום המסחר נשמר
+`PREMARKET_LEARNING_REVIEW` עם MFE, ‏MAE, תשואות קדימה אחרי 5/15/30/60 דקות
+ו־EOD לכל הופעה ב־Top 10. חוסר ב־checkpoint, מחיר ייחוס או נרות מסומן
+`LEARNING_DATA_INCOMPLETE`; הסקירה אינה משנה משקלים ואינה מאפשרת פעולת ברוקר.
+
 A `BUY_NOW` decision requires all of the following:
 
 - a verified catalyst or continuation case;

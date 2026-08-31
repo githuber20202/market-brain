@@ -15,6 +15,8 @@ Market Brain הוא רדאר שוק brokerless שפועל כברירת מחדל 
 ממומשים בפועל:
 
 - טעינה ואימות של Universe, כולל סיווג `EQUITY`, ‏`ETF` ו־`UNRESOLVED`;
+- משפך Premarket בשלוש נקודות זמן (`T-30`, ‏`T-12`, ‏`T-3`) עם audit מלא
+  של 61/61, חדשות, תנועה, נזילות, חוזקה יחסית והידרדרות;
 - discovery מתוזמן, דירוג, Opening Range, ‏trigger ו־retest בצד השרת;
 - רצפות גאומטריה משותפות ל־Radar ול־Replay;
 - תוכניות, `BUY_NOW` וטריידי Shadow עם event sourcing ו־state replay;
@@ -40,6 +42,7 @@ GitHub Actions keyless. גם בו execution וגישת חשבון ישירה ח�
 
 ## נקודות כניסה
 
+- `python -m market_brain.runtime.batch --mode premarket --checkpoint T-30|T-12|T-3`
 - `python -m market_brain.runtime.batch --mode radar|digest|weekly`
 - `docs/SHADOW_RUNBOOK.md` — הפעלה, צפייה בדוחות וטיפול בתקלות;
 - `docs/GITHUB_ACTIONS_BATCH.md` — cadence, ‏state ותקציב הריצות;
