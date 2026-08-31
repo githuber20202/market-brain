@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from itertools import pairwise
 
 import httpx
 
@@ -14,7 +16,11 @@ from market_brain.providers.rate_limit import TokenBucketRateLimiter
 from market_brain.settings import Settings, settings
 
 YAHOO_SOURCE_ID = "YAHOO_DELAYED"
+YAHOO_PREMARKET_SOURCE_ID = "YAHOO_PREMARKET_DELAYED"
 YAHOO_CHART_BASE_URL = "https://query2.finance.yahoo.com/v8/finance/chart"
+YAHOO_SEARCH_URL = "https://query2.finance.yahoo.com/v1/finance/search"
+YAHOO_SCREENER_URL = "https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved"
+SYMBOL_PATTERN = re.compile(r"^[A-Z][A-Z0-9.-]{0,14}$")
 
 
 class YahooMarketData:
@@ -52,23 +58,35 @@ class YahooMarketData:
             now=self.now,
             sleep=sleep,
         )
-        self._chart_cache: dict[tuple[str, str, str, str], dict] = {}
+        self._chart_cache: dict[tuple[str, str, str, str, bool], dict] = {}
+        self._news_cache: dict[tuple[str, str], list[dict]] = {}
+        self._movers_cache: dict[str, list[dict]] = {}
 
     @property
     def configured(self) -> bool:
         return True
 
-    async def _chart(self, symbol: str, interval: str, range_value: str) -> dict:
+    async def _chart(
+        self,
+        symbol: str,
+        interval: str,
+        range_value: str,
+        *,
+        include_prepost: bool = False,
+    ) -> dict:
         normalized = symbol.upper().strip()
-        key = (_slot_key(self.now()), normalized, interval, range_value)
+        key = (_slot_key(self.now()), normalized, interval, range_value, include_prepost)
         cached = self._chart_cache.get(key)
         if cached is not None:
             return cached
+        params = {"interval": interval, "range": range_value}
+        if include_prepost:
+            params["includePrePost"] = "true"
         payload = await self.http.get_json(
             f"{YAHOO_CHART_BASE_URL}/{normalized}",
             resource=f"chart:{interval}",
             symbol=normalized,
-            params={"interval": interval, "range": range_value},
+            params=params,
         )
         chart = payload.get("chart")
         results = chart.get("result") if isinstance(chart, dict) else None
@@ -82,6 +100,224 @@ class YahooMarketData:
             )
         self._chart_cache[key] = row
         return row
+
+    async def premarket_snapshot(self, symbol: str) -> MarketSnapshot:
+        normalized = symbol.upper().strip()
+        chart = await self._chart(
+            normalized,
+            "1m",
+            "1d",
+            include_prepost=True,
+        )
+        fetched_at = _aware(self.now())
+        pre_start, regular_open = _premarket_window(chart)
+        cutoff = min(fetched_at, regular_open)
+        bars = [
+            row
+            for row in _chart_bars(chart)
+            if pre_start <= datetime.fromisoformat(row["t"]) < cutoff
+        ]
+        if not bars:
+            raise DataUnavailable(
+                source_id=YAHOO_PREMARKET_SOURCE_ID,
+                resource="premarket_snapshot",
+                symbol=normalized,
+                error_type="YAHOO_PREMARKET_BARS_EMPTY",
+            )
+        latest = bars[-1]
+        latest_at = datetime.fromisoformat(latest["t"])
+        delay_minutes = max(0.0, (fetched_at - latest_at).total_seconds() / 60.0)
+        meta = chart.get("meta") if isinstance(chart.get("meta"), dict) else {}
+        volumes = [float(row["v"]) for row in bars if row.get("v") is not None]
+        total_volume = sum(volumes) if volumes else None
+        recent = bars[-16:]
+        return_15m = None
+        if len(recent) >= 2 and float(recent[0]["c"]) > 0:
+            return_15m = (float(recent[-1]["c"]) / float(recent[0]["c"]) - 1.0) * 100.0
+        recent_highs = [float(row["h"]) for row in bars[-3:]]
+        lower_highs = sum(
+            next_high < current_high
+            for current_high, next_high in pairwise(recent_highs)
+        )
+        return MarketSnapshot(
+            symbol=normalized,
+            last=float(latest["c"]),
+            prior_close=_positive_float(
+                meta.get("previousClose", meta.get("chartPreviousClose"))
+            ),
+            volume=total_volume,
+            vwap=None,
+            open_price=float(bars[0]["o"]),
+            high=max(float(row["h"]) for row in bars),
+            low=min(float(row["l"]) for row in bars),
+            data_age_seconds=delay_minutes * 60.0,
+            source_id=YAHOO_PREMARKET_SOURCE_ID,
+            delay_minutes=delay_minutes,
+            fetched_at=fetched_at,
+            authoritative=delay_minutes <= self.cfg.max_delayed_age_minutes,
+            metadata={
+                "market_phase": "PREMARKET",
+                "fetched_at": fetched_at.isoformat(),
+                "quote_timestamp": latest_at.isoformat(),
+                "last_bar_timestamp": latest_at.isoformat(),
+                "last_bar_high": latest["h"],
+                "last_bar_low": latest["l"],
+                "last_bar_close": latest["c"],
+                "premarket_start": pre_start.isoformat(),
+                "regular_open": regular_open.isoformat(),
+                "premarket_high": max(float(row["h"]) for row in bars),
+                "premarket_low": min(float(row["l"]) for row in bars),
+                "premarket_volume": total_volume,
+                "premarket_return_15m_percent": return_15m,
+                "premarket_lower_highs_count": lower_highs,
+                "premarket_bars_count": len(bars),
+                "premarket_recent_bars": recent,
+                "vwap_state": "MISSING",
+                "vwap_reason": "YAHOO_CHART_HAS_NO_AUTHORITATIVE_VWAP",
+                "price_cross_check": "NOT_AVAILABLE_PREMARKET",
+            },
+        )
+
+    async def premarket_snapshots(self, symbols: list[str]) -> SnapshotBatch:
+        output: list[MarketSnapshot] = []
+        skipped: list[SkippedSymbol] = []
+        for symbol in _symbols(symbols):
+            try:
+                output.append(await self.premarket_snapshot(symbol))
+            except (DataUnavailable, RuntimeError, TypeError, ValueError) as exc:
+                error_type = exc.error_type if isinstance(exc, DataUnavailable) else type(exc).__name__
+                skipped.append(SkippedSymbol(symbol=symbol, error_type=error_type))
+        return SnapshotBatch(tuple(output), tuple(skipped))
+
+    async def learning_bars(self, symbol: str) -> list[dict]:
+        chart = await self._chart(
+            symbol.upper().strip(),
+            "1m",
+            "1d",
+            include_prepost=True,
+        )
+        return _chart_bars(chart)
+
+    async def news(self, symbol: str, *, limit: int | None = None) -> list[dict]:
+        normalized = symbol.upper().strip()
+        key = (_slot_key(self.now()), normalized)
+        cached = self._news_cache.get(key)
+        if cached is not None:
+            return cached
+        count = limit or self.cfg.premarket_news_limit
+        payload = await self.http.get_json(
+            YAHOO_SEARCH_URL,
+            resource="news_search",
+            symbol=normalized,
+            params={
+                "q": normalized,
+                "quotesCount": 1,
+                "newsCount": count,
+                "enableFuzzyQuery": "false",
+            },
+        )
+        cutoff = _aware(self.now()) - timedelta(hours=self.cfg.premarket_news_lookback_hours)
+        rows: list[dict] = []
+        for item in payload.get("news", []):
+            if not isinstance(item, dict):
+                continue
+            try:
+                published_at = datetime.fromtimestamp(int(item["providerPublishTime"]), UTC)
+            except (KeyError, TypeError, ValueError, OSError):
+                continue
+            related = [
+                str(value).upper()
+                for value in item.get("relatedTickers", [])
+                if isinstance(value, str)
+            ]
+            if published_at < cutoff or normalized not in related:
+                continue
+            title = str(item.get("title") or "").strip()
+            if not title:
+                continue
+            rows.append(
+                {
+                    "title": title,
+                    "publisher": str(item.get("publisher") or "UNKNOWN").strip(),
+                    "published_at": published_at.isoformat(),
+                    "url": str(item.get("link") or "").strip() or None,
+                    "related_tickers": related,
+                    "source_id": "YAHOO_NEWS_SEARCH",
+                    "direct_symbol_match": True,
+                }
+            )
+        rows.sort(key=lambda row: row["published_at"], reverse=True)
+        self._news_cache[key] = rows[:count]
+        return self._news_cache[key]
+
+    async def external_movers(self) -> list[dict]:
+        key = _slot_key(self.now())
+        cached = self._movers_cache.get(key)
+        if cached is not None:
+            return cached
+        by_symbol: dict[str, dict] = {}
+        for screen in ("day_gainers", "most_actives"):
+            payload = await self.http.get_json(
+                YAHOO_SCREENER_URL,
+                resource=f"screener:{screen}",
+                symbol="MARKET",
+                params={"scrIds": screen, "count": 25, "start": 0},
+            )
+            finance = payload.get("finance")
+            results = finance.get("result") if isinstance(finance, dict) else None
+            result = results[0] if isinstance(results, list) and results else None
+            quotes = result.get("quotes") if isinstance(result, dict) else None
+            for row in quotes if isinstance(quotes, list) else []:
+                if not isinstance(row, dict):
+                    continue
+                symbol = str(row.get("symbol") or "").upper().strip()
+                quote_type = str(row.get("quoteType") or "EQUITY").upper()
+                price = _positive_float(row.get("regularMarketPrice"))
+                volume = _optional_float(row.get("regularMarketVolume"))
+                market_cap = _optional_float(row.get("marketCap"))
+                if (
+                    not SYMBOL_PATTERN.fullmatch(symbol)
+                    or quote_type != "EQUITY"
+                    or price is None
+                    or volume is None
+                    or market_cap is None
+                    or price < self.cfg.min_price
+                    or market_cap < self.cfg.premarket_external_min_market_cap
+                    or price * volume < self.cfg.premarket_external_min_dollar_volume
+                ):
+                    continue
+                candidate = {
+                    "symbol": symbol,
+                    "name": str(row.get("shortName") or row.get("longName") or symbol),
+                    "exchange": str(row.get("fullExchangeName") or row.get("exchange") or ""),
+                    "market_cap": market_cap,
+                    "regular_market_price": price,
+                    "regular_market_volume": volume,
+                    "regular_change_percent": _optional_float(
+                        row.get("regularMarketChangePercent")
+                    ),
+                    "premarket_price": _optional_float(row.get("preMarketPrice")),
+                    "premarket_change_percent": _optional_float(
+                        row.get("preMarketChangePercent")
+                    ),
+                    "source_id": "YAHOO_PREDEFINED_SCREENER",
+                }
+                previous = by_symbol.get(symbol)
+                if previous is None or (
+                    candidate["premarket_change_percent"] is not None
+                    and previous.get("premarket_change_percent") is None
+                ):
+                    by_symbol[symbol] = candidate
+        rows = sorted(
+            by_symbol.values(),
+            key=lambda row: (
+                -(row["premarket_change_percent"] or -999.0),
+                -(row["regular_market_price"] * row["regular_market_volume"]),
+                row["symbol"],
+            ),
+        )
+        self._movers_cache[key] = rows[: self.cfg.premarket_external_max_symbols]
+        return self._movers_cache[key]
 
     async def snapshot(self, symbol: str, decision: bool = False) -> MarketSnapshot:
         del decision
@@ -268,6 +504,31 @@ def _vwap(bars: list[dict]) -> float | None:
         weighted += typical * float(row_volume)
         volume += float(row_volume)
     return weighted / volume if volume > 0 else None
+
+
+def _premarket_window(chart: dict) -> tuple[datetime, datetime]:
+    meta = chart.get("meta") if isinstance(chart.get("meta"), dict) else {}
+    periods = meta.get("currentTradingPeriod")
+    pre = periods.get("pre") if isinstance(periods, dict) else None
+    regular = periods.get("regular") if isinstance(periods, dict) else None
+    try:
+        pre_start = datetime.fromtimestamp(int(pre["start"]), UTC)
+        regular_open = datetime.fromtimestamp(int(regular["start"]), UTC)
+    except (KeyError, TypeError, ValueError, OSError) as exc:
+        raise DataUnavailable(
+            source_id=YAHOO_PREMARKET_SOURCE_ID,
+            resource="premarket_window",
+            symbol=str(meta.get("symbol") or "MARKET"),
+            error_type="YAHOO_TRADING_PERIOD_INVALID",
+        ) from exc
+    if pre_start >= regular_open:
+        raise DataUnavailable(
+            source_id=YAHOO_PREMARKET_SOURCE_ID,
+            resource="premarket_window",
+            symbol=str(meta.get("symbol") or "MARKET"),
+            error_type="YAHOO_TRADING_PERIOD_INVALID",
+        )
+    return pre_start, regular_open
 
 
 def _timeframe(value: str) -> tuple[str, str]:
