@@ -20,6 +20,10 @@ class UniverseEntry:
     ranking_eligible: bool
     source_file: str
     instrument_type: str = "EQUITY"
+    audit_required: bool = True
+    name: str = ""
+    exchange: str = ""
+    sector_proxy: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,6 +130,14 @@ def load_universe(directory: Path) -> tuple[UniverseEntry, ...]:
                         ranking_eligible=_csv_bool(row.get("ranking_eligible"), default=True),
                         source_file=path.name,
                         instrument_type=instrument_type,
+                        audit_required=_csv_bool(row.get("audit_required"), default=True),
+                        name=str(row.get("name") or symbol).strip(),
+                        exchange=str(row.get("exchange") or "").strip(),
+                        sector_proxy=(
+                            normalize_symbol(str(row["sector_proxy"]))
+                            if row.get("sector_proxy")
+                            else None
+                        ),
                     )
                 )
     if not entries:
