@@ -5,11 +5,12 @@
 
 ## מצב GitHub Actions — ברירת המחדל
 
-במצב הזה אין שרת להקים ואין מפתחות למלא. שלושת ה־workflows נמצאים בלשונית
+במצב הזה אין שרת להקים ואין מפתחות למלא. ארבעת ה־workflows נמצאים בלשונית
 **Actions** בריפו הציבורי:
 
 | Workflow | תזמון UTC | תפקיד |
 |---|---|---|
+| `Premarket Prediction` | `0,18,27 13,14 * * 1-5` | שתי משמרות DST; השער מפעיל בדיוק את `T-30/T-12/T-3` לפי שעון ניו־יורק, בודק 61/61 ומפרסם עד שתי מועמדות `PREDICTION/WATCH`. |
 | `Shadow Radar` | `*/10 13-20 * * 1-5` | מתעורר כל 10 דקות; הקוד מפעיל discovery רק ב־11 slots של NYSE ועוקב אחר Plans פעילים בשאר הריצות. |
 | `Shadow Digest` | `20 20,21 * * 1-5` | שתי משמרות DST; הקוד יוצר digest פעם אחת אחרי 16:20 ET. |
 | `Shadow Weekly` | `30 21 * * 5` | רענון איכות, Replay של 5 sessions ודוח Shadow שבועי. |
@@ -35,7 +36,8 @@
 מופיע הכפתור **Run workflow**.
 
 מה ולמה: להרצה ידנית, פתח את workflow, לחץ **Run workflow**, בחר branch `main`
-ולחץ שוב **Run workflow**. ב־Radar וב־Digest אפשר לבחור `force=true`; אפשרות זו
+ולחץ שוב **Run workflow**. ב־Premarket בוחרים גם checkpoint; ב־Radar וב־Digest
+אפשר לבחור `force=true`. אפשרות זו
 עוקפת רק את שער השעה של ה־workflow. ה־batch עדיין בודק לוח NYSE ו־state, ולכן
 בשבת התוצאה התקינה היא `NO_SESSION`, ולא סריקת שוק.
 
@@ -191,9 +193,9 @@ docker compose --profile live logs --tail=200 api stream-worker
 
 ### שגרת ערב — כ־5 דקות
 
-ה־digest נשלח ב־16:15 שעון ניו יורק. בישראל זה 23:15 כמעט כל השנה. רק בשבועות
+ה־digest נשלח אחרי 16:20 שעון ניו יורק. בישראל זה 23:20 כמעט כל השנה. רק בשבועות
 המעבר שבהם מועדי החלפת שעון הקיץ אינם חופפים — באמצע עד סוף מרץ ובסוף אוקטובר עד
-תחילת נובמבר — השעה היא 22:15.
+תחילת נובמבר — השעה היא 22:20.
 
 בודקים ב־digest:
 
@@ -201,6 +203,10 @@ docker compose --profile live logs --tail=200 api stream-worker
 - hit rate, expectancy ב־R ו־max drawdown ב־R, היום ובמצטבר;
 - פירוט לפי setup;
 - מצב הזרם, Alert delivery, Replay check ותזכורת Reconcile.
+- סיכום שלושת checkpoints של Premarket והאם המועמדות האחרונות נראו או אושרו
+  לאחר הפתיחה.
+- כיסוי סקירת התוצאות, MFE/MAE ותשואת EOD ממוצעת של Finalists; נתון חסר נשאר
+  `LEARNING_DATA_INCOMPLETE`.
 
 זהו דוח מדידה. אין להסיק ממנו המלצת מסחר ואין לבצע פעולה בעקבותיו.
 תוצאות Shadow ו־Replay ברות השוואה כי שתיהן משתמשות באותו מנוע יציאות:
