@@ -807,17 +807,25 @@ def test_batch_gate_selects_only_real_et_schedule(tmp_path):
 
 def test_shadow_workflows_have_exact_schedule_permissions_and_concurrency():
     root = Path(__file__).resolve().parents[1]
+    premarket = (root / ".github/workflows/premarket-prediction.yml").read_text()
     radar = (root / ".github/workflows/shadow-radar.yml").read_text()
     digest = (root / ".github/workflows/shadow-digest.yml").read_text()
 
+    assert 'cron: "0,18,27 13,14 * * 1-5"' in premarket
+    assert "--mode premarket" in premarket
+    assert 'choices=("premarket", "radar", "digest")' in (
+        root / "scripts/batch_gate.py"
+    ).read_text()
     assert 'cron: "*/10 13-20 * * 1-5"' in radar
     assert 'cron: "20 20,21 * * 1-5"' in digest
-    for workflow in (radar, digest):
+    for workflow in (premarket, radar, digest):
         assert "group: market-brain-shadow-state" in workflow
         assert "contents: write" in workflow
         assert "issues: write" in workflow
         assert "secrets." not in workflow
         assert "BATCH_DURATION_SECONDS" in workflow
         assert "force:" in workflow
-        assert "args+=(--force)" in workflow
         assert "FORCE_GATE" in workflow
+    assert 'args+=(--force --checkpoint "$FORCED_CHECKPOINT")' in premarket
+    for workflow in (radar, digest):
+        assert "args+=(--force)" in workflow
