@@ -1,0 +1,110 @@
+name: Premarket Prediction
+
+on:
+  schedule:
+    # 09:00/09:18/09:27 America/New_York in both EDT and EST.
+    # The Python gate rejects the three DST-shift duplicates.
+    - cron: "0,18,27 13,14 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Bypass only the workflow time gate
+        required: false
+        default: false
+        type: boolean
+      checkpoint:
+        description: Required checkpoint when force=true
+        required: false
+        default: T-30
+        type: choice
+        options:
+          - T-30
+          - T-12
+          - T-3
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: market-brain-shadow-state
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      due: ${{ steps.gate.outputs.due }}
+      checkpoint: ${{ steps.gate.outputs.checkpoint }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: gate
+        env:
+          FORCE_GATE: ${{ inputs.force || 'false' }}
+          FORCED_CHECKPOINT: ${{ inputs.checkpoint || 'T-30' }}
+        run: |
+          args=()
+          if [[ "$FORCE_GATE" == "true" ]]; then
+            args+=(--force --checkpoint "$FORCED_CHECKPOINT")
+          fi
+          python scripts/batch_gate.py --mode premarket "${args[@]}"
+
+  prediction:
+    needs: gate
+    if: needs.gate.outputs.due == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: market
+          POSTGRES_PASSWORD: market_batch
+          POSTGRES_DB: market
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U market -d market"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      POSTGRES_DSN: postgresql://market:market_batch@127.0.0.1:5432/market
+      DATA_PLAN: keyless_delayed
+      RUN_MODE: shadow
+      EXECUTION_ACTIONS_ALLOWED: "false"
+      DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Start duration timer
+        run: echo "BATCH_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+      - name: Install runtime
+        run: python -m pip install -e .
+      - name: Restore shadow state
+        run: |
+          git fetch origin shadow-state:refs/remotes/origin/shadow-state || true
+          python -m market_brain.runtime.state restore --repo . --dsn "$POSTGRES_DSN"
+          psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f config/schema.sql
+          python -m market_brain.runtime.state activate-quality \
+            --repo . --dsn "$POSTGRES_DSN" --target data/quality.csv
+      - name: Run premarket prediction
+        env:
+          CHECKPOINT: ${{ needs.gate.outputs.checkpoint }}
+        run: |
+          python -m market_brain.runtime.batch \
+            --mode premarket \
+            --checkpoint "$CHECKPOINT"
+      - name: Persist shadow state
+        run: |
+          session_date=$(TZ=America/New_York date +%F)
+          python -m market_brain.runtime.state persist \
+            --repo . --dsn "$POSTGRES_DSN" --session-date "$session_date" --push
+      - name: Print duration
+        if: always()
+        run: echo "BATCH_DURATION_SECONDS=$(($(date +%s)-BATCH_STARTED_AT))"
