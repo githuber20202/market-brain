@@ -112,6 +112,12 @@ class Settings(BaseSettings):
     radar_poll_seconds: float = 5.0
     run_mode: Literal["shadow", "live"] = "shadow"
     shadow_capital_base: float = 100_000.0
+    premarket_news_lookback_hours: int = 72
+    premarket_news_limit: int = 5
+    premarket_external_max_symbols: int = 30
+    premarket_external_min_market_cap: float = 0.0
+    premarket_external_min_dollar_volume: float = 25_000_000.0
+    premarket_finalist_score: float = 65.0
 
     postgres_dsn: str | None = None
     nats_url: str | None = None
@@ -206,6 +212,18 @@ class Settings(BaseSettings):
             raise ValueError("INVALID_RADAR_POLL_SECONDS")
         if self.shadow_capital_base <= 0:
             raise ValueError("INVALID_SHADOW_CAPITAL_BASE")
+        if self.premarket_news_lookback_hours <= 0:
+            raise ValueError("INVALID_PREMARKET_NEWS_LOOKBACK")
+        if self.premarket_news_limit <= 0 or self.premarket_news_limit > 20:
+            raise ValueError("INVALID_PREMARKET_NEWS_LIMIT")
+        if self.premarket_external_max_symbols < 0 or self.premarket_external_max_symbols > 30:
+            raise ValueError("INVALID_PREMARKET_EXTERNAL_SYMBOL_CAP")
+        if self.premarket_external_min_market_cap < 0:
+            raise ValueError("INVALID_PREMARKET_EXTERNAL_MARKET_CAP")
+        if self.premarket_external_min_dollar_volume < 0:
+            raise ValueError("INVALID_PREMARKET_EXTERNAL_DOLLAR_VOLUME")
+        if not 0 <= self.premarket_finalist_score <= 100:
+            raise ValueError("INVALID_PREMARKET_FINALIST_SCORE")
         if self.stream_stale_alert_seconds <= 0:
             raise ValueError("INVALID_STREAM_STALE_ALERT_SECONDS")
         if self.max_trade_risk_pct <= 0 or self.max_trade_risk_pct > 1.0:
