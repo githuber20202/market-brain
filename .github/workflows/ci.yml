@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, task32-premarket-prediction-work]
   pull_request:
     branches: [main]
 
@@ -72,6 +72,16 @@ jobs:
           DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
         run: |
           psql "$POSTGRES_DSN" -v ON_ERROR_STOP=1 -f config/schema.sql
+          python -m market_brain.runtime.batch \
+            --mode premarket \
+            --checkpoint T-30 \
+            --fixtures tests/fixtures \
+            --fixture-profile premarket \
+            --now 2026-08-28T13:00:00+00:00 | tee /tmp/premarket-smoke.log
+          grep -q '"status": "COMPLETED"' /tmp/premarket-smoke.log
+          grep -q '"audit_rows": 61' /tmp/premarket-smoke.log
+          grep -q '"checkpoint": "T-30"' /tmp/premarket-smoke.log
+          echo "PREMARKET_AUDIT=61/61"
           python scripts/seed_batch_smoke.py \
             --dsn "$POSTGRES_DSN" \
             --created-at 2026-08-28T13:34:00+00:00
