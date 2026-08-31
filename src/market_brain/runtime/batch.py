@@ -30,6 +30,8 @@ from market_brain.providers.rate_limit import TokenBucketRateLimiter
 from market_brain.providers.yahoo import YahooMarketData
 from market_brain.replay.engine import ReplayEngine
 from market_brain.runtime.daily_digest import DailyDigest
+from market_brain.runtime.premarket import PremarketFunnel
+from market_brain.runtime.premarket_learning import PremarketLearningReviewer
 from market_brain.runtime.radar_scheduler import RadarScheduler, scheduled_slots
 from market_brain.runtime.shadow import ShadowEvaluator
 from market_brain.settings import ROOT, Settings
@@ -43,6 +45,8 @@ class BatchRuntime:
         service,
         provider,
         scheduler: RadarScheduler,
+        premarket: PremarketFunnel | None = None,
+        premarket_learning: PremarketLearningReviewer | None = None,
         shadow: ShadowEvaluator,
         digest: DailyDigest,
         dispatcher: AlertDispatcher,
@@ -55,6 +59,8 @@ class BatchRuntime:
         self.service = service
         self.provider = provider
         self.scheduler = scheduler
+        self.premarket = premarket
+        self.premarket_learning = premarket_learning
         self.shadow = shadow
         self.digest = digest
         self.dispatcher = dispatcher
@@ -82,7 +88,13 @@ class BatchRuntime:
         print(f"STATE_INTEGRITY=FAIL replay_check={differences}")
         raise RuntimeError("STATE_INTEGRITY")
 
-    async def run(self, mode: str, *, now: datetime) -> dict:
+    async def run(
+        self,
+        mode: str,
+        *,
+        now: datetime,
+        checkpoint: str | None = None,
+    ) -> dict:
         timestamp = _aware(now)
         await self.validate_state(now=timestamp)
         self.scheduler.validate_startup(now=timestamp)
@@ -90,6 +102,12 @@ class BatchRuntime:
         wallet_seeded = await self._ensure_shadow_wallet(timestamp)
         if mode == "radar":
             result = await self._run_radar(timestamp)
+        elif mode == "premarket":
+            if checkpoint is None:
+                raise ValueError("PREMARKET_CHECKPOINT_REQUIRED")
+            if self.premarket is None:
+                raise RuntimeError("PREMARKET_RUNTIME_NOT_CONFIGURED")
+            result = await self.premarket.run(checkpoint, now=timestamp)
         elif mode == "digest":
             result = await self._run_digest(timestamp)
         elif mode == "weekly":
@@ -148,6 +166,9 @@ class BatchRuntime:
         if local < scheduled:
             return {"mode": "digest", "status": "NOT_DUE"}
         shadow_count = await self.shadow.evaluate_now(now=timestamp)
+        learning = None
+        if self.premarket_learning is not None:
+            learning = await self.premarket_learning.review(now=timestamp)
         alert = await self.digest.create(
             now=timestamp,
             run_id=f"daily_digest:{local.date().isoformat()}",
@@ -159,6 +180,7 @@ class BatchRuntime:
             "mode": "digest",
             "status": "COMPLETED" if alert is not None else "ALREADY_COMPLETED",
             "shadow_evaluated": shadow_count,
+            "premarket_learning": learning,
             "report": str(report) if report else None,
         }
 
@@ -463,6 +485,10 @@ class BatchRuntime:
             "alerts": len(await self.store.list_alerts()),
             "shadow_trades": len(await self.store.list_shadow_trades()),
         }
+        if mode == "premarket":
+            payload["checkpoint"] = result.get("checkpoint")
+            payload["top10"] = result.get("top10", [])
+            payload["finalists"] = result.get("finalists", [])
         if mode == "weekly":
             payload["quality"] = result.get("quality")
         self.state_dir.mkdir(parents=True, exist_ok=True)
@@ -500,15 +526,37 @@ def _fixture_provider(
     minute_file = (
         "yahoo_chart_batch_plan_watch.json"
         if fixture_profile == "batch-plan-watch"
-        else "yahoo_chart_1m.json"
+        else (
+            "yahoo_chart_premarket.json"
+            if fixture_profile == "premarket"
+            else "yahoo_chart_1m.json"
+        )
     )
     minute = json.loads((fixture_dir / minute_file).read_text())
     daily = json.loads((fixture_dir / "yahoo_chart_1d.json").read_text())
     cboe = json.loads((fixture_dir / "cboe_quote.json").read_text())
+    news = (
+        json.loads((fixture_dir / "yahoo_search_news.json").read_text())
+        if fixture_profile == "premarket"
+        else None
+    )
+    screener = (
+        json.loads((fixture_dir / "yahoo_screener_empty.json").read_text())
+        if fixture_profile == "premarket"
+        else None
+    )
 
     async def handler(request: httpx.Request) -> httpx.Response:
         if request.url.host == "cdn.cboe.com":
             return httpx.Response(200, json=cboe)
+        if request.url.path.endswith("/v1/finance/search") and news is not None:
+            payload = json.loads(json.dumps(news))
+            rows = payload.get("news", [])
+            if rows and isinstance(rows[0], dict):
+                rows[0]["relatedTickers"] = [request.url.params.get("q", "TEST")]
+            return httpx.Response(200, json=payload)
+        if "/v1/finance/screener/" in request.url.path and screener is not None:
+            return httpx.Response(200, json=screener)
         payload = daily if request.url.params.get("interval") == "1d" else minute
         return httpx.Response(200, json=payload)
 
@@ -559,6 +607,22 @@ async def build_runtime(
         calendar_path=cfg.market_calendar_path,
         plans_per_run=cfg.plans_per_run,
     )
+    runtime_state_dir = state_dir or ROOT / "state"
+    premarket = PremarketFunnel(
+        store=store,
+        service=service,
+        provider=provider,
+        universe_dir=cfg.universe_dir,
+        calendar_path=cfg.market_calendar_path,
+        cfg=cfg,
+        state_dir=runtime_state_dir,
+    )
+    premarket_learning = PremarketLearningReviewer(
+        store=store,
+        provider=provider,
+        calendar_path=cfg.market_calendar_path,
+        state_dir=runtime_state_dir,
+    )
     shadow = ShadowEvaluator(store, cfg=cfg, backfill=service.backfill_intraday_structures)
     issue_sink = GitHubIssueSink(
         os.getenv("GITHUB_TOKEN"),
@@ -577,13 +641,15 @@ async def build_runtime(
         service=service,
         provider=provider,
         scheduler=scheduler,
+        premarket=premarket,
+        premarket_learning=premarket_learning,
         shadow=shadow,
         digest=DailyDigest(store),
         dispatcher=dispatcher,
         issue_sink=issue_sink,
         cfg=cfg,
         output_dir=output_dir or ROOT / "reports",
-        state_dir=state_dir,
+        state_dir=runtime_state_dir,
     )
     return runtime, fixture_client
 
@@ -592,11 +658,15 @@ async def async_main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--mode",
-        choices=("radar", "digest", "weekly", "rehearsal"),
+        choices=("premarket", "radar", "digest", "weekly", "rehearsal"),
         required=True,
     )
     parser.add_argument("--fixtures", type=Path)
-    parser.add_argument("--fixture-profile", choices=("batch-plan-watch",))
+    parser.add_argument(
+        "--fixture-profile",
+        choices=("batch-plan-watch", "premarket"),
+    )
+    parser.add_argument("--checkpoint", choices=("T-30", "T-12", "T-3"))
     parser.add_argument("--now", help="UTC/offset ISO timestamp; test and smoke use only")
     parser.add_argument("--session", help="NYSE session date for rehearsal (YYYY-MM-DD)")
     parser.add_argument(
@@ -643,6 +713,10 @@ async def async_main() -> int:
         return 0
     if args.session or args.publish_issue:
         parser.error("--session and --publish-issue require --mode rehearsal")
+    if args.mode == "premarket" and not args.checkpoint:
+        parser.error("--checkpoint is required with --mode premarket")
+    if args.mode != "premarket" and args.checkpoint:
+        parser.error("--checkpoint requires --mode premarket")
     runtime, fixture_client = await build_runtime(
         cfg,
         now=now,
@@ -650,7 +724,7 @@ async def async_main() -> int:
         fixture_profile=args.fixture_profile,
     )
     try:
-        await runtime.run(args.mode, now=now)
+        await runtime.run(args.mode, now=now, checkpoint=args.checkpoint)
     finally:
         await runtime.close()
         if fixture_client is not None:
