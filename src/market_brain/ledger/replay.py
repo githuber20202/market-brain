@@ -12,6 +12,30 @@ from market_brain.ledger.store import (
     _wallet_from_json,
 )
 
+_WALLET_PAYLOAD_PATHS = {
+    "WALLET_SEEDED": None,
+    "WALLET_RECONCILED": None,
+    "POSITION_IMPORTED": "wallet",
+    "CAPACITY_RESERVED": "wallet",
+    "CAPACITY_RELEASED": "wallet",
+    "FILL_CONFIRMED": "wallet",
+    "STOP_ORDER_CONFIRMED": "wallet",
+    "EXIT_CONFIRMED": "wallet",
+}
+_WALLET_REQUIRED_FIELDS = frozenset({"capital_base", "cash_available"})
+
+
+def _wallet_snapshot(event: LedgerEvent) -> dict | None:
+    if event.event_type not in _WALLET_PAYLOAD_PATHS:
+        return None
+    path = _WALLET_PAYLOAD_PATHS[event.event_type]
+    if path is not None and path not in event.payload:
+        return None
+    candidate = event.payload if path is None else event.payload.get(path)
+    if not isinstance(candidate, dict) or not _WALLET_REQUIRED_FIELDS.issubset(candidate):
+        raise ValueError(f"INVALID_WALLET_SNAPSHOT:{event.event_type}")
+    return candidate
+
 
 def rebuild_state(events: list[LedgerEvent]) -> dict:
     wallet = None
@@ -21,10 +45,9 @@ def rebuild_state(events: list[LedgerEvent]) -> dict:
     shadow_trades = {}
     for event in events:
         payload = event.payload
-        if event.event_type in {"WALLET_SEEDED", "WALLET_RECONCILED"}:
-            wallet = _wallet_from_json(payload)
-        if payload.get("wallet") is not None:
-            wallet = _wallet_from_json(payload["wallet"])
+        wallet_snapshot = _wallet_snapshot(event)
+        if wallet_snapshot is not None:
+            wallet = _wallet_from_json(wallet_snapshot)
         if event.event_type == "PLAN_ISSUED" and payload.get("plan") is not None:
             plan = _plan_from_json(payload["plan"])
             plans[plan.plan_id] = plan

@@ -4,6 +4,7 @@ import pytest
 
 from market_brain.domain.models import MarketSnapshot, StrategyLane
 from market_brain.engines.quality import classify_quality
+from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.replay import rebuild_state, replay_check
 from market_brain.ledger.store import InMemoryEventStore
 from market_brain.orchestration.service import DecisionService
@@ -14,6 +15,26 @@ class FakeProvider:
     async def snapshot(self, symbol: str, decision: bool = False):
         return MarketSnapshot(symbol=symbol,last=100.8,bid=100.79,ask=100.81,vwap=100.0,data_age_seconds=1.0,
             source_id="ALPACA_SIP",authoritative=True)
+
+
+def test_rebuild_state_ignores_daily_digest_wallet_label():
+    rebuilt = rebuild_state(
+        [
+            LedgerEvent(
+                "WALLET_SEEDED",
+                "wallet",
+                {"capital_base": 10_000, "cash_available": 9_500},
+            ),
+            LedgerEvent(
+                "DAILY_DIGEST_CREATED",
+                "daily_digest:2026-08-31",
+                {"wallet": "virtual", "signals_created": 0},
+            ),
+        ]
+    )
+
+    assert rebuilt["wallet"].capital_base == 10_000
+    assert rebuilt["wallet"].cash_available == 9_500
 
 
 @pytest.mark.asyncio

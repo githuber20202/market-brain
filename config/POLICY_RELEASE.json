@@ -1,0 +1,8 @@
+{
+  "policy_version": "2026-09-02.1",
+  "policy_release_sha": "a8d7504124316f120b16b217e306280260d02cb3412db17c8b3166f30b048aad",
+  "artifact_schema_version": "market-scan-artifact.v3",
+  "execution_plane": "GITHUB_SHADOW",
+  "role": "RESEARCH_REPLAY_LEARNING",
+  "ready_allowed": false
+}
