@@ -7,6 +7,7 @@ from market_brain.domain.models import AlertRecord
 from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.replay import replay_check
 from market_brain.orchestration.universe import EASTERN
+from market_brain.runtime.coverage import coverage_for_events, coverage_line
 from market_brain.runtime.shadow import shadow_metrics
 
 
@@ -69,6 +70,7 @@ class DailyDigest:
         shadow_today = shadow_metrics(shadow_trades, all_events, session_date=session_date)
         shadow_cumulative = shadow_metrics(shadow_trades, all_events)
         data_availability = _data_availability(events)
+        session_coverage = coverage_for_events(events, session_date)
         plan_rejections = _plan_rejections(events)
         score_histogram = _score_histogram(events)
         shadow_entries = _shadow_entries(events)
@@ -98,6 +100,10 @@ class DailyDigest:
                 "cumulative": shadow_cumulative,
             },
             "data_availability": data_availability,
+            "session_coverage": session_coverage,
+            "workflow_status": "COMPLETED",
+            "session_status": session_coverage["session_status"],
+            "learning_status": session_coverage["learning_status"],
             "plan_rejections": plan_rejections,
             "score_histogram": score_histogram,
             "shadow_entries": shadow_entries,
@@ -113,6 +119,22 @@ class DailyDigest:
             if isinstance(current, dict) and current.get("status") == "COMPLETED":
                 return None
             await self.store.save_alert(alert)
+            if session_coverage["session_status"] != "COMPLETE":
+                await self.store.append(
+                    LedgerEvent(
+                        "SESSION_INCOMPLETE",
+                        f"session:{session_date.isoformat()}",
+                        {
+                            "session_date": session_date.isoformat(),
+                            "workflow_status": "COMPLETED",
+                            "session_status": session_coverage["session_status"],
+                            "learning_status": session_coverage["learning_status"],
+                            "incomplete_slots": session_coverage["incomplete_slots"],
+                            "coverage": session_coverage,
+                        },
+                        occurred_at=timestamp,
+                    )
+                )
             await self.store.append(
                 LedgerEvent(
                     "DAILY_DIGEST_CREATED",
@@ -201,9 +223,15 @@ def _format_text(payload: dict[str, Any]) -> str:
     ]
     if not checkpoint_lines:
         checkpoint_lines = ["- none"]
-    return "\n".join(
-        [
+    lines = [
             f"Market Brain daily digest — {payload['session_date']} ET",
+            (
+                "Statuses: "
+                f"workflow_status={payload['workflow_status']} "
+                f"session_status={payload['session_status']} "
+                f"learning_status={payload['learning_status']}"
+            ),
+            coverage_line(payload["session_coverage"]),
             f"Stream: {stream_state} | uptime={uptime}",
             f"Signals created: {payload['signals_created']}",
             (
@@ -271,7 +299,9 @@ def _format_text(payload: dict[str, Any]) -> str:
             *checkpoint_lines,
             "Reminder: reconcile broker holdings with the Position Twin.",
         ]
-    )
+    if payload["session_status"] == "NEVER_RAN":
+        lines.insert(0, "NEVER_RAN")
+    return "\n".join(lines)
 
 
 def _duration(seconds: int | None) -> str:

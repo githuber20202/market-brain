@@ -168,6 +168,10 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     assert alert.payload["wallet"] == "virtual"
     assert alert.payload["quality"]["status"] == "QUALITY_STALE"
     assert alert.payload["data_availability"]["slots_missed"] == 1
+    assert alert.payload["workflow_status"] == "COMPLETED"
+    assert alert.payload["session_status"] == "INCOMPLETE"
+    assert alert.payload["learning_status"] == "BLOCKED"
+    assert "Session coverage: radar expected=11" in alert.payload["text"]
     assert alert.payload["plan_rejections"] == {
         "OPENING_RANGE_TOO_NARROW": 1,
         "RISK_TOO_SMALL": 2,
@@ -252,7 +256,30 @@ async def test_daily_digest_handles_disconnected_stream_and_replay_mismatch():
     assert alert.payload["replay_check"]["ok"] is False
     assert alert.payload["replay_check"]["differences"] == ["position:orphan"]
     assert alert.payload["open_positions"][0]["protection"] == "UNPROTECTED"
+    assert alert.payload["text"].splitlines()[0] == "NEVER_RAN"
     assert "Replay check: FAIL" in alert.payload["text"]
+
+
+@pytest.mark.asyncio
+async def test_daily_digest_records_session_incomplete_with_missing_slots():
+    store = InMemoryEventStore()
+    now = datetime(2026, 9, 3, 16, 20, tzinfo=EASTERN).astimezone(UTC)
+    await store.append(
+        LedgerEvent(
+            "RADAR_RUN",
+            "radar:2026-09-03:0950",
+            {"status": "COMPLETED"},
+            occurred_at=now,
+        )
+    )
+
+    alert = await DailyDigest(store).create(now=now)
+
+    assert alert is not None
+    incomplete = [event for event in store.events if event.event_type == "SESSION_INCOMPLETE"]
+    assert len(incomplete) == 1
+    assert incomplete[0].payload["session_status"] == "INCOMPLETE"
+    assert "radar:2026-09-03:1020:NEVER_RAN" in incomplete[0].payload["incomplete_slots"]
 
 
 def test_daily_digest_script_is_network_free_and_uses_existing_outbox():
