@@ -33,6 +33,17 @@
 `handoff.json` שה־SHA-256 שלו תואם ל־`market.dump`. ‏`latest.json` מכיל
 `workflow_status`, ‏`session_status` ו־`learning_status` בנפרד.
 
+Lease תקף חוסם ריצות אחרות רק כאשר ה־`workflow_run_id` שמחזיק בו עדיין במצב
+`in_progress` או `queued`. אם GitHub מחזיר שהריצה הסתיימה, בוטלה או נכשלה, ה־lease
+נחשב מיד `LEASE_STALE_HOLDER_DEAD` ומותרת התאוששות בלי להמתין 25 דקות. אם לא ניתן
+לאמת את מצב הריצה, הבדיקה נסגרת בבטחה עם `LEASE_HOLDER_STATUS_UNKNOWN` ואינה
+מפעילה ריצה מתחרה.
+
+`heartbeat.json` מתעד את `head_sha` האמיתי של הריצה ואת
+`consecutive_failures`. כשל ב־tick יחיד נרשם כ־`SESSION_TICK_FAILED`, מסמן את
+ה־slot כ־`FAILED`, יוצר התראת `STATE_INTEGRITY` ומאפשר ל־tick הבא לרוץ. הצלחה
+מאפסת את המונה; שלושה כשלים רצופים מפילים את השלב.
+
 מה ולמה: כדי להשבית זמנית workflow, פתח **Actions**, בחר את שמו, פתח את תפריט
 שלוש הנקודות ובחר **Disable workflow**. כדי להחזירו, בחר **Enable workflow**.
 
@@ -53,6 +64,11 @@ state, סיבתיות או כללי המדידה.
 `session-trigger`. ה־push מפעיל את אותו gate ואינו מעביר פרטי חשבון, פוזיציות,
 fills או סכומים. אם כבר קיימת בעלות תקפה, התוצאה התקינה היא
 `SESSION_GATE due=false reason=LEASE_HELD`.
+
+קומיט Recovery חייב להיבנות מ־`main` הנוכחי ולהוסיף עליו רק את
+`triggers/<YYYY-MM-DD>.json`. ה־gate מבצע fetch ל־`origin/main` ודורש ש־`main`
+הנוכחי יהיה ancestor של `github.sha`; אחרת הוא מחזיר
+`SESSION_GATE due=false reason=TRIGGER_STALE`, כדי שקוד ישן לעולם לא יריץ session.
 
 גיבוי ידני אחרון: אם ב־08:30 ET עדיין אין heartbeat מהיום, הפעל ידנית את
 `Shadow Session` מ־Actions. אין להריץ checkpoints ישנים בדיעבד ואין לשנות lease
