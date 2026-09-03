@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, task33b-contracts-work]
+    branches: [main]
   pull_request:
     branches: [main]
 
