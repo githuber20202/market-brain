@@ -1,0 +1,163 @@
+name: Shadow Session
+
+on:
+  schedule:
+    - cron: "0 6,7,8,9,10,11,12 * * 1-5"
+    - cron: "30 6,7 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Bypass only the session workflow gate
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: [session-trigger]
+    paths:
+      - "triggers/*.json"
+
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
+concurrency:
+  group: market-brain-shadow-state
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      due: ${{ steps.gate.outputs.due }}
+      reason: ${{ steps.gate.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - id: gate
+        env:
+          FORCE_GATE: ${{ inputs.force || 'false' }}
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: src:.
+        run: |
+          args=(--trigger "${{ github.event_name }}")
+          if [[ "$FORCE_GATE" == "true" ]]; then args+=(--force); fi
+          python scripts/session_gate.py "${args[@]}"
+
+  wait:
+    needs: gate
+    if: needs.gate.outputs.due == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: market
+          POSTGRES_PASSWORD: market_batch
+          POSTGRES_DB: market
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U market -d market"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      POSTGRES_DSN: postgresql://market:market_batch@127.0.0.1:5432/market
+      DATA_PLAN: keyless_delayed
+      RUN_MODE: shadow
+      EXECUTION_ACTIONS_ALLOWED: "false"
+      DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install runtime
+        run: python -m pip install -e .
+      - name: Restore once and run WAIT
+        run: python -m market_brain.runtime.session --phase wait --budget-minutes 330
+
+  phase_a:
+    needs: [gate, wait]
+    if: needs.gate.outputs.due == 'true' && needs.wait.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: market
+          POSTGRES_PASSWORD: market_batch
+          POSTGRES_DB: market
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U market -d market"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      POSTGRES_DSN: postgresql://market:market_batch@127.0.0.1:5432/market
+      DATA_PLAN: keyless_delayed
+      RUN_MODE: shadow
+      EXECUTION_ACTIONS_ALLOWED: "false"
+      DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install runtime
+        run: python -m pip install -e .
+      - name: Restore once and run phase A
+        run: python -m market_brain.runtime.session --phase a --budget-minutes 330
+
+  phase_b:
+    needs: [gate, phase_a]
+    if: needs.gate.outputs.due == 'true' && needs.phase_a.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: market
+          POSTGRES_PASSWORD: market_batch
+          POSTGRES_DB: market
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U market -d market"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      POSTGRES_DSN: postgresql://market:market_batch@127.0.0.1:5432/market
+      DATA_PLAN: keyless_delayed
+      RUN_MODE: shadow
+      EXECUTION_ACTIONS_ALLOWED: "false"
+      DIRECT_ACCOUNT_ACCESS_ALLOWED: "false"
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install runtime
+        run: python -m pip install -e .
+      - name: Restore once and run phase B
+        run: python -m market_brain.runtime.session --phase b --budget-minutes 330

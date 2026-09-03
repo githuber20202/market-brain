@@ -5,15 +5,17 @@
 
 ## מצב GitHub Actions — ברירת המחדל
 
-במצב הזה אין שרת להקים ואין מפתחות למלא. ארבעת ה־workflows נמצאים בלשונית
-**Actions** בריפו הציבורי:
+`Shadow Session` הוא בעל התזמון היומי היחיד. ה־cron שלו רק מתניע ריצה; לאחר
+ההתנעה, אותה ריצה מחזיקה lease ומתקדמת לפי שעון ניו־יורק דרך WAIT, שלב A ושלב B.
+שלושת ה־workflows הישנים של Premarket, Radar ו־Digest נשארו להפעלה ידנית בלבד.
+`Shadow Weekly` נשאר מתוזמן ליום שישי.
 
-| Workflow | תזמון UTC | תפקיד |
-|---|---|---|
-| `Premarket Prediction` | `0,18,27 13,14 * * 1-5` | שתי משמרות DST; השער מפעיל בדיוק את `T-30/T-12/T-3` לפי שעון ניו־יורק, בודק 61/61 ומפרסם עד שתי מועמדות `PREDICTION/WATCH`. |
-| `Shadow Radar` | `*/10 13-20 * * 1-5` | מתעורר כל 10 דקות; הקוד מפעיל discovery רק ב־11 slots של NYSE ועוקב אחר Plans פעילים בשאר הריצות. |
-| `Shadow Digest` | `20 20,21 * * 1-5` | שתי משמרות DST; הקוד יוצר digest פעם אחת אחרי 16:20 ET. |
-| `Shadow Weekly` | `30 21 * * 5` | רענון איכות, Replay של 5 sessions ודוח Shadow שבועי. |
+| קובץ | תפקיד |
+|---|---|
+| `shadow-session.yml` | WAIT עד 07:30 ET; שלב A עד 13:00; שלב B עד 16:35; שלושת checkpoints, ‏Radar ו־Digest. |
+| `shadow-watchdog.yml` | התאוששות בלבד: מפעיל Session אם אין lease ואין ריצה פעילה לפני 16:20 ET. |
+| `premarket-prediction.yml`, `shadow-radar.yml`, `shadow-digest.yml` | גיבוי ידני בפיקוח; ללא schedule. |
+| `shadow-weekly.yml` | רענון איכות, Replay של חמישה sessions ודוח שבועי. |
 
 מה ולמה: כדי לראות התראות, פתח בריפו את **Issues** וסנן לפי label בשם
 `shadow`. לכל יום יש Issue בשם `Shadow YYYY-MM-DD`; כל Alert הוא comment עם
@@ -26,8 +28,10 @@
 `state/latest.json`. איכות החברות נמצאת ב־`state/quality.csv`; הדוחות נמצאים
 בתיקייה `reports/` באותו branch.
 
-הצלחה: `latest.json` מכיל `status`, ‏`mode` ו־`updated_at`; ‏`quality.csv` מכיל
-שורת כותרת ושורות מניות; דוחות Replay/Shadow הם קובצי Markdown קריאים בדפדפן.
+הצלחה: `heartbeat.json` הוא מהיום ובגיל קטן מעשר דקות בזמן ריצה; `lease.json`
+מצביע לאותו `workflow_run_id` ותוקפו 25 דקות מה־heartbeat; לאחר שלב A קיים
+`handoff.json` שה־SHA-256 שלו תואם ל־`market.dump`. ‏`latest.json` מכיל
+`workflow_status`, ‏`session_status` ו־`learning_status` בנפרד.
 
 מה ולמה: כדי להשבית זמנית workflow, פתח **Actions**, בחר את שמו, פתח את תפריט
 שלוש הנקודות ובחר **Disable workflow**. כדי להחזירו, בחר **Enable workflow**.
@@ -35,14 +39,28 @@
 הצלחה: workflow מושבת מציג banner מתאים ואינו מקבל ריצות schedule; אחרי Enable
 מופיע הכפתור **Run workflow**.
 
-מה ולמה: להרצה ידנית, פתח את workflow, לחץ **Run workflow**, בחר branch `main`
-ולחץ שוב **Run workflow**. ב־Premarket בוחרים גם checkpoint; ב־Radar וב־Digest
-אפשר לבחור `force=true`. אפשרות זו
-עוקפת רק את שער השעה של ה־workflow. ה־batch עדיין בודק לוח NYSE ו־state, ולכן
-בשבת התוצאה התקינה היא `NO_SESSION`, ולא סריקת שוק.
+מה ולמה: להרצה ידנית, פתח **Shadow Session**, לחץ **Run workflow**, בחר `main`
+והפעל. `force=true` עוקף רק את שער ה־workflow; הוא אינו עוקף לוח NYSE, בדיקת
+state, סיבתיות או כללי המדידה.
 
-הצלחה: ריצה מופיעה ברשימה. בלוג יש `STATE_RESTORE=PASS`, אחריו
-`STATE_INTEGRITY=PASS`, ובסיום `STATE_BRANCH=PASS`.
+הצלחה: בלוג ה־gate מכיל `SESSION_GATE`; כל שלב מסיים ב־`SESSION_PHASE_END`;
+לאחר Radar מופיע `SESSION_COVERAGE`; וב־`shadow-state` מתעדכנים heartbeat ו־lease.
+
+### Recovery Trigger וגיבוי 08:30 ET
+
+ב־08:30 ET הצד החי קורא רק את `state/heartbeat.json` הציבורי. אם אין heartbeat
+מהיום, הוא כותב קובץ לא־אישי בשם `triggers/<YYYY-MM-DD>.json` לענף
+`session-trigger`. ה־push מפעיל את אותו gate ואינו מעביר פרטי חשבון, פוזיציות,
+fills או סכומים. אם כבר קיימת בעלות תקפה, התוצאה התקינה היא
+`SESSION_GATE due=false reason=LEASE_HELD`.
+
+גיבוי ידני אחרון: אם ב־08:30 ET עדיין אין heartbeat מהיום, הפעל ידנית את
+`Shadow Session` מ־Actions. אין להריץ checkpoints ישנים בדיעבד ואין לשנות lease
+ידנית.
+
+בסוף יום תקין שורת הכיסוי היא 11 Radar ו־3 Premarket. כל חוסר יוצר
+`session_status=INCOMPLETE`, ‏`learning_status=BLOCKED` ואירוע
+`SESSION_INCOMPLETE`; יום ללא שום ריצה מסומן `NEVER_RAN`.
 
 GitHub עשוי להשבית schedule בריפו ציבורי לאחר 60 יום ללא פעילות. ה־commits
 האוטומטיים ל־`shadow-state` הם פעילות רגילה כל עוד המערכת רצה. אם בכל זאת מופיע
@@ -50,9 +68,9 @@ banner של Disabled, בצע Enable והרצה ידנית אחת. בבדיקה �
 שלכל workflow יש ריצת schedule עדכנית; אין ליצור commits ריקים רק לצורך
 keepalive.
 
-מגבלות המצב: Yahoo הוא מקור יחיד ויכול להיות לא זמין; הנתונים מושהים; ה־batch
-מתעורר כל 10 דקות; אין stream רציף ואין `SELL_NOW` תוך שניות. לכן המצב הוא
-Shadow למדידה בלבד.
+מגבלות המצב: Yahoo הוא מקור יחיד ויכול להיות לא זמין; הנתונים מושהים; אין stream
+רציף ואין `SELL_NOW` תוך שניות. ה־CSV המלא ב־`reports/radar/<date>.csv` הוא ראיית
+Shadow ציבורית בלבד. המצב מיועד למדידה ואינו מקור להחלטת מסחר חיה.
 
 ## כלל הבטיחות של השבוע
 

@@ -1,0 +1,26 @@
+name: Shadow Watchdog
+
+on:
+  schedule:
+    - cron: "5,35 12-20 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dispatch recovery only when ownership is absent
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: src:.
+        run: python scripts/session_watchdog.py

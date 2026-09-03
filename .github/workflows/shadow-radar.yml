@@ -1,8 +1,6 @@
 name: Shadow Radar
 
 on:
-  schedule:
-    - cron: "*/10 13-20 * * 1-5"
   workflow_dispatch:
     inputs:
       force:

@@ -31,7 +31,7 @@ def _run(
     )
 
 
-def restore_state(repo: Path, dsn: str, *, ref: str = "origin/shadow-state") -> bool:
+def restore_state_files(repo: Path, *, ref: str = "origin/shadow-state") -> bool:
     listing = subprocess.run(
         ["git", "ls-tree", "-r", "--name-only", ref, "--", "state", "reports"],
         cwd=repo,
@@ -56,6 +56,11 @@ def restore_state(repo: Path, dsn: str, *, ref: str = "origin/shadow-state") -> 
     dump_path = repo / "state" / "market.dump"
     if not dump_path.exists():
         raise RuntimeError("STATE_DUMP_MISSING")
+    return True
+
+
+def restore_database(repo: Path, dsn: str) -> None:
+    dump_path = repo / "state" / "market.dump"
     _run(
         [
             "pg_restore",
@@ -70,6 +75,12 @@ def restore_state(repo: Path, dsn: str, *, ref: str = "origin/shadow-state") -> 
         ]
     )
     print(f"STATE_RESTORE=PASS bytes={dump_path.stat().st_size}")
+
+
+def restore_state(repo: Path, dsn: str, *, ref: str = "origin/shadow-state") -> bool:
+    if not restore_state_files(repo, ref=ref):
+        return False
+    restore_database(repo, dsn)
     return True
 
 

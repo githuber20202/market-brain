@@ -1,10 +1,6 @@
 name: Premarket Prediction
 
 on:
-  schedule:
-    # 09:00/09:18/09:27 America/New_York in both EDT and EST.
-    # The Python gate rejects the three DST-shift duplicates.
-    - cron: "0,18,27 13,14 * * 1-5"
   workflow_dispatch:
     inputs:
       force:

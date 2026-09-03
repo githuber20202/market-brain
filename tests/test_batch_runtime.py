@@ -805,19 +805,24 @@ def test_batch_gate_selects_only_real_et_schedule(tmp_path):
     )
 
 
-def test_shadow_workflows_have_exact_schedule_permissions_and_concurrency():
+def test_shadow_session_owns_daily_schedule_and_legacy_jobs_are_manual_only():
     root = Path(__file__).resolve().parents[1]
     premarket = (root / ".github/workflows/premarket-prediction.yml").read_text()
     radar = (root / ".github/workflows/shadow-radar.yml").read_text()
     digest = (root / ".github/workflows/shadow-digest.yml").read_text()
+    session = (root / ".github/workflows/shadow-session.yml").read_text()
+    watchdog = (root / ".github/workflows/shadow-watchdog.yml").read_text()
 
-    assert 'cron: "0,18,27 13,14 * * 1-5"' in premarket
+    assert "schedule:" not in premarket
+    assert "schedule:" not in radar
+    assert "schedule:" not in digest
+    assert "workflow_dispatch:" in premarket
+    assert "workflow_dispatch:" in radar
+    assert "workflow_dispatch:" in digest
     assert "--mode premarket" in premarket
     assert 'choices=("premarket", "radar", "digest")' in (
         root / "scripts/batch_gate.py"
     ).read_text()
-    assert 'cron: "*/10 13-20 * * 1-5"' in radar
-    assert 'cron: "20 20,21 * * 1-5"' in digest
     for workflow in (premarket, radar, digest):
         assert "group: market-brain-shadow-state" in workflow
         assert "contents: write" in workflow
@@ -829,3 +834,22 @@ def test_shadow_workflows_have_exact_schedule_permissions_and_concurrency():
     assert 'args+=(--force --checkpoint "$FORCED_CHECKPOINT")' in premarket
     for workflow in (radar, digest):
         assert "args+=(--force)" in workflow
+
+    assert 'cron: "0 6,7,8,9,10,11,12 * * 1-5"' in session
+    assert 'cron: "30 6,7 * * 1-5"' in session
+    assert "branches: [session-trigger]" in session
+    assert 'paths:\n      - "triggers/*.json"' in session
+    assert "group: market-brain-shadow-state" in session
+    assert "cancel-in-progress: false" in session
+    assert "contents: write" in session
+    assert "issues: write" in session
+    assert "actions: read" in session
+    assert "--phase wait" in session
+    assert "--phase a" in session
+    assert "--phase b" in session
+    assert "timeout-minutes: 345" in session
+    assert "secrets." not in session
+
+    assert 'cron: "5,35 12-20 * * 1-5"' in watchdog
+    assert "actions: write" in watchdog
+    assert "python scripts/session_watchdog.py" in watchdog

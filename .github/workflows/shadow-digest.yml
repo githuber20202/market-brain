@@ -1,8 +1,6 @@
 name: Shadow Digest
 
 on:
-  schedule:
-    - cron: "20 20,21 * * 1-5"
   workflow_dispatch:
     inputs:
       force:

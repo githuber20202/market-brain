@@ -5,10 +5,10 @@ import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
-
-from market_brain.orchestration.universe import EASTERN
+from zoneinfo import ZoneInfo
 
 LEASE_MINUTES = 25
+EASTERN = ZoneInfo("America/New_York")
 
 
 def market_session_id(now: datetime) -> str:

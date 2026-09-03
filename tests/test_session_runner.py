@@ -2,9 +2,11 @@ from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
+from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import InMemoryEventStore
-from market_brain.orchestration.universe import EASTERN
+from market_brain.orchestration.universe import EASTERN, NyseMarketCalendar
 from market_brain.runtime.session import SessionRunner, select_phase, session_ticks
+from market_brain.runtime.session_state import write_handoff
 
 
 class FakeClock:
@@ -43,6 +45,35 @@ class FakeRuntime:
     async def run(self, mode: str, *, now: datetime, checkpoint: str | None = None):
         self.calls.append((mode, now, checkpoint))
         return {"status": "COMPLETED"}
+
+
+class ResumeScheduler(FakeScheduler):
+    def __init__(self, store) -> None:
+        self.store = store
+        self.calendar = NyseMarketCalendar({}, {2026, 2027})
+        self.missed: list[str] = []
+
+    async def mark_missed(self, slot, *, now):
+        run_id = f"radar:{slot.date().isoformat()}:{slot.strftime('%H%M')}"
+        payload = {"status": "MISSED", "scheduled_for": slot.isoformat()}
+        self.missed.append(run_id)
+        await self.store.append(LedgerEvent("RADAR_RUN", run_id, payload, occurred_at=now))
+        await self.store.set_runtime_status(f"radar_run:{run_id}", payload)
+        return payload
+
+
+class ResumePremarket:
+    def __init__(self, store) -> None:
+        self.store = store
+        self.missed: list[str] = []
+
+    async def mark_missed(self, checkpoint, *, scheduled_for, now):
+        run_id = f"premarket:{scheduled_for.date().isoformat()}:{checkpoint}"
+        payload = {"status": "MISSED", "checkpoint": checkpoint}
+        self.missed.append(checkpoint)
+        await self.store.append(LedgerEvent("PREMARKET_RUN", run_id, payload, occurred_at=now))
+        await self.store.set_runtime_status(f"premarket_run:{run_id}", payload)
+        return payload
 
 
 def test_phase_selection_and_tick_ownership_use_et():
@@ -99,3 +130,74 @@ async def test_session_loop_fake_clock_runs_three_radar_ticks_and_digest(tmp_pat
     assert len(persisted) >= 10
     assert (tmp_path / "heartbeat.json").exists()
     assert (tmp_path / "lease.json").exists()
+
+
+@pytest.mark.asyncio
+async def test_phase_b_handoff_mismatch_alerts_and_fails_closed(tmp_path):
+    runtime = FakeRuntime()
+    clock = FakeClock(datetime(2026, 9, 3, 13, 0, tzinfo=EASTERN))
+    (tmp_path / "market.dump").write_bytes(b"phase-a")
+    write_handoff(
+        tmp_path,
+        session_id="2026-09-03",
+        workflow_run_id="500",
+        last_completed_tick="2026-09-03T12:50:00-04:00",
+    )
+    (tmp_path / "market.dump").write_bytes(b"tampered")
+
+    async def persist(full: bool) -> None:
+        if full:
+            (tmp_path / "market.dump").write_bytes(b"failure-snapshot")
+
+    runner = SessionRunner(
+        runtime,
+        state_dir=tmp_path,
+        phase="b",
+        budget_minutes=120,
+        workflow_run_id="501",
+        head_sha="abc123",
+        policy_version="2026-09-02.1",
+        persist=persist,
+        clock=clock,
+    )
+
+    with pytest.raises(RuntimeError, match="HANDOFF_MISMATCH"):
+        await runner.run()
+
+    alerts = await runtime.store.list_alerts()
+    assert alerts[-1].kind == "STATE_INTEGRITY"
+    assert alerts[-1].payload["reason"] == "HANDOFF_MISMATCH"
+
+
+@pytest.mark.asyncio
+async def test_late_phase_a_resume_marks_passed_slots_without_catch_up(tmp_path):
+    runtime = FakeRuntime()
+    runtime.scheduler = ResumeScheduler(runtime.store)
+    runtime.premarket = ResumePremarket(runtime.store)
+    clock = FakeClock(datetime(2026, 9, 3, 11, 0, tzinfo=EASTERN))
+
+    async def persist(full: bool) -> None:
+        if full:
+            (tmp_path / "market.dump").write_bytes(b"fake-dump")
+
+    runner = SessionRunner(
+        runtime,
+        state_dir=tmp_path,
+        phase="a",
+        budget_minutes=1,
+        workflow_run_id="700",
+        head_sha="abc123",
+        policy_version="2026-09-02.1",
+        persist=persist,
+        clock=clock,
+    )
+
+    result = await runner.run()
+
+    assert result["ticks"] == 1
+    assert runtime.premarket.missed == ["T-30", "T-12", "T-3"]
+    assert runtime.scheduler.missed == [
+        "radar:2026-09-03:0950",
+        "radar:2026-09-03:1020",
+    ]
+    assert [mode for mode, _now, _checkpoint in runtime.calls] == ["radar"]

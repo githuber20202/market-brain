@@ -10,6 +10,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 from typing import Any
 
+from market_brain.alerts.sink import GitHubIssueSink
 from market_brain.domain.models import AlertRecord
 from market_brain.orchestration.universe import EASTERN
 from market_brain.runtime.batch import BatchRuntime, build_runtime
@@ -30,7 +31,8 @@ from market_brain.runtime.state import (
     activate_quality_from_state,
     persist_state,
     publish_state_branch,
-    restore_state,
+    restore_database,
+    restore_state_files,
 )
 from market_brain.settings import ROOT, Settings
 
@@ -157,6 +159,10 @@ class SessionRunner:
         )
         start, end = phase_window(local_started.date(), phase)
         budget_end = started_at + timedelta(minutes=self.budget_minutes)
+        prior_heartbeat = read_json(self.state_dir / "heartbeat.json")
+        if prior_heartbeat and prior_heartbeat.get("session_id") == session_id:
+            self.last_scheduled_tick = prior_heartbeat.get("last_scheduled_tick")
+            self.last_completed_tick = prior_heartbeat.get("last_completed_tick")
         lease = read_json(self.state_dir / "lease.json")
         if lease_held_by_other(
             lease,
@@ -207,6 +213,25 @@ class SessionRunner:
                 f"SESSION_PHASE_END phase={phase} ticks=0 next_phase={NEXT_PHASE[phase]}"
             )
             return output
+
+        if phase != "wait" and local_started < start:
+            await self._checkpoint(
+                phase=phase,
+                session_id=session_id,
+                now=started_at,
+                next_due=start.isoformat(),
+                full=True,
+            )
+            print(f"SESSION_PHASE_SKIPPED phase={phase} reason=PHASE_NOT_STARTED")
+            print(
+                f"SESSION_PHASE_END phase={phase} ticks=0 next_phase={NEXT_PHASE[phase]}"
+            )
+            return {
+                "phase": phase,
+                "ticks": 0,
+                "next_phase": NEXT_PHASE[phase],
+                "status": "SKIPPED",
+            }
 
         await self._wait_until(
             min(start.astimezone(UTC), budget_end),
@@ -543,19 +568,33 @@ class SessionRunner:
             print("SESSION_FAILURE_PERSIST=FAILED")
 
 
-async def _prepare_runtime(repo: Path, cfg: Settings, now: datetime) -> BatchRuntime:
+async def _prepare_runtime(
+    repo: Path,
+    cfg: Settings,
+    now: datetime,
+    *,
+    phase: str,
+) -> BatchRuntime:
     await asyncio.to_thread(
         subprocess.run,
         ["git", "fetch", "origin", "shadow-state:refs/remotes/origin/shadow-state"],
         cwd=repo,
         check=False,
     )
-    await asyncio.to_thread(
-        restore_state,
+    restored = await asyncio.to_thread(
+        restore_state_files,
         repo,
-        str(cfg.postgres_dsn),
         ref="origin/shadow-state",
     )
+    effective_phase = select_phase(now) if phase == "auto" else phase
+    if restored and effective_phase == "b":
+        try:
+            verify_handoff(repo / "state", session_id=market_session_id(now))
+        except RuntimeError:
+            await _publish_restore_failure(now, "HANDOFF_MISMATCH")
+            raise
+    if restored:
+        await asyncio.to_thread(restore_database, repo, str(cfg.postgres_dsn))
     await asyncio.to_thread(
         subprocess.run,
         [
@@ -577,6 +616,25 @@ async def _prepare_runtime(repo: Path, cfg: Settings, now: datetime) -> BatchRun
         now=now,
     )
     return runtime
+
+
+async def _publish_restore_failure(now: datetime, reason: str) -> None:
+    sink = GitHubIssueSink(
+        os.getenv("GITHUB_TOKEN"),
+        os.getenv("GITHUB_REPOSITORY"),
+        clock=lambda: now,
+    )
+    try:
+        delivered = await sink.send(
+            {
+                "session_date": market_session_id(now),
+                "text": f"SESSION_FAILURE phase=b reason={reason}",
+                "reason": reason,
+            }
+        )
+        print(f"HANDOFF_ALERT delivered={str(delivered).lower()}")
+    finally:
+        await sink.aclose()
 
 
 def _head_sha(repo: Path) -> str:
@@ -603,7 +661,7 @@ async def async_main() -> int:
         raise RuntimeError("POSTGRES_DSN_MISSING")
     clock = RealClock()
     now = clock.now()
-    runtime = await _prepare_runtime(repo, cfg, now)
+    runtime = await _prepare_runtime(repo, cfg, now, phase=args.phase)
     session_id = market_session_id(now)
 
     async def persist(full: bool) -> None:

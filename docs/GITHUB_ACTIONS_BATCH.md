@@ -1,66 +1,95 @@
-# GitHub Actions batch runtime
+# GitHub Actions session runtime
 
-The keyless default runs only in Shadow mode. `shadow-radar.yml` uses delayed REST
-snapshots and never starts NATS, the stream worker, or `PositionMonitor`. Therefore it
-cannot emit second-level `SELL_NOW` alerts; this mode is measurement-only.
+GitHub Actions cron is a wake-up hint, not a minute-resolution clock. Production
+evidence showed only six Radar wake-ups across three trading days where roughly 126
+were expected. The observed UTC starts were `2026-08-31 19:25/23:17`,
+`2026-09-01 17:12/19:58/22:32`, and `2026-09-02 17:02`; Premarket and Digest were
+also delayed by hours. For that reason, one admitted workflow run now owns the market
+session and waits on the New York clock in-process.
 
-The premarket workflow wakes at the EDT and EST forms of 09:00, 09:18, and 09:27.
-Its Python gate accepts only the matching New York checkpoint, audits all 61 required
-rows, and emits at most two delayed `PREDICTION/WATCH` finalists. It never emits
-`READY` or pre-open execution levels.
+This remains a public, brokerless, delayed-data Shadow system. It does not read an
+account, place orders, publish `READY`, or contain secrets. `shadow-radar.yml`,
+`premarket-prediction.yml`, and `shadow-digest.yml` remain available for supervised
+manual dispatch, but have no schedules.
 
-The radar workflow starts every ten minutes inside the broad UTC window. The gate
-accepts delayed starts, while the batch state decides what is due: discovery runs only
-for the latest scheduled slot among the 11 slots from 09:50 through 14:50 ET. Every
-accepted run also watches active plans and shadow trades using only their symbols.
-The final accepted plan-watch tick is 15:20 ET; discovery still has exactly 11 slots
-ending at 14:50 ET.
-Older unrecorded discovery slots are persisted as `MISSED` instead of being evaluated
-with present-time data.
+## Ownership and schedule
 
-## Schedule
+`shadow-session.yml` has redundant coarse UTC wake-ups. Its gate rejects closed
+NYSE days, times at or after 16:35 ET, a valid lease owned by another run, and another
+queued/in-progress Shadow Session from the same ET date. `force=true` bypasses only
+this workflow gate; market calendar, causality, state integrity, and policy checks
+remain in force.
 
-| Workflow | Cron (UTC) | Runtime decision |
+One admitted workflow run has three jobs, each with its own temporary Postgres:
+
+| Job | ET ownership | Work |
 |---|---|---|
-| `premarket-prediction.yml` | `0,18,27 13,14 * * 1-5` | Dual EDT/EST wake-ups; the gate selects T-30, T-12, or T-3 in New York time and rejects the duplicate hour. |
-| `shadow-radar.yml` | `*/10 13-20 * * 1-5` | Gate accepts the ET radar window; batch runs only the latest due 09:50–14:50 ET discovery slot and performs plan-watch on every accepted run. |
-| `shadow-digest.yml` | `20 20,21 * * 1-5` | Dual EDT/EST wake-up; batch emits at most one digest after 16:20 ET. |
-| `shadow-weekly.yml` | `30 21 * * 5` | Friday quality refresh plus five-session Replay and weekly Shadow report. |
+| `wait` | before 07:30 | Sleep and renew public control state; no market measurement. |
+| `phase_a` | 07:30–13:00 | T-30 at 09:00, T-12 at 09:18, T-3 at 09:27, then ten-minute Radar/plan-watch ticks. |
+| `phase_b` | 13:00–16:35 | Ten-minute Radar/plan-watch ticks through 15:20 and Digest at 16:20. |
+
+Every job restores `shadow-state` exactly once. Every measurement tick uses the
+existing `BatchRuntime` in-process and then creates a database dump, updates the
+public heartbeat and lease, and force-pushes the parentless `shadow-state` snapshot.
+Heartbeat-only maintenance pulses keep the lease alive during long waits. No passed
+measurement is recomputed: expired slots are recorded as `MISSED`.
+
+## Durable control evidence
+
+The public state branch contains:
+
+- `state/heartbeat.json`: session/run identity, phase, last scheduled/completed tick,
+  next due tick, policy version, code SHA, lease expiry, and `as_of`;
+- `state/lease.json`: owner and a 25-minute expiry; a stale lease may be recovered;
+- `state/handoff.json`: A→B ownership plus SHA-256 of the restored `market.dump`;
+- `state/latest.json`: separate `workflow_status`, `session_status`, and
+  `learning_status` values;
+- `reports/radar/<date>.csv`: the full eligible universe and every score component
+  for each discovery slot, retained for the latest ten session files.
+
+Phase B verifies the exact dump hash recorded by phase A. A same-day mismatch fails
+closed as `HANDOFF_MISMATCH`, creates an Issue alert, and exits non-zero. A new run
+that resumes after 13:00 without a same-day handoff is allowed and logs
+`HANDOFF_ABSENT reason=RESUME`.
+
+## Honest coverage
+
+Digest coverage is derived from the fixed schedule, not from the events that happen
+to exist: 11 discovery slots (09:50–14:50 ET) plus three Premarket checkpoints. The
+Digest and Issue print:
+
+`Session coverage: radar expected=11 ok=… unavailable=… missed=… never_ran=…; premarket expected=3 ok=… missed=…`
+
+The three independent states are:
+
+- `workflow_status`: `COMPLETED` or `FAILED`;
+- `session_status`: `COMPLETE`, `INCOMPLETE`, or `NEVER_RAN`;
+- `learning_status`: `READY` only for complete usable evidence, otherwise `BLOCKED`.
+
+An incomplete session appends `SESSION_INCOMPLETE` with the exact slot list to the
+ledger so weekly and replay reports cannot treat the date as complete. A date with no
+events begins the Digest text with `NEVER_RAN`, rather than presenting zero activity
+as a successful session.
+
+## Recovery domains
+
+`shadow-watchdog.yml` checks every 30 minutes during its UTC window. Before 16:20 ET,
+it dispatches `shadow-session.yml` only when there is no valid lease and no active or
+queued session run. This is a recovery watchdog, never a catch-up calculator.
+
+The independent live-side Recovery Trigger reads the raw public heartbeat at 08:30
+ET. If there is no heartbeat for the current ET date, it commits
+`triggers/<YYYY-MM-DD>.json` to `session-trigger`. The resulting `push` event wakes
+the same session gate without using Actions cron. It sends no account, order, fill,
+position, or other personal field.
+
+Last manual fallback: at 08:30 ET, if today has no heartbeat, open **Actions → Shadow
+Session → Run workflow** on `main`. Do not manufacture old checkpoints and do not
+edit the lease by hand.
 
 ## Historical production-path rehearsal
 
-`python -m market_brain.runtime.batch --mode rehearsal --session YYYY-MM-DD`
-runs one completed NYSE session through the same `BatchRuntime` used by the scheduled
-jobs. It executes every ten-minute tick from 09:50 through 15:20 ET and the 16:20 ET
-digest against a separate temporary database. It never restores or persists
-`shadow-state`. Alerts go to the job log; `--publish-issue` is reserved for a
-supervised run and posts one summary comment to a closed `Shadow rehearsal <date>`
-Issue.
-
-`YahooReplayMarketData` downloads each symbol/timeframe chart once, then exposes only
-bars at or before the simulated clock. Snapshot provenance is `YAHOO_REPLAY`; Cboe is
-disabled because its current delayed quote cannot validate an earlier intraday price.
-The log records every slot, candidate, rejection, plan-watch transition, Shadow
-outcome, HTTP request count, tick duration, full digest text, and exception count.
-
-Manual Radar and Digest dispatches expose `force=true`. Force bypasses only the
-stateless workflow gate so a supervised off-hours job can start. It does not bypass
-the NYSE calendar, due-slot checks, state replay validation, or any planning gate;
-an off-session batch returns `NO_SESSION` and persists the restored state.
-
-All scheduled daily workflows share one concurrency group, restore the orphan
-`shadow-state` branch, require `replay_check=[]`, and replace that branch with one new
-parentless commit after a successful run. The retained state is one current Postgres
-dump, 14 dated dumps, `state/latest.json`, and generated reports. Intraday bars are
-pruned to the five most recent sessions before each dump.
-
-## Actions-minute estimate
-
-The UTC schedule creates 48 radar, six premarket, and two digest gate jobs per weekday.
-The ET windows let about 33 radar, three premarket, and one digest job continue. A
-conservative one-minute gate/two-minute batch estimate for 22 weekdays is
-`(56×22) + (37×22×2) = 2,860` runner minutes per month. Allowing five ten-minute
-weekly jobs adds about 50 minutes, for a conservative total of 2,910 runner minutes
-per month. Actions usage for this public repository is free;
-every full job still prints `BATCH_DURATION_SECONDS` so actual usage remains
-measurable.
+`python -m market_brain.runtime.batch --mode rehearsal --session YYYY-MM-DD` runs a
+completed NYSE session through the same `BatchRuntime` against a separate temporary
+database. It never restores or persists `shadow-state`. `YahooReplayMarketData`
+exposes only bars at or before the simulated clock, preserving causal replay.
