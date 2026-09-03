@@ -234,7 +234,7 @@ async def verify_state(dsn: str) -> list[str]:
     return differences
 
 
-async def _persist(repo: Path, dsn: str, session_date: str, push: bool) -> None:
+async def persist_state(repo: Path, dsn: str, session_date: str, push: bool) -> None:
     store = PostgresEventStore(dsn)
     try:
         pruned = await store.prune_intraday_bars(5)
@@ -287,7 +287,9 @@ def main() -> None:
 
         asyncio.run(activate())
     else:
-        asyncio.run(_persist(args.repo.resolve(), args.dsn, args.session_date, args.push))
+        asyncio.run(
+            persist_state(args.repo.resolve(), args.dsn, args.session_date, args.push)
+        )
 
 
 def _aware(value: datetime) -> datetime:

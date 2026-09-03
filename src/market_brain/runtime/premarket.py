@@ -107,6 +107,48 @@ class PremarketFunnel:
         )
         return await self._persist(artifact, status_key=status_key)
 
+    async def mark_missed(
+        self,
+        checkpoint: str,
+        *,
+        scheduled_for: datetime,
+        now: datetime,
+    ) -> dict[str, Any]:
+        stage = checkpoint.upper()
+        if stage not in PREMARKET_CHECKPOINTS:
+            raise ValueError("PREMARKET_CHECKPOINT_INVALID")
+        timestamp = _aware(now)
+        session_id = _aware(scheduled_for).astimezone(EASTERN).date().isoformat()
+        run_id = f"premarket:{session_id}:{stage}"
+        status_key = f"premarket_run:{run_id}"
+        existing = await self.store.get_runtime_status_key(status_key)
+        if isinstance(existing, dict) and existing.get("status") in {
+            "COMPLETED",
+            "MISSED",
+        }:
+            return {
+                "mode": "premarket",
+                "status": "ALREADY_COMPLETED",
+                "checkpoint": stage,
+                "run_id": run_id,
+                "artifact_dir": existing.get("artifact_dir"),
+            }
+        universe = load_universe(self.universe_dir)
+        required = sum(entry.audit_required for entry in universe)
+        artifact = self._empty_artifact(
+            run_id,
+            stage,
+            timestamp,
+            status="MISSED",
+            required=required,
+            blockers=["PREMARKET_CHECKPOINT_MISSED"],
+        )
+        artifact["session_id"] = session_id
+        artifact["scheduled_for"] = _aware(scheduled_for).astimezone(EASTERN).isoformat()
+        artifact["missed_at"] = timestamp.isoformat()
+        artifact["text"] = format_premarket_report(artifact)
+        return await self._persist(artifact, status_key=status_key)
+
     async def _collect(
         self,
         *,
