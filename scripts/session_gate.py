@@ -9,7 +9,7 @@ from datetime import UTC, datetime, time
 from pathlib import Path
 from typing import Any
 
-from market_brain.runtime.session_state import lease_held_by_other
+from market_brain.runtime.session_state import LeaseInspection, inspect_lease
 from scripts.batch_gate import EASTERN, ROOT, is_market_session
 
 ACTIVE_STATUSES = {"in_progress", "queued", "waiting", "pending", "requested"}
@@ -91,6 +91,41 @@ def active_session_runs(
     return active
 
 
+def trigger_contains_current_main(
+    repo: Path,
+    *,
+    runner=subprocess.run,
+) -> bool:
+    try:
+        fetched = runner(
+            [
+                "git",
+                "fetch",
+                "origin",
+                "+main:refs/remotes/origin/main",
+            ],
+            cwd=repo,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if fetched.returncode != 0:
+        return False
+    try:
+        ancestor = runner(
+            ["git", "merge-base", "--is-ancestor", "origin/main", "HEAD"],
+            cwd=repo,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return ancestor.returncode == 0
+
+
 def evaluate_session_gate(
     *,
     now: datetime,
@@ -100,25 +135,35 @@ def evaluate_session_gate(
     force: bool,
     lease: dict[str, Any] | None,
     active_runs: list[str],
+    lease_inspection: LeaseInspection | None = None,
+    trigger_stale: bool = False,
 ) -> GateResult:
     local = _aware(now).astimezone(EASTERN)
     if force:
         return GateResult(True, "FORCE", local, trigger)
+    if trigger == "push" and trigger_stale:
+        return GateResult(False, "TRIGGER_STALE", local, trigger)
     if not is_market_session(local.date(), calendar_path):
         return GateResult(False, "MARKET_CLOSED", local, trigger)
     if local.time().replace(tzinfo=None) >= time(16, 35):
         return GateResult(False, "SESSION_WINDOW_CLOSED", local, trigger)
     session_id = local.date().isoformat()
-    if lease_held_by_other(
+    lease_state = lease_inspection or inspect_lease(
         lease,
         now=now,
         session_id=session_id,
         workflow_run_id=str(workflow_run_id),
-    ):
-        return GateResult(False, "LEASE_HELD", local, trigger)
+    )
+    if lease_state.held_by_other:
+        return GateResult(False, lease_state.reason, local, trigger)
     if active_runs:
         return GateResult(False, "RUN_ACTIVE", local, trigger)
-    return GateResult(True, "DUE", local, trigger)
+    reason = (
+        "LEASE_STALE_HOLDER_DEAD"
+        if lease_state.reason == "LEASE_STALE_HOLDER_DEAD"
+        else "DUE"
+    )
+    return GateResult(True, reason, local, trigger)
 
 
 def normalized_trigger(value: str) -> str:
@@ -159,9 +204,25 @@ def main() -> None:
     )
     repository = os.getenv("GITHUB_REPOSITORY", "githuber20202/market-brain")
     workflow_run_id = os.getenv("GITHUB_RUN_ID", "local")
+    trigger = normalized_trigger(
+        args.trigger or os.getenv("GITHUB_EVENT_NAME", "unknown")
+    )
+    trigger_stale = trigger == "push" and not trigger_contains_current_main(repo)
+    lease = None if args.force else state_lease(repo)
+    lease_inspection = (
+        None
+        if args.force
+        else inspect_lease(
+            lease,
+            now=now,
+            session_id=_aware(now).astimezone(EASTERN).date().isoformat(),
+            workflow_run_id=workflow_run_id,
+            repository=repository,
+        )
+    )
     runs = (
         []
-        if args.force
+        if args.force or trigger_stale
         else active_session_runs(
             repository,
             now=now,
@@ -171,11 +232,13 @@ def main() -> None:
     result = evaluate_session_gate(
         now=now,
         calendar_path=repo / "data" / "market_calendar.csv",
-        trigger=normalized_trigger(args.trigger or os.getenv("GITHUB_EVENT_NAME", "unknown")),
+        trigger=trigger,
         workflow_run_id=workflow_run_id,
         force=args.force,
-        lease=None if args.force else state_lease(repo),
+        lease=lease,
         active_runs=runs,
+        lease_inspection=lease_inspection,
+        trigger_stale=trigger_stale,
     )
     emit_gate(result, output_path=os.getenv("GITHUB_OUTPUT"))
 

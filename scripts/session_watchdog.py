@@ -6,7 +6,7 @@ import subprocess
 from datetime import UTC, datetime, time
 from pathlib import Path
 
-from market_brain.runtime.session_state import lease_held_by_other
+from market_brain.runtime.session_state import LeaseInspection, inspect_lease
 from scripts.batch_gate import EASTERN, ROOT, is_market_session
 from scripts.session_gate import active_session_runs, state_lease
 
@@ -18,22 +18,29 @@ def watchdog_decision(
     workflow_run_id: str,
     lease: dict | None,
     active_runs: list[str],
+    lease_inspection: LeaseInspection | None = None,
 ) -> tuple[str, str]:
     local = _aware(now).astimezone(EASTERN)
     if not is_market_session(local.date(), calendar_path):
         return "IDLE", "MARKET_CLOSED"
     if local.time().replace(tzinfo=None) >= time(16, 20):
         return "IDLE", "WATCHDOG_WINDOW_CLOSED"
-    if lease_held_by_other(
+    lease_state = lease_inspection or inspect_lease(
         lease,
         now=now,
         session_id=local.date().isoformat(),
         workflow_run_id=workflow_run_id,
-    ):
-        return "IDLE", "LEASE_HELD"
+    )
+    if lease_state.held_by_other:
+        return "IDLE", lease_state.reason
     if active_runs:
         return "IDLE", "RUN_ACTIVE"
-    return "DISPATCHED", "RECOVERY_REQUIRED"
+    reason = (
+        "LEASE_STALE_HOLDER_DEAD"
+        if lease_state.reason == "LEASE_STALE_HOLDER_DEAD"
+        else "RECOVERY_REQUIRED"
+    )
+    return "DISPATCHED", reason
 
 
 def run_watchdog(
@@ -52,6 +59,14 @@ def run_watchdog(
         text=True,
     )
     lease = state_lease(repo, runner=runner)
+    lease_inspection = inspect_lease(
+        lease,
+        now=now,
+        session_id=_aware(now).astimezone(EASTERN).date().isoformat(),
+        workflow_run_id=workflow_run_id,
+        repository=repository,
+        runner=runner,
+    )
     active = active_session_runs(
         repository,
         now=now,
@@ -64,6 +79,7 @@ def run_watchdog(
         workflow_run_id=workflow_run_id,
         lease=lease,
         active_runs=active,
+        lease_inspection=lease_inspection,
     )
     if action == "DISPATCHED":
         runner(
@@ -81,7 +97,8 @@ def run_watchdog(
             capture_output=True,
             text=True,
         )
-    print(f"WATCHDOG action={action} reason={reason} et={_aware(now).astimezone(EASTERN).isoformat()}")
+    local_now = _aware(now).astimezone(EASTERN).isoformat()
+    print(f"WATCHDOG action={action} reason={reason} et={local_now}")
     return action, reason
 
 

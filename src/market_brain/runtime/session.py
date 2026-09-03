@@ -12,12 +12,13 @@ from typing import Any
 
 from market_brain.alerts.sink import GitHubIssueSink
 from market_brain.domain.models import AlertRecord
+from market_brain.ledger.events import LedgerEvent
 from market_brain.orchestration.universe import EASTERN
 from market_brain.runtime.batch import BatchRuntime, build_runtime
 from market_brain.runtime.coverage import coverage_for_events, coverage_line
 from market_brain.runtime.radar_scheduler import scheduled_slots
 from market_brain.runtime.session_state import (
-    lease_held_by_other,
+    inspect_lease,
     load_policy_version,
     market_session_id,
     read_json,
@@ -129,6 +130,8 @@ class SessionRunner:
         policy_version: str,
         persist: Callable[[bool], Awaitable[None]],
         clock: Any | None = None,
+        repository: str | None = None,
+        command_runner: Callable[..., Any] = subprocess.run,
     ) -> None:
         if phase not in {"auto", "wait", "a", "b"}:
             raise ValueError("SESSION_PHASE_INVALID")
@@ -143,8 +146,11 @@ class SessionRunner:
         self.policy_version = policy_version
         self.persist = persist
         self.clock = clock or RealClock()
+        self.repository = repository
+        self.command_runner = command_runner
         self.last_scheduled_tick: str | None = None
         self.last_completed_tick: str | None = None
+        self.consecutive_failures = 0
         self._next_heartbeat: datetime | None = None
         self._has_full_checkpoint = False
 
@@ -163,14 +169,28 @@ class SessionRunner:
         if prior_heartbeat and prior_heartbeat.get("session_id") == session_id:
             self.last_scheduled_tick = prior_heartbeat.get("last_scheduled_tick")
             self.last_completed_tick = prior_heartbeat.get("last_completed_tick")
+            prior_failures = prior_heartbeat.get("consecutive_failures", 0)
+            if isinstance(prior_failures, int) and not isinstance(
+                prior_failures, bool
+            ) and prior_failures >= 0:
+                self.consecutive_failures = prior_failures
         lease = read_json(self.state_dir / "lease.json")
-        if lease_held_by_other(
+        lease_state = inspect_lease(
             lease,
             now=started_at,
             session_id=session_id,
             workflow_run_id=self.workflow_run_id,
-        ):
-            raise RuntimeError("SESSION_LEASE_HELD")
+            repository=self.repository,
+            runner=self.command_runner,
+        )
+        if lease_state.held_by_other:
+            raise RuntimeError(f"SESSION_LEASE_HELD reason={lease_state.reason}")
+        if lease_state.reason == "LEASE_STALE_HOLDER_DEAD":
+            print(
+                "SESSION_LEASE due=true reason=LEASE_STALE_HOLDER_DEAD "
+                f"holder_run_id={lease_state.holder_run_id} "
+                f"holder_status={lease_state.holder_status}"
+            )
 
         if phase in {"a", "b"}:
             self.runtime.scheduler.validate_startup(now=started_at)
@@ -304,14 +324,48 @@ class SessionRunner:
                     actionable = [row for row in due if not self._expired_tick(row, now)]
                     tick = actionable[-1] if actionable else None
                     if tick is not None:
-                        result = await self.runtime.run(
-                            tick.kind,
-                            now=now,
-                            checkpoint=tick.checkpoint,
-                        )
                         tick_count += 1
                         self.last_scheduled_tick = tick.scheduled_for.isoformat()
-                        self.last_completed_tick = _aware(self.clock.now()).isoformat()
+                        result: dict[str, Any] | None = None
+                        failure_reason: str | None = None
+                        try:
+                            result = await self.runtime.run(
+                                tick.kind,
+                                now=now,
+                                checkpoint=tick.checkpoint,
+                            )
+                            failure_reason = self._tick_result_failure(result)
+                        except Exception as exc:  # noqa: BLE001 - isolate one scheduled tick
+                            failure_reason = str(exc) or type(exc).__name__
+
+                        if failure_reason is not None:
+                            self.consecutive_failures += 1
+                            await self._record_tick_failure(
+                                tick=tick,
+                                phase=phase,
+                                session_id=session_id,
+                                now=_aware(self.clock.now()),
+                                failure_reason=failure_reason,
+                            )
+                            await self._checkpoint(
+                                phase=phase,
+                                session_id=session_id,
+                                now=_aware(self.clock.now()),
+                                next_due=self._next_due(pending),
+                                full=True,
+                            )
+                            if tick.kind == "radar":
+                                await self._print_coverage(local_started.date())
+                            if self.consecutive_failures >= 3:
+                                raise RuntimeError(
+                                    "SESSION_CONSECUTIVE_TICK_FAILURES"
+                                )
+                            continue
+
+                        self.consecutive_failures = 0
+                        self.last_completed_tick = _aware(
+                            self.clock.now()
+                        ).isoformat()
                         await self._checkpoint(
                             phase=phase,
                             session_id=session_id,
@@ -321,8 +375,6 @@ class SessionRunner:
                         )
                         if tick.kind == "radar":
                             await self._print_coverage(local_started.date())
-                        if result.get("status") == "FAILED":
-                            raise RuntimeError("SESSION_TICK_FAILED")
                         continue
 
                 next_tick = pending[0].scheduled_for.astimezone(UTC) if pending else None
@@ -441,6 +493,7 @@ class SessionRunner:
             next_due_tick=next_due,
             lease_expires_at=lease["expires_at"],
             policy_version=self.policy_version,
+            consecutive_failures=self.consecutive_failures,
         )
         events = await self.runtime.store.read_events()
         coverage = coverage_for_events(events, date.fromisoformat(session_id))
@@ -534,6 +587,105 @@ class SessionRunner:
             f"learning_status={coverage['learning_status']} "
             f"{coverage_line(coverage)}"
         )
+
+    @staticmethod
+    def _tick_result_failure(result: dict[str, Any] | None) -> str | None:
+        if not isinstance(result, dict):
+            return "SESSION_TICK_RESULT_INVALID"
+        if result.get("status") == "FAILED":
+            return str(result.get("error_type") or "SESSION_TICK_FAILED")
+        runs = result.get("runs")
+        if isinstance(runs, list):
+            for row in runs:
+                if isinstance(row, dict) and row.get("status") == "FAILED":
+                    return str(row.get("error_type") or "SESSION_TICK_FAILED")
+        return None
+
+    async def _record_tick_failure(
+        self,
+        *,
+        tick: SessionTick,
+        phase: str,
+        session_id: str,
+        now: datetime,
+        failure_reason: str,
+    ) -> None:
+        timestamp = _aware(now)
+        aggregate_id = self._tick_aggregate_id(tick, session_id)
+        payload: dict[str, Any] = {
+            "session_date": session_id,
+            "phase": phase,
+            "tick_kind": tick.kind,
+            "scheduled_for": tick.scheduled_for.isoformat(),
+            "checkpoint": tick.checkpoint,
+            "status": "FAILED",
+            "reason": "SESSION_TICK_FAILED",
+            "error_type": failure_reason,
+            "failed_at": timestamp.isoformat(),
+            "consecutive_failures": self.consecutive_failures,
+        }
+        async with self.runtime.store.transaction():
+            await self.runtime.store.append(
+                LedgerEvent(
+                    "SESSION_TICK_FAILED",
+                    aggregate_id,
+                    payload,
+                    occurred_at=timestamp,
+                )
+            )
+            event_type, status_key = self._tick_status_target(tick, aggregate_id)
+            existing = await self.runtime.store.get_runtime_status_key(status_key)
+            if not isinstance(existing, dict) or existing.get("status") != "FAILED":
+                specialized = {"run_id": aggregate_id, **payload}
+                await self.runtime.store.append(
+                    LedgerEvent(
+                        event_type,
+                        aggregate_id,
+                        specialized,
+                        occurred_at=timestamp,
+                    )
+                )
+                await self.runtime.store.set_runtime_status(
+                    status_key,
+                    specialized,
+                )
+        alert = AlertRecord(
+            kind="STATE_INTEGRITY",
+            payload={
+                **payload,
+                "text": (
+                    "SESSION_TICK_FAILED "
+                    f"phase={phase} kind={tick.kind} "
+                    f"scheduled_for={tick.scheduled_for.isoformat()} "
+                    f"reason={failure_reason} "
+                    f"consecutive_failures={self.consecutive_failures}"
+                ),
+            },
+            created_at=timestamp,
+        )
+        await self.runtime.store.save_alert(alert)
+        await self.runtime.dispatcher.dispatch_once(now=timestamp)
+        print(alert.payload["text"])
+
+    @staticmethod
+    def _tick_aggregate_id(tick: SessionTick, session_id: str) -> str:
+        if tick.kind == "premarket":
+            return f"premarket:{session_id}:{tick.checkpoint}"
+        return (
+            f"{tick.kind}:{session_id}:"
+            f"{tick.scheduled_for.astimezone(EASTERN).strftime('%H%M')}"
+        )
+
+    @staticmethod
+    def _tick_status_target(
+        tick: SessionTick,
+        aggregate_id: str,
+    ) -> tuple[str, str]:
+        if tick.kind == "premarket":
+            return "PREMARKET_RUN", f"premarket_run:{aggregate_id}"
+        if tick.kind == "radar":
+            return "RADAR_RUN", f"radar_run:{aggregate_id}"
+        return "DAILY_DIGEST_FAILED", f"daily_digest_run:{tick.scheduled_for.date()}"
 
     async def _record_failure(
         self,
@@ -680,6 +832,7 @@ async def async_main() -> int:
         policy_version=load_policy_version(repo),
         persist=persist,
         clock=clock,
+        repository=os.getenv("GITHUB_REPOSITORY", "githuber20202/market-brain"),
     )
     try:
         await runner.run()

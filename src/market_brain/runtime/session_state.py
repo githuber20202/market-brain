@@ -2,13 +2,24 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
 LEASE_MINUTES = 25
+LIVE_WORKFLOW_STATUSES = {"in_progress", "queued"}
 EASTERN = ZoneInfo("America/New_York")
+
+
+@dataclass(frozen=True, slots=True)
+class LeaseInspection:
+    held_by_other: bool
+    reason: str
+    holder_run_id: str | None = None
+    holder_status: str | None = None
 
 
 def market_session_id(now: datetime) -> str:
@@ -42,19 +53,100 @@ def parse_timestamp(value: Any) -> datetime | None:
         return None
 
 
+def inspect_lease(
+    lease: dict[str, Any] | None,
+    *,
+    now: datetime,
+    session_id: str,
+    workflow_run_id: str,
+    repository: str | None = None,
+    runner=subprocess.run,
+) -> LeaseInspection:
+    if not lease or str(lease.get("session_id")) != session_id:
+        return LeaseInspection(False, "LEASE_ABSENT")
+    expires_at = parse_timestamp(lease.get("expires_at"))
+    if expires_at is None or expires_at <= _aware(now):
+        return LeaseInspection(False, "LEASE_EXPIRED")
+    holder_run_id = str(lease.get("workflow_run_id") or "")
+    if not holder_run_id:
+        return LeaseInspection(True, "LEASE_HOLDER_INVALID")
+    if holder_run_id == str(workflow_run_id):
+        return LeaseInspection(False, "LEASE_OWNED", holder_run_id)
+    if repository is None:
+        return LeaseInspection(True, "LEASE_HELD", holder_run_id)
+
+    holder_status = workflow_run_status(
+        holder_run_id,
+        repository=repository,
+        runner=runner,
+    )
+    if holder_status is None:
+        return LeaseInspection(
+            True,
+            "LEASE_HOLDER_STATUS_UNKNOWN",
+            holder_run_id,
+        )
+    if holder_status not in LIVE_WORKFLOW_STATUSES:
+        return LeaseInspection(
+            False,
+            "LEASE_STALE_HOLDER_DEAD",
+            holder_run_id,
+            holder_status,
+        )
+    return LeaseInspection(True, "LEASE_HELD", holder_run_id, holder_status)
+
+
+def workflow_run_status(
+    workflow_run_id: str,
+    *,
+    repository: str,
+    runner=subprocess.run,
+) -> str | None:
+    try:
+        result = runner(
+            [
+                "gh",
+                "run",
+                "view",
+                str(workflow_run_id),
+                "--repo",
+                repository,
+                "--json",
+                "status",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    try:
+        payload = json.loads(result.stdout)
+    except (TypeError, json.JSONDecodeError):
+        return None
+    status = payload.get("status") if isinstance(payload, dict) else None
+    return str(status) if isinstance(status, str) and status else None
+
+
 def lease_held_by_other(
     lease: dict[str, Any] | None,
     *,
     now: datetime,
     session_id: str,
     workflow_run_id: str,
+    repository: str | None = None,
+    runner=subprocess.run,
 ) -> bool:
-    if not lease or str(lease.get("session_id")) != session_id:
-        return False
-    expires_at = parse_timestamp(lease.get("expires_at"))
-    if expires_at is None or expires_at <= _aware(now):
-        return False
-    return str(lease.get("workflow_run_id")) != workflow_run_id
+    return inspect_lease(
+        lease,
+        now=now,
+        session_id=session_id,
+        workflow_run_id=workflow_run_id,
+        repository=repository,
+        runner=runner,
+    ).held_by_other
 
 
 def renew_lease(
@@ -97,6 +189,7 @@ def write_heartbeat(
     next_due_tick: str | None,
     lease_expires_at: str,
     policy_version: str,
+    consecutive_failures: int,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "session_id": session_id,
@@ -108,6 +201,7 @@ def write_heartbeat(
         "next_due_tick": next_due_tick,
         "lease_expires_at": lease_expires_at,
         "policy_version": policy_version,
+        "consecutive_failures": consecutive_failures,
         "as_of": _aware(now).isoformat(),
     }
     write_json(state_dir / "heartbeat.json", payload)

@@ -1,3 +1,5 @@
+import json
+import subprocess
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
@@ -6,7 +8,7 @@ from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import InMemoryEventStore
 from market_brain.orchestration.universe import EASTERN, NyseMarketCalendar
 from market_brain.runtime.session import SessionRunner, select_phase, session_ticks
-from market_brain.runtime.session_state import write_handoff
+from market_brain.runtime.session_state import read_json, renew_lease, write_handoff
 
 
 class FakeClock:
@@ -35,15 +37,21 @@ class FakeDispatcher:
 
 
 class FakeRuntime:
-    def __init__(self) -> None:
+    def __init__(self, outcomes=None) -> None:
         self.store = InMemoryEventStore()
         self.scheduler = FakeScheduler()
         self.premarket = None
         self.dispatcher = FakeDispatcher()
         self.calls: list[tuple[str, datetime, str | None]] = []
+        self.outcomes = list(outcomes or [])
 
     async def run(self, mode: str, *, now: datetime, checkpoint: str | None = None):
         self.calls.append((mode, now, checkpoint))
+        if self.outcomes:
+            outcome = self.outcomes.pop(0)
+            if isinstance(outcome, Exception):
+                raise outcome
+            return outcome
         return {"status": "COMPLETED"}
 
 
@@ -201,3 +209,156 @@ async def test_late_phase_a_resume_marks_passed_slots_without_catch_up(tmp_path)
         "radar:2026-09-03:1020",
     ]
     assert [mode for mode, _now, _checkpoint in runtime.calls] == ["radar"]
+
+
+@pytest.mark.asyncio
+async def test_tick_failures_are_isolated_and_success_resets_counter(tmp_path):
+    runtime = FakeRuntime(
+        [
+            RuntimeError("QUOTE_TIMEOUT"),
+            {"status": "FAILED", "error_type": "BAR_FETCH_FAILED"},
+            {"status": "COMPLETED"},
+            {"status": "COMPLETED"},
+        ]
+    )
+    clock = FakeClock(datetime(2026, 9, 3, 15, 0, tzinfo=EASTERN))
+
+    async def persist(full: bool) -> None:
+        if full:
+            (tmp_path / "market.dump").write_bytes(b"fake-dump")
+
+    runner = SessionRunner(
+        runtime,
+        state_dir=tmp_path,
+        phase="b",
+        budget_minutes=120,
+        workflow_run_id="801",
+        head_sha="actual-run-sha",
+        policy_version="2026-09-02.1",
+        persist=persist,
+        clock=clock,
+    )
+
+    result = await runner.run()
+
+    assert result["status"] == "COMPLETED"
+    assert result["ticks"] == 4
+    failures = [
+        event
+        for event in await runtime.store.read_events()
+        if event.event_type == "SESSION_TICK_FAILED"
+    ]
+    assert [event.payload["error_type"] for event in failures] == [
+        "QUOTE_TIMEOUT",
+        "BAR_FETCH_FAILED",
+    ]
+    alerts = [
+        alert
+        for alert in await runtime.store.list_alerts()
+        if alert.kind == "STATE_INTEGRITY"
+        and alert.payload.get("reason") == "SESSION_TICK_FAILED"
+    ]
+    assert len(alerts) == 2
+    assert read_json(tmp_path / "heartbeat.json")["head_sha"] == "actual-run-sha"
+    assert read_json(tmp_path / "heartbeat.json")["consecutive_failures"] == 0
+    for slot in ("1500", "1510"):
+        status = await runtime.store.get_runtime_status_key(
+            f"radar_run:radar:2026-09-03:{slot}"
+        )
+        assert status["status"] == "FAILED"
+
+
+@pytest.mark.asyncio
+async def test_three_consecutive_tick_failures_fail_the_phase(tmp_path):
+    runtime = FakeRuntime(
+        [
+            RuntimeError("FAILURE_ONE"),
+            RuntimeError("FAILURE_TWO"),
+            RuntimeError("FAILURE_THREE"),
+        ]
+    )
+    clock = FakeClock(datetime(2026, 9, 3, 15, 0, tzinfo=EASTERN))
+
+    async def persist(full: bool) -> None:
+        if full:
+            (tmp_path / "market.dump").write_bytes(b"fake-dump")
+
+    runner = SessionRunner(
+        runtime,
+        state_dir=tmp_path,
+        phase="b",
+        budget_minutes=120,
+        workflow_run_id="802",
+        head_sha="actual-run-sha",
+        policy_version="2026-09-02.1",
+        persist=persist,
+        clock=clock,
+    )
+
+    with pytest.raises(RuntimeError, match="SESSION_CONSECUTIVE_TICK_FAILURES"):
+        await runner.run()
+
+    heartbeat = read_json(tmp_path / "heartbeat.json")
+    assert heartbeat["consecutive_failures"] == 3
+    failures = [
+        event
+        for event in await runtime.store.read_events()
+        if event.event_type == "SESSION_TICK_FAILED"
+    ]
+    assert len(failures) == 3
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("holder_status", "raises"),
+    [("in_progress", True), ("completed", False)],
+)
+async def test_session_runner_checks_lease_holder_liveness(
+    tmp_path,
+    holder_status,
+    raises,
+):
+    now = datetime(2026, 9, 3, 15, 0, tzinfo=EASTERN)
+    renew_lease(
+        tmp_path,
+        now=now,
+        session_id="2026-09-03",
+        workflow_run_id="800",
+    )
+
+    def command_runner(args, **_kwargs):
+        assert args[:3] == ["gh", "run", "view"]
+        return subprocess.CompletedProcess(
+            args,
+            0,
+            stdout=json.dumps({"status": holder_status}),
+            stderr="",
+        )
+
+    runtime = FakeRuntime()
+    clock = FakeClock(now)
+
+    async def persist(full: bool) -> None:
+        if full:
+            (tmp_path / "market.dump").write_bytes(b"fake-dump")
+
+    runner = SessionRunner(
+        runtime,
+        state_dir=tmp_path,
+        phase="b",
+        budget_minutes=1,
+        workflow_run_id="900",
+        head_sha="actual-run-sha",
+        policy_version="2026-09-02.1",
+        persist=persist,
+        clock=clock,
+        repository="githuber20202/market-brain",
+        command_runner=command_runner,
+    )
+
+    if raises:
+        with pytest.raises(RuntimeError, match="SESSION_LEASE_HELD"):
+            await runner.run()
+    else:
+        result = await runner.run()
+        assert result["status"] == "COMPLETED"

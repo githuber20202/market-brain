@@ -1,6 +1,6 @@
 import json
 import subprocess
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from scripts.session_watchdog import run_watchdog
 
@@ -64,3 +64,51 @@ def test_watchdog_is_idle_when_another_run_is_active(tmp_path):
 
     assert result == ("IDLE", "RUN_ACTIVE")
     assert not any(args[:3] == ["gh", "workflow", "run"] for args in calls)
+
+
+def test_watchdog_dispatches_immediately_when_lease_holder_is_dead(tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "market_calendar.csv").write_text(
+        "date,status,open_time,close_time,source\n",
+        encoding="utf-8",
+    )
+    now = datetime(2026, 9, 3, 12, 35, tzinfo=UTC)
+    lease = {
+        "session_id": "2026-09-03",
+        "workflow_run_id": "901",
+        "acquired_at": now.isoformat(),
+        "expires_at": (now + timedelta(minutes=25)).isoformat(),
+    }
+    calls: list[list[str]] = []
+
+    def runner(args, **_kwargs):
+        calls.append(args)
+        if args[:2] == ["git", "show"]:
+            return subprocess.CompletedProcess(
+                args,
+                0,
+                stdout=json.dumps(lease),
+                stderr="",
+            )
+        if args[:3] == ["gh", "run", "view"]:
+            return subprocess.CompletedProcess(
+                args,
+                0,
+                stdout=json.dumps({"status": "completed"}),
+                stderr="",
+            )
+        if args[:3] == ["gh", "run", "list"]:
+            return subprocess.CompletedProcess(args, 0, stdout="[]", stderr="")
+        return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+
+    result = run_watchdog(
+        now=now,
+        repo=tmp_path,
+        repository="githuber20202/market-brain",
+        workflow_run_id="900",
+        runner=runner,
+    )
+
+    assert result == ("DISPATCHED", "LEASE_STALE_HOLDER_DEAD")
+    assert any(args[:3] == ["gh", "workflow", "run"] for args in calls)

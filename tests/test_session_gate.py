@@ -2,10 +2,12 @@ import json
 import subprocess
 from datetime import UTC, datetime, timedelta
 
+from market_brain.runtime.session_state import LeaseInspection
 from scripts.session_gate import (
     active_session_runs,
     evaluate_session_gate,
     normalized_trigger,
+    trigger_contains_current_main,
 )
 
 
@@ -72,6 +74,61 @@ def test_gate_rejects_active_run_but_force_bypasses_only_the_gate(tmp_path):
 
     assert (active.due, active.reason) == (False, "RUN_ACTIVE")
     assert (forced.due, forced.reason) == (True, "FORCE")
+
+
+def test_gate_rejects_stale_push_trigger(tmp_path):
+    result = evaluate_session_gate(
+        now=datetime(2026, 9, 3, 12, 30, tzinfo=UTC),
+        calendar_path=_calendar(tmp_path),
+        trigger="push",
+        workflow_run_id="200",
+        force=False,
+        lease=None,
+        active_runs=[],
+        trigger_stale=True,
+    )
+
+    assert (result.due, result.reason) == (False, "TRIGGER_STALE")
+
+
+def test_gate_recovers_immediately_from_dead_lease_holder(tmp_path):
+    result = evaluate_session_gate(
+        now=datetime(2026, 9, 3, 12, 30, tzinfo=UTC),
+        calendar_path=_calendar(tmp_path),
+        trigger="schedule",
+        workflow_run_id="200",
+        force=False,
+        lease=_lease(datetime(2026, 9, 3, 12, 30, tzinfo=UTC)),
+        active_runs=[],
+        lease_inspection=LeaseInspection(
+            False,
+            "LEASE_STALE_HOLDER_DEAD",
+            "100",
+            "completed",
+        ),
+    )
+
+    assert (result.due, result.reason) == (True, "LEASE_STALE_HOLDER_DEAD")
+
+
+def test_trigger_staleness_fetches_main_and_requires_ancestor(tmp_path):
+    calls: list[list[str]] = []
+
+    def current_runner(args, **_kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+
+    assert trigger_contains_current_main(tmp_path, runner=current_runner)
+    assert calls == [
+        ["git", "fetch", "origin", "+main:refs/remotes/origin/main"],
+        ["git", "merge-base", "--is-ancestor", "origin/main", "HEAD"],
+    ]
+
+    def stale_runner(args, **_kwargs):
+        code = 1 if args[:3] == ["git", "merge-base", "--is-ancestor"] else 0
+        return subprocess.CompletedProcess(args, code, stdout="", stderr="")
+
+    assert not trigger_contains_current_main(tmp_path, runner=stale_runner)
 
 
 def test_active_run_query_excludes_current_run_and_prior_day():
