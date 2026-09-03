@@ -21,10 +21,6 @@ permissions:
   issues: write
   actions: read
 
-concurrency:
-  group: market-brain-shadow-state
-  cancel-in-progress: false
-
 jobs:
   gate:
     runs-on: ubuntu-latest
@@ -51,6 +47,9 @@ jobs:
   wait:
     needs: gate
     if: needs.gate.outputs.due == 'true'
+    concurrency:
+      group: market-brain-shadow-state
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 345
     services:
@@ -89,6 +88,9 @@ jobs:
   phase_a:
     needs: [gate, wait]
     if: needs.gate.outputs.due == 'true' && needs.wait.result == 'success'
+    concurrency:
+      group: market-brain-shadow-state
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 345
     services:
@@ -127,6 +129,9 @@ jobs:
   phase_b:
     needs: [gate, phase_a]
     if: needs.gate.outputs.due == 'true' && needs.phase_a.result == 'success'
+    concurrency:
+      group: market-brain-shadow-state
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 345
     services:

@@ -1,6 +1,7 @@
 {
   "schema_version": "shadow-session-recovery-trigger.v1",
   "session_id": "2026-09-03",
-  "requested_at": "2026-09-03T07:18:08Z",
-  "reason": "TASK33A_RECOVERY_SMOKE"
+  "requested_at": "2026-09-03T07:29:55Z",
+  "reason": "TASK33A_RECOVERY_SMOKE",
+  "policy_head_sha": "63ff62bd8b3bc49108e4a60fbb98275f8a416c07"
 }
