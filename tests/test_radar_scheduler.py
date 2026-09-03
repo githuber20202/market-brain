@@ -214,6 +214,9 @@ async def test_fake_clock_fires_at_0950_once_and_creates_digest(tmp_path: Path):
         "65+": 1,
     }
     assert result["candidates"][0]["score_components"]["total"] == 90.0
+    assert len(result["rankings"]) == 1
+    assert result["rankings"][0]["symbol"] == "AAPL"
+    assert result["rankings"][0]["risk_reward"] == 10.0
     assert len(screener.calls) == 1
     assert len(service.plan_calls) == 1
     assert service.plan_calls[0]["lane"] == StrategyLane.CORE_MOMENTUM

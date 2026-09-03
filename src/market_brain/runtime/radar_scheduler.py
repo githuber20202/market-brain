@@ -162,6 +162,12 @@ class RadarScheduler:
                     {"symbol": item.symbol, "error_type": item.error_type}
                     for item in exc.skipped_symbols
                 ],
+                rankings=self._blank_rankings(
+                    exc.error_type,
+                    skipped_symbols={
+                        item.symbol.upper(): item.error_type for item in exc.skipped_symbols
+                    },
+                ),
                 occurred_at=timestamp,
             )
         except Exception as exc:
@@ -173,6 +179,7 @@ class RadarScheduler:
                 candidates=[],
                 plan_ids=[],
                 error_type=type(exc).__name__,
+                rankings=self._blank_rankings(type(exc).__name__),
                 occurred_at=timestamp,
             )
 
@@ -208,6 +215,7 @@ class RadarScheduler:
             "error_type": None,
             "data_unavailable": None,
             "skipped_symbols": [],
+            "rankings": self._blank_rankings("RADAR_SLOT_MISSED"),
         }
         async with self.service.store.transaction():
             await self.service.store.append(
@@ -387,6 +395,11 @@ class RadarScheduler:
             }
             plan_ids.append(plan.plan_id)
             candidates.append(candidate)
+        rankings = self._ranking_table(
+            rows,
+            candidates=candidates,
+            skipped_symbols={item.symbol.upper(): item.error_type for item in skipped},
+        )
         return await self._persist_result(
             run_id,
             slot,
@@ -399,8 +412,117 @@ class RadarScheduler:
             ],
             score_histogram=score_histogram,
             liquidity_refresh=liquidity_refresh,
+            rankings=rankings,
             occurred_at=timestamp,
         )
+
+    def _ranking_table(
+        self,
+        rows: list[dict],
+        *,
+        candidates: list[dict],
+        skipped_symbols: dict[str, str],
+    ) -> list[dict]:
+        candidates_by_symbol = {
+            str(row.get("symbol") or "").upper(): row for row in candidates
+        }
+        ranked_by_symbol: dict[str, dict] = {}
+        for rank, row in enumerate(rows, start=1):
+            snapshot = row.get("snapshot") if isinstance(row.get("snapshot"), dict) else {}
+            score = row.get("score") if isinstance(row.get("score"), dict) else {}
+            features = row.get("features") if isinstance(row.get("features"), dict) else {}
+            symbol = str(snapshot.get("symbol") or "").upper()
+            if not symbol:
+                continue
+            candidate = candidates_by_symbol.get(symbol, {})
+            reasons = score.get("reasons")
+            if isinstance(reasons, (list, tuple)):
+                normalized_reasons = [str(value) for value in reasons]
+            elif reasons is None or reasons == "":
+                normalized_reasons = []
+            else:
+                normalized_reasons = [str(reasons)]
+            candidate_reason = candidate.get("reason")
+            if candidate_reason:
+                normalized_reasons.append(str(candidate_reason))
+            ranked_by_symbol[symbol] = {
+                "rank": rank,
+                "symbol": symbol,
+                "data_status": "OK",
+                "catalyst_or_continuation": score.get("catalyst_or_continuation"),
+                "price_momentum": score.get("price_momentum"),
+                "volume_liquidity": score.get("volume_liquidity"),
+                "relative_strength_sector": score.get("relative_strength_sector"),
+                "entry_invalidation_structure": score.get(
+                    "entry_invalidation_structure"
+                ),
+                "risk_reward": score.get("risk_reward"),
+                "total": score.get("total"),
+                "discovery_total": score.get("discovery_total"),
+                "reasons": list(dict.fromkeys(normalized_reasons)),
+                "last": snapshot.get("last"),
+                "volume": snapshot.get("volume"),
+                "relative_volume": features.get("relative_volume"),
+                "plan_id": candidate.get("plan_id"),
+            }
+        output: list[dict] = []
+        symbols = [entry.symbol.upper() for entry in self.universe if entry.ranking_eligible]
+        for symbol in symbols:
+            row = ranked_by_symbol.get(symbol)
+            if row is not None:
+                output.append(row)
+                continue
+            output.append(
+                self._blank_ranking_row(
+                    symbol,
+                    skipped_symbols.get(symbol, "MARKET_SNAPSHOT_MISSING"),
+                )
+            )
+        return sorted(
+            output,
+            key=lambda row: (
+                row["rank"] is None,
+                row["rank"] if row["rank"] is not None else 10**9,
+                row["symbol"],
+            ),
+        )
+
+    def _blank_rankings(
+        self,
+        reason: str,
+        *,
+        skipped_symbols: dict[str, str] | None = None,
+    ) -> list[dict]:
+        skipped = skipped_symbols or {}
+        return [
+            self._blank_ranking_row(
+                entry.symbol.upper(),
+                skipped.get(entry.symbol.upper(), reason),
+            )
+            for entry in self.universe
+            if entry.ranking_eligible
+        ]
+
+    @staticmethod
+    def _blank_ranking_row(symbol: str, reason: str) -> dict:
+        return {
+            "rank": None,
+            "symbol": symbol,
+            "data_status": "MISSING",
+            "catalyst_or_continuation": None,
+            "price_momentum": None,
+            "volume_liquidity": None,
+            "relative_strength_sector": None,
+            "entry_invalidation_structure": None,
+            "risk_reward": None,
+            "total": None,
+            "discovery_total": None,
+            "reasons": [reason],
+            "last": None,
+            "volume": None,
+            "relative_volume": None,
+            "plan_id": None,
+        }
 
     async def _persist_result(
         self,
@@ -415,6 +537,7 @@ class RadarScheduler:
         skipped_symbols: list[dict] | None = None,
         score_histogram: dict[str, int] | None = None,
         liquidity_refresh: dict | None = None,
+        rankings: list[dict] | None = None,
         occurred_at: datetime | None = None,
     ) -> dict:
         payload = {
@@ -429,6 +552,7 @@ class RadarScheduler:
             "skipped_symbols": skipped_symbols or [],
             "score_histogram": score_histogram or _empty_score_histogram(),
             "liquidity_refresh": liquidity_refresh,
+            "rankings": rankings or [],
         }
         async with self.service.store.transaction():
             await self.service.store.append(

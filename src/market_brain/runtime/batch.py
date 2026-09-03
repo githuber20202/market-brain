@@ -29,9 +29,11 @@ from market_brain.providers.base import DataUnavailable
 from market_brain.providers.rate_limit import TokenBucketRateLimiter
 from market_brain.providers.yahoo import YahooMarketData
 from market_brain.replay.engine import ReplayEngine
+from market_brain.runtime.coverage import coverage_for_events
 from market_brain.runtime.daily_digest import DailyDigest
 from market_brain.runtime.premarket import PremarketFunnel
 from market_brain.runtime.premarket_learning import PremarketLearningReviewer
+from market_brain.runtime.radar_report import append_radar_csv
 from market_brain.runtime.radar_scheduler import RadarScheduler, scheduled_slots
 from market_brain.runtime.shadow import ShadowEvaluator
 from market_brain.settings import ROOT, Settings
@@ -142,6 +144,8 @@ class BatchRuntime:
             result = await self.scheduler.run_slot(due[-1], now=timestamp)
             if result is not None:
                 runs.append(result)
+                if result.get("rankings"):
+                    append_radar_csv(result, self.output_dir)
         plan_watch = await self._run_plan_watch(timestamp)
         shadow_count = await self.shadow.evaluate_now(now=timestamp)
         expired = await self.service.sweep_expired(now=timestamp)
@@ -469,6 +473,8 @@ class BatchRuntime:
 
     async def _write_latest(self, mode: str, timestamp: datetime, result: dict) -> None:
         runtime = await self.store.get_runtime_status()
+        session_date = timestamp.astimezone(EASTERN).date()
+        coverage = coverage_for_events(await self.store.read_events(), session_date)
         completed_slots = sorted(
             str(value.get("scheduled_for"))
             for key, value in runtime.items()
@@ -480,6 +486,12 @@ class BatchRuntime:
             "updated_at": timestamp.isoformat(),
             "mode": mode,
             "status": result.get("status"),
+            "workflow_status": (
+                "FAILED" if result.get("status") == "FAILED" else "COMPLETED"
+            ),
+            "session_status": coverage["session_status"],
+            "learning_status": coverage["learning_status"],
+            "session_coverage": coverage,
             "last_completed_slot": completed_slots[-1] if completed_slots else None,
             "plans": len(await self.store.list_plans()),
             "alerts": len(await self.store.list_alerts()),
