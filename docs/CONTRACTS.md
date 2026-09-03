@@ -50,6 +50,11 @@ If that ordering cannot be proven, the affected component MUST be `CONFLICT` and
 market gate MUST fail closed. A historical source timestamp MUST NOT be substituted
 for `first_seen_at`.
 
+For delayed bars fetched by a batch, `first_seen_at` is that batch's recorded
+`fetched_at`—the first provable possession time—not the bar timestamp. For news found
+through Yahoo Search, it is the first recorded fetch time, never
+`providerPublishTime`; that provider value belongs in `market_event_at`.
+
 ### Evidence/component state
 
 Every evidence group and every score component has exactly one state:
@@ -64,6 +69,14 @@ Every evidence group and every score component has exactly one state:
 States describe evidence quality; they do not award points. The policy decides the
 existing fail-closed consequence. Where multiple defects apply, canonical severity is
 `CONFLICT`, then `MISSING`, then `DELAYED`, then `VERIFIED`.
+
+The declaration of `required_evidence_groups` and `required_components` for every
+stage MUST live in the Task 34 policy bundle. If a stage has no such declaration,
+Shadow MUST keep `coverage.complete=false`. The current keyless path MUST represent
+its lawful evidence rather than invent unavailable fields: relative strength is
+measured against SPY, and spread uses Cboe when available. A field that its source
+does not provide is `MISSING` or `DELAYED` according to the existing policy—not
+`CONFLICT`, which is reserved for disagreement or an invalid invariant.
 
 ### Source provenance
 
