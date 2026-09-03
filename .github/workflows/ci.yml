@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, task33a-session-runner-work]
+    branches: [main]
   pull_request:
     branches: [main]
 
