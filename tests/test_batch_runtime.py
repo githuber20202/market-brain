@@ -839,8 +839,13 @@ def test_shadow_session_owns_daily_schedule_and_legacy_jobs_are_manual_only():
     assert 'cron: "30 6,7 * * 1-5"' in session
     assert "branches: [session-trigger]" in session
     assert 'paths:\n      - "triggers/*.json"' in session
-    assert "group: market-brain-shadow-state" in session
-    assert "cancel-in-progress: false" in session
+    # The gate must not share the writer concurrency lock: recovery pushes need
+    # to reach it while the live session owns a valid lease.  Only state-writing
+    # jobs serialize on the shared shadow-state group.
+    assert session.count("group: market-brain-shadow-state") == 3
+    assert session.count("cancel-in-progress: false") == 3
+    gate_section = session.split("  gate:", 1)[1].split("  wait:", 1)[0]
+    assert "concurrency:" not in gate_section
     assert "contents: write" in session
     assert "issues: write" in session
     assert "actions: read" in session
