@@ -97,7 +97,7 @@ def test_phase_selection_and_tick_ownership_use_et():
 
 
 @pytest.mark.asyncio
-async def test_session_loop_fake_clock_runs_three_radar_ticks_and_digest(tmp_path):
+async def test_session_loop_fake_clock_runs_six_radar_ticks_and_digest(tmp_path):
     runtime = FakeRuntime()
     clock = FakeClock(datetime(2026, 9, 3, 15, 0, tzinfo=EASTERN))
     persisted: list[bool] = []
@@ -123,11 +123,14 @@ async def test_session_loop_fake_clock_runs_three_radar_ticks_and_digest(tmp_pat
 
     assert result == {
         "phase": "b",
-        "ticks": 4,
+        "ticks": 7,
         "next_phase": "none",
         "status": "COMPLETED",
     }
     assert [mode for mode, _now, _checkpoint in runtime.calls] == [
+        "radar",
+        "radar",
+        "radar",
         "radar",
         "radar",
         "radar",
@@ -206,7 +209,11 @@ async def test_late_phase_a_resume_marks_passed_slots_without_catch_up(tmp_path)
     assert runtime.premarket.missed == ["T-30", "T-12", "T-3"]
     assert runtime.scheduler.missed == [
         "radar:2026-09-03:0950",
+        "radar:2026-09-03:1000",
+        "radar:2026-09-03:1010",
         "radar:2026-09-03:1020",
+        "radar:2026-09-03:1030",
+        "radar:2026-09-03:1040",
     ]
     assert [mode for mode, _now, _checkpoint in runtime.calls] == ["radar"]
 
@@ -242,7 +249,7 @@ async def test_tick_failures_are_isolated_and_success_resets_counter(tmp_path):
     result = await runner.run()
 
     assert result["status"] == "COMPLETED"
-    assert result["ticks"] == 4
+    assert result["ticks"] == 7
     failures = [
         event
         for event in await runtime.store.read_events()

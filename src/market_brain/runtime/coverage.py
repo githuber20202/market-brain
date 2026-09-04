@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime
 from typing import Any
 
 from market_brain.orchestration.universe import EASTERN
+from market_brain.runtime.radar_scheduler import (
+    DISCOVERY_END,
+    DISCOVERY_INTERVAL,
+    DISCOVERY_START,
+)
 
 RADAR_OK = "COMPLETED"
 RADAR_UNAVAILABLE = "DATA_UNAVAILABLE"
@@ -12,9 +17,14 @@ PREMARKET_CHECKPOINTS = ("T-30", "T-12", "T-3")
 
 
 def expected_radar_slots(session_date: date) -> tuple[datetime, ...]:
-    """Return the eleven discovery slots used by the existing radar policy."""
-    first = datetime.combine(session_date, time(9, 50), EASTERN)
-    return tuple(first + timedelta(minutes=30 * index) for index in range(11))
+    """Return the ten-minute discovery slots used by the radar policy."""
+    current = datetime.combine(session_date, DISCOVERY_START, EASTERN)
+    final = datetime.combine(session_date, DISCOVERY_END, EASTERN)
+    slots: list[datetime] = []
+    while current <= final:
+        slots.append(current)
+        current += DISCOVERY_INTERVAL
+    return tuple(slots)
 
 
 def coverage_for_events(events: Iterable[Any], session_date: date) -> dict[str, Any]:

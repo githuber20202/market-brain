@@ -447,7 +447,7 @@ async def test_data_unavailable_slot_fails_closed_and_next_slot_catches_up(tmp_p
         "DATA_UNAVAILABLE",
     ]
 
-    next_slot = datetime(2026, 8, 28, 10, 20, tzinfo=EASTERN)
+    next_slot = datetime(2026, 8, 28, 10, 0, tzinfo=EASTERN)
     caught_up = await scheduler.run_pending(now=next_slot)
     current = await scheduler.run_pending(now=next_slot.replace(second=10))
     repeated = await scheduler.run_pending(now=next_slot.replace(second=20))
@@ -456,7 +456,7 @@ async def test_data_unavailable_slot_fails_closed_and_next_slot_catches_up(tmp_p
     assert caught_up["scheduled_for"].endswith("09:50:00-04:00")
     assert caught_up["status"] == "COMPLETED"
     assert current is not None
-    assert current["scheduled_for"].endswith("10:20:00-04:00")
+    assert current["scheduled_for"].endswith("10:00:00-04:00")
     assert current["status"] == "COMPLETED"
     assert repeated is None
     assert len(service.plan_calls) == 2

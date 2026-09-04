@@ -3,11 +3,16 @@ from __future__ import annotations
 import json
 import time as monotonic_time
 from collections import Counter
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time
 from typing import Any
 
 from market_brain.orchestration.universe import EASTERN
-from market_brain.runtime.radar_scheduler import scheduled_slots
+from market_brain.runtime.radar_scheduler import (
+    DISCOVERY_END,
+    DISCOVERY_INTERVAL,
+    DISCOVERY_START,
+    scheduled_slots,
+)
 from market_brain.runtime.state import activate_quality_from_state
 from market_brain.settings import ROOT
 
@@ -36,12 +41,12 @@ class RehearsalConsoleSink:
 
 
 def rehearsal_ticks(session_date: date) -> tuple[datetime, ...]:
-    current = datetime.combine(session_date, time(9, 50), EASTERN)
-    final = datetime.combine(session_date, time(15, 20), EASTERN)
+    current = datetime.combine(session_date, DISCOVERY_START, EASTERN)
+    final = datetime.combine(session_date, DISCOVERY_END, EASTERN)
     output: list[datetime] = []
     while current <= final:
         output.append(current)
-        current += timedelta(minutes=10)
+        current += DISCOVERY_INTERVAL
     return tuple(output)
 
 
@@ -67,11 +72,7 @@ async def run_rehearsal(
     session = runtime.scheduler.calendar.session_for(session_date)
     if session is None:
         raise RuntimeError("REHEARSAL_NO_SESSION")
-    if tuple(scheduled_slots(session)) != tuple(
-        datetime.combine(session_date, time(9, 50), EASTERN)
-        + timedelta(minutes=30 * index)
-        for index in range(11)
-    ):
+    if tuple(scheduled_slots(session)) != rehearsal_ticks(session_date):
         raise RuntimeError("REHEARSAL_DISCOVERY_SLOTS_INVALID")
 
     tick_reports: list[dict[str, Any]] = []
