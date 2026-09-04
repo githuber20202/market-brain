@@ -1,0 +1,113 @@
+{
+  "alerts": 75,
+  "last_completed_slot": "2026-09-04T14:50:00-04:00",
+  "learning_status": "BLOCKED",
+  "mode": "weekly",
+  "plans": 25,
+  "quality": {
+    "as_of": "2026-09-04T23:12:03.744331+00:00",
+    "complete": 42,
+    "missing": [],
+    "output": "/home/runner/work/market-brain/market-brain/state/quality.csv",
+    "partial": 9,
+    "rows": 51,
+    "skipped_instruments": [
+      {
+        "instrument_type": "UNRESOLVED",
+        "symbol": "CHG"
+      },
+      {
+        "instrument_type": "ETF",
+        "symbol": "GLTR"
+      },
+      {
+        "instrument_type": "ETF",
+        "symbol": "IBIT"
+      },
+      {
+        "instrument_type": "ETF",
+        "symbol": "ITA"
+      },
+      {
+        "instrument_type": "ETF",
+        "symbol": "QQQ"
+      },
+      {
+        "instrument_type": "ETF",
+        "symbol": "REMX"
+      },
+      {
+        "instrument_type": "ETF",
+        "symbol": "SPY"
+      },
+      {
+        "instrument_type": "ETF",
+        "symbol": "VOO"
+      },
+      {
+        "instrument_type": "ETF",
+        "symbol": "XAR"
+      },
+      {
+        "instrument_type": "ETF",
+        "symbol": "XLE"
+      }
+    ],
+    "source": "YAHOO_FUNDAMENTALS",
+    "status": "COMPLETED",
+    "universe": 51
+  },
+  "session_coverage": {
+    "incomplete_slots": [
+      "radar:2026-09-04:0950:MISSED",
+      "radar:2026-09-04:1000:NEVER_RAN",
+      "radar:2026-09-04:1010:NEVER_RAN",
+      "radar:2026-09-04:1020:MISSED",
+      "radar:2026-09-04:1030:NEVER_RAN",
+      "radar:2026-09-04:1040:NEVER_RAN",
+      "radar:2026-09-04:1050:MISSED",
+      "radar:2026-09-04:1100:NEVER_RAN",
+      "radar:2026-09-04:1110:NEVER_RAN",
+      "radar:2026-09-04:1130:NEVER_RAN",
+      "radar:2026-09-04:1140:NEVER_RAN",
+      "radar:2026-09-04:1200:NEVER_RAN",
+      "radar:2026-09-04:1210:NEVER_RAN",
+      "radar:2026-09-04:1230:NEVER_RAN",
+      "radar:2026-09-04:1240:NEVER_RAN",
+      "radar:2026-09-04:1300:NEVER_RAN",
+      "radar:2026-09-04:1310:NEVER_RAN",
+      "radar:2026-09-04:1330:NEVER_RAN",
+      "radar:2026-09-04:1340:NEVER_RAN",
+      "radar:2026-09-04:1400:NEVER_RAN",
+      "radar:2026-09-04:1410:NEVER_RAN",
+      "radar:2026-09-04:1430:NEVER_RAN",
+      "radar:2026-09-04:1440:NEVER_RAN",
+      "radar:2026-09-04:1500:NEVER_RAN",
+      "radar:2026-09-04:1510:NEVER_RAN",
+      "radar:2026-09-04:1520:NEVER_RAN",
+      "radar:2026-09-04:1530:NEVER_RAN",
+      "radar:2026-09-04:1540:NEVER_RAN",
+      "radar:2026-09-04:1550:NEVER_RAN"
+    ],
+    "learning_status": "BLOCKED",
+    "premarket": {
+      "expected": 3,
+      "missed": 0,
+      "never_ran": 0,
+      "ok": 3
+    },
+    "radar": {
+      "expected": 37,
+      "missed": 3,
+      "never_ran": 26,
+      "ok": 8,
+      "unavailable": 0
+    },
+    "session_status": "INCOMPLETE"
+  },
+  "session_status": "INCOMPLETE",
+  "shadow_trades": 0,
+  "status": "COMPLETED",
+  "updated_at": "2026-09-04T23:12:03.744331+00:00",
+  "workflow_status": "COMPLETED"
+}
