@@ -171,7 +171,7 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     assert alert.payload["workflow_status"] == "COMPLETED"
     assert alert.payload["session_status"] == "INCOMPLETE"
     assert alert.payload["learning_status"] == "BLOCKED"
-    assert "Session coverage: radar expected=11" in alert.payload["text"]
+    assert "Session coverage: radar expected=37" in alert.payload["text"]
     assert alert.payload["plan_rejections"] == {
         "OPENING_RANGE_TOO_NARROW": 1,
         "RISK_TOO_SMALL": 2,

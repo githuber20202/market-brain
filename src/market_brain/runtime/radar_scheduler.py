@@ -27,6 +27,10 @@ from market_brain.providers.base import DataUnavailable
 
 LOGGER = logging.getLogger(__name__)
 
+DISCOVERY_START = time(9, 50)
+DISCOVERY_END = time(15, 50)
+DISCOVERY_INTERVAL = timedelta(minutes=10)
+
 
 class RadarScheduler:
     def __init__(
@@ -616,15 +620,15 @@ class RadarScheduler:
 
 
 def scheduled_slots(session: MarketSession) -> tuple[datetime, ...]:
-    slot = datetime.combine(session.session_date, time(9, 50), EASTERN)
+    slot = datetime.combine(session.session_date, DISCOVERY_START, EASTERN)
     latest = min(
-        datetime.combine(session.session_date, time(14, 50), EASTERN),
+        datetime.combine(session.session_date, DISCOVERY_END, EASTERN),
         session.closes_at,
     )
     slots: list[datetime] = []
     while slot <= latest and slot < session.closes_at:
         slots.append(slot)
-        slot += timedelta(minutes=30)
+        slot += DISCOVERY_INTERVAL
     return tuple(slots)
 
 

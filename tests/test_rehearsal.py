@@ -115,11 +115,11 @@ async def test_yahoo_replay_slices_future_bars_caches_and_disables_cboe():
         assert all("cdn.cboe.com" not in request for request in requests)
 
 
-def test_rehearsal_ticks_cover_every_ten_minutes_through_1520():
+def test_rehearsal_ticks_cover_every_ten_minutes_through_1550():
     ticks = rehearsal_ticks(date(2026, 8, 28))
-    assert len(ticks) == 34
+    assert len(ticks) == 37
     assert ticks[0].isoformat() == "2026-08-28T09:50:00-04:00"
-    assert ticks[-1].isoformat() == "2026-08-28T15:20:00-04:00"
+    assert ticks[-1].isoformat() == "2026-08-28T15:50:00-04:00"
     assert all(
         (later - earlier).total_seconds() == 600
         for earlier, later in pairwise(ticks)

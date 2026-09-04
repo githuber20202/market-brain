@@ -16,7 +16,12 @@ from market_brain.ledger.events import LedgerEvent
 from market_brain.orchestration.universe import EASTERN
 from market_brain.runtime.batch import BatchRuntime, build_runtime
 from market_brain.runtime.coverage import coverage_for_events, coverage_line
-from market_brain.runtime.radar_scheduler import scheduled_slots
+from market_brain.runtime.radar_scheduler import (
+    DISCOVERY_END,
+    DISCOVERY_INTERVAL,
+    DISCOVERY_START,
+    scheduled_slots,
+)
 from market_brain.runtime.session_state import (
     inspect_lease,
     load_policy_version,
@@ -101,12 +106,12 @@ def session_ticks(session_date: date, phase: str) -> tuple[SessionTick, ...]:
             for checkpoint, target in PREMARKET_TARGETS.items()
         )
     if phase in {"a", "b"}:
-        radar = datetime.combine(session_date, time(9, 50), EASTERN)
-        radar_end = datetime.combine(session_date, time(15, 20), EASTERN)
+        radar = datetime.combine(session_date, DISCOVERY_START, EASTERN)
+        radar_end = datetime.combine(session_date, DISCOVERY_END, EASTERN)
         while radar <= radar_end:
             if start <= radar < end:
                 ticks.append(SessionTick("radar", radar))
-            radar += timedelta(minutes=10)
+            radar += DISCOVERY_INTERVAL
     if phase == "b":
         ticks.append(
             SessionTick(

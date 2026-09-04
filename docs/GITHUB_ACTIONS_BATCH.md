@@ -26,7 +26,7 @@ One admitted workflow run has three jobs, each with its own temporary Postgres:
 |---|---|---|
 | `wait` | before 07:30 | Sleep and renew public control state; no market measurement. |
 | `phase_a` | 07:30–13:00 | T-30 at 09:00, T-12 at 09:18, T-3 at 09:27, then ten-minute Radar/plan-watch ticks. |
-| `phase_b` | 13:00–16:35 | Ten-minute Radar/plan-watch ticks through 15:20 and Digest at 16:20. |
+| `phase_b` | 13:00–16:35 | Ten-minute broad Radar/plan-watch ticks through 15:50 and Digest at 16:20. |
 
 Every job restores `shadow-state` exactly once. Every measurement tick uses the
 existing `BatchRuntime` in-process and then creates a database dump, updates the
@@ -55,10 +55,11 @@ that resumes after 13:00 without a same-day handoff is allowed and logs
 ## Honest coverage
 
 Digest coverage is derived from the fixed schedule, not from the events that happen
-to exist: 11 discovery slots (09:50–14:50 ET) plus three Premarket checkpoints. The
+to exist: 37 discovery slots, every ten minutes from 09:50–15:50 ET, plus three
+Premarket checkpoints. The
 Digest and Issue print:
 
-`Session coverage: radar expected=11 ok=… unavailable=… missed=… never_ran=…; premarket expected=3 ok=… missed=…`
+`Session coverage: radar expected=37 ok=… unavailable=… missed=… never_ran=…; premarket expected=3 ok=… missed=…`
 
 The three independent states are:
 

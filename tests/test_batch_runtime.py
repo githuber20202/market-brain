@@ -216,9 +216,9 @@ async def test_batch_radar_marks_old_slots_missed_and_runs_latest_with_real_now(
     first = await runtime.run("radar", now=now)
     second = await runtime.run("radar", now=now)
 
-    assert first["due_slots"] == 11
+    assert first["due_slots"] == 31
     assert len(first["runs"]) == 1
-    assert first["missed_slots"] == 10
+    assert first["missed_slots"] == 30
     assert second["runs"] == []
     assert scheduler.calls == [now]
     latest = json.loads((tmp_path / "state" / "latest.json").read_text())
