@@ -509,6 +509,7 @@ class SessionRunner:
                 "updated_at": timestamp.isoformat(),
                 "workflow_status": workflow_status,
                 "session_status": coverage["session_status"],
+                "planning_status": coverage["planning_status"],
                 "learning_status": coverage["learning_status"],
                 "session_coverage": coverage,
             }
@@ -589,6 +590,7 @@ class SessionRunner:
         print(
             "SESSION_COVERAGE "
             f"session_status={coverage['session_status']} "
+            f"planning_status={coverage['planning_status']} "
             f"learning_status={coverage['learning_status']} "
             f"{coverage_line(coverage)}"
         )

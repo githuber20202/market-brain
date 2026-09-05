@@ -53,14 +53,18 @@ def coverage_for_events(events: Iterable[Any], session_date: date) -> dict[str, 
     radar_unavailable = 0
     radar_missed = 0
     radar_never_ran = 0
+    planning_ok = 0
+    planning_blocked = 0
+    planning_not_run = 0
     incomplete: list[str] = []
     for run_id in radar_expected:
         row = radar_latest.get(run_id)
         if row is None:
             radar_never_ran += 1
+            planning_not_run += 1
             incomplete.append(f"{run_id}:NEVER_RAN")
             continue
-        status = str(row.get("status") or "UNKNOWN")
+        status = str(row.get("discovery_status") or row.get("status") or "UNKNOWN")
         if status == RADAR_OK:
             radar_ok += 1
         elif status == RADAR_UNAVAILABLE:
@@ -69,6 +73,16 @@ def coverage_for_events(events: Iterable[Any], session_date: date) -> dict[str, 
         else:
             radar_missed += 1
             incomplete.append(f"{run_id}:{status}")
+        planning = str(
+            row.get("planning_status")
+            or ("COMPLETED" if status == RADAR_OK else "NOT_RUN")
+        )
+        if planning == "COMPLETED":
+            planning_ok += 1
+        elif planning.startswith("BLOCKED"):
+            planning_blocked += 1
+        else:
+            planning_not_run += 1
 
     premarket_ok = 0
     premarket_missed = 0
@@ -96,6 +110,14 @@ def coverage_for_events(events: Iterable[Any], session_date: date) -> dict[str, 
     else:
         session_status = "COMPLETE"
     learning_status = "READY" if session_status == "COMPLETE" else "BLOCKED"
+    if not radar_latest:
+        planning_status = "NEVER_RAN"
+    elif planning_blocked:
+        planning_status = "BLOCKED"
+    elif planning_not_run:
+        planning_status = "INCOMPLETE"
+    else:
+        planning_status = "COMPLETE"
     return {
         "radar": {
             "expected": len(radar_expected),
@@ -110,7 +132,14 @@ def coverage_for_events(events: Iterable[Any], session_date: date) -> dict[str, 
             "missed": premarket_missed,
             "never_ran": premarket_never_ran,
         },
+        "planning": {
+            "expected": len(radar_expected),
+            "ok": planning_ok,
+            "blocked": planning_blocked,
+            "not_run": planning_not_run,
+        },
         "session_status": session_status,
+        "planning_status": planning_status,
         "learning_status": learning_status,
         "incomplete_slots": incomplete,
     }

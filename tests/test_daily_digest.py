@@ -15,6 +15,7 @@ from market_brain.domain.models import (
 )
 from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import InMemoryEventStore
+from market_brain.runtime.coverage import expected_radar_slots
 from market_brain.runtime.daily_digest import DailyDigest
 
 EASTERN = ZoneInfo("America/New_York")
@@ -170,7 +171,9 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     assert alert.payload["data_availability"]["slots_missed"] == 1
     assert alert.payload["workflow_status"] == "COMPLETED"
     assert alert.payload["session_status"] == "INCOMPLETE"
+    assert alert.payload["planning_status"] == "INCOMPLETE"
     assert alert.payload["learning_status"] == "BLOCKED"
+    assert "planning_status=INCOMPLETE" in alert.payload["text"]
     assert "Session coverage: radar expected=37" in alert.payload["text"]
     assert alert.payload["plan_rejections"] == {
         "OPENING_RANGE_TOO_NARROW": 1,
@@ -280,6 +283,55 @@ async def test_daily_digest_records_session_incomplete_with_missing_slots():
     assert len(incomplete) == 1
     assert incomplete[0].payload["session_status"] == "INCOMPLETE"
     assert "radar:2026-09-03:1020:NEVER_RAN" in incomplete[0].payload["incomplete_slots"]
+
+
+@pytest.mark.asyncio
+async def test_daily_digest_separates_planning_block_from_learning_readiness():
+    store = InMemoryEventStore()
+    session_date = datetime(2026, 9, 4, 16, 20, tzinfo=EASTERN).date()
+    now = datetime(2026, 9, 4, 16, 20, tzinfo=EASTERN).astimezone(UTC)
+    for checkpoint in ("T-30", "T-12", "T-3"):
+        await store.append(
+            LedgerEvent(
+                "PREMARKET_RUN",
+                f"premarket:{session_date.isoformat()}:{checkpoint}",
+                {"status": "COMPLETED", "checkpoint": checkpoint},
+                occurred_at=now,
+            )
+        )
+    for slot in expected_radar_slots(session_date):
+        blocked = slot.strftime("%H%M") in {"0950", "1020", "1050"}
+        await store.append(
+            LedgerEvent(
+                "RADAR_RUN",
+                f"radar:{session_date.isoformat()}:{slot.strftime('%H%M')}",
+                {
+                    "status": "MISSED" if blocked else "COMPLETED",
+                    "discovery_status": "COMPLETED",
+                    "planning_status": (
+                        "BLOCKED_DATA_UNAVAILABLE" if blocked else "COMPLETED"
+                    ),
+                    "previous_status": "DATA_UNAVAILABLE" if blocked else None,
+                },
+                occurred_at=now,
+            )
+        )
+
+    alert = await DailyDigest(store).create(now=now)
+
+    assert alert is not None
+    assert alert.payload["session_status"] == "COMPLETE"
+    assert alert.payload["planning_status"] == "BLOCKED"
+    assert alert.payload["learning_status"] == "READY"
+    assert alert.payload["data_availability"] == {
+        "slots_ok": 37,
+        "slots_unavailable": 0,
+        "slots_missed": 0,
+    }
+    assert "Planning coverage: expected=37 ok=34 blocked=3 not_run=0" in alert.payload[
+        "text"
+    ]
+    assert not any(event.event_type == "SESSION_INCOMPLETE" for event in store.events)
 
 
 def test_daily_digest_script_is_network_free_and_uses_existing_outbox():
