@@ -141,6 +141,8 @@ class RadarScheduler:
             f"radar_run:{run_id}",
             {
                 "status": "STARTED",
+                "discovery_status": "STARTED",
+                "planning_status": "NOT_STARTED",
                 "scheduled_for": scheduled_slot.isoformat(),
                 "attempt_slot": attempt_slot.isoformat(),
                 "started_at": timestamp.isoformat(),
@@ -153,6 +155,8 @@ class RadarScheduler:
                 run_id,
                 scheduled_slot,
                 status="DATA_UNAVAILABLE",
+                discovery_status="DATA_UNAVAILABLE",
+                planning_status="NOT_RUN",
                 candidates=[],
                 plan_ids=[],
                 error_type=exc.error_type,
@@ -160,6 +164,7 @@ class RadarScheduler:
                     "source_id": exc.source_id,
                     "resource": exc.resource,
                     "symbol": exc.symbol,
+                    "reason_codes": list(exc.reason_codes),
                     "attempt_slot": attempt_slot.isoformat(),
                 },
                 skipped_symbols=[
@@ -180,6 +185,8 @@ class RadarScheduler:
                 run_id,
                 scheduled_slot,
                 status="FAILED",
+                discovery_status="FAILED",
+                planning_status="NOT_RUN",
                 candidates=[],
                 plan_ids=[],
                 error_type=type(exc).__name__,
@@ -205,21 +212,35 @@ class RadarScheduler:
             "MISSED",
         }:
             return existing
+        prior = existing if isinstance(existing, dict) else {}
+        discovery_completed = prior.get("discovery_status") == "COMPLETED"
+        prior_rankings = prior.get("rankings")
         payload = {
             "run_id": run_id,
             "status": "MISSED",
+            "discovery_status": "COMPLETED" if discovery_completed else "MISSED",
+            "planning_status": (
+                str(prior.get("planning_status") or "BLOCKED_DATA_UNAVAILABLE")
+                if discovery_completed
+                else "NOT_RUN"
+            ),
             "scheduled_for": scheduled_slot.isoformat(),
             "missed_at": timestamp.isoformat(),
-            "previous_status": (
-                existing.get("status") if isinstance(existing, dict) else None
-            ),
+            "previous_status": prior.get("status"),
             "universe_size": len(self.universe),
-            "candidates": [],
-            "plan_ids": [],
-            "error_type": None,
-            "data_unavailable": None,
-            "skipped_symbols": [],
-            "rankings": self._blank_rankings("RADAR_SLOT_MISSED"),
+            "candidates": prior.get("candidates", []),
+            "plan_ids": prior.get("plan_ids", []),
+            "error_type": prior.get("error_type"),
+            "data_unavailable": prior.get("data_unavailable"),
+            "planning_failures": prior.get("planning_failures", []),
+            "skipped_symbols": prior.get("skipped_symbols", []),
+            "score_histogram": prior.get("score_histogram", _empty_score_histogram()),
+            "liquidity_refresh": prior.get("liquidity_refresh"),
+            "rankings": (
+                prior_rankings
+                if isinstance(prior_rankings, list) and prior_rankings
+                else self._blank_rankings("RADAR_SLOT_MISSED")
+            ),
         }
         async with self.service.store.transaction():
             await self.service.store.append(
@@ -278,6 +299,20 @@ class RadarScheduler:
                     ),
                     skipped_symbols=skipped,
                 )
+        if not rows:
+            raise DataUnavailable(
+                source_id=(
+                    "YAHOO_DELAYED"
+                    if getattr(cfg, "data_plan", None) == "keyless_delayed"
+                    else "RADAR_DISCOVERY"
+                ),
+                resource="rankings",
+                symbol="UNIVERSE",
+                error_type="DISCOVERY_EVIDENCE_MISSING",
+                skipped_symbols=skipped,
+            )
+        planning_failures: list[dict] = []
+        prepared_snapshots: dict[str, object] = {}
         if (
             getattr(cfg, "data_plan", None) == "keyless_delayed"
             and hasattr(self.service, "prepare_plan_market_data")
@@ -294,16 +329,19 @@ class RadarScheduler:
                 if not eligible:
                     continue
                 try:
-                    await self.service.prepare_plan_market_data(
+                    prepared_snapshots[symbol] = await self.service.prepare_plan_market_data(
                         symbol,
                         now=timestamp.astimezone(UTC),
                     )
-                except DataUnavailable:
-                    raise
+                except DataUnavailable as exc:
+                    planning_failures.append(self._planning_failure(exc))
                 except (RuntimeError, ValueError, TypeError):
                     continue
         candidates: list[dict] = []
         plan_ids: list[str] = []
+        planning_failures_by_symbol = {
+            str(row["symbol"]).upper(): row for row in planning_failures
+        }
         instrument_types = {
             entry.symbol: entry.instrument_type for entry in self.universe
         }
@@ -328,6 +366,8 @@ class RadarScheduler:
                 "plan_id": None,
                 "levels": None,
                 "reason": None,
+                "planning_status": "NOT_EVALUATED",
+                "planning_reason_codes": [],
             }
             manual_quality = self.quality.get(symbol)
             catalyst_verified = bool(snapshot.get("catalyst_verified", False))
@@ -368,25 +408,50 @@ class RadarScheduler:
                 candidate["quality_source"] = "MISSING_EVENT_ONLY"
             else:
                 candidate["reason"] = "QUALITY_MISSING_CORE_BLOCKED"
+                candidate["planning_status"] = "BLOCKED_POLICY"
                 candidates.append(candidate)
                 continue
             candidate["lane"] = str(lane)
+            if planning_failures:
+                failure = planning_failures_by_symbol.get(symbol)
+                if failure is None:
+                    candidate["planning_status"] = "WITHHELD_FAIL_CLOSED"
+                else:
+                    candidate["reason"] = failure["error_type"]
+                    candidate["planning_status"] = "DATA_UNAVAILABLE"
+                    candidate["planning_reason_codes"] = failure["reason_codes"]
+                candidates.append(candidate)
+                continue
             try:
-                plan, _evidence = await self.service.build_plan_from_market(
-                    symbol=symbol,
-                    quality=quality,
-                    lane=lane,
-                    catalyst_verified=catalyst_verified,
-                    catalyst_strength=catalyst_strength,
-                    structure_score=15.0,
-                    rr_score=10.0,
-                    benchmark_return_pct=snapshot.get("benchmark_return_pct"),
-                    now=timestamp.astimezone(UTC),
-                )
+                prepared_snapshot = prepared_snapshots.get(symbol)
+                if prepared_snapshot is not None and hasattr(self.service, "build_plan"):
+                    prepared_snapshot.catalyst_verified = catalyst_verified
+                    prepared_snapshot.catalyst_strength = catalyst_strength
+                    plan, _evidence = await self.service.build_plan(
+                        prepared_snapshot,
+                        quality,
+                        lane,
+                        15.0,
+                        10.0,
+                        now=timestamp.astimezone(UTC),
+                    )
+                else:
+                    plan, _evidence = await self.service.build_plan_from_market(
+                        symbol=symbol,
+                        quality=quality,
+                        lane=lane,
+                        catalyst_verified=catalyst_verified,
+                        catalyst_strength=catalyst_strength,
+                        structure_score=15.0,
+                        rr_score=10.0,
+                        benchmark_return_pct=snapshot.get("benchmark_return_pct"),
+                        now=timestamp.astimezone(UTC),
+                    )
             except DataUnavailable:
                 raise
             except (RuntimeError, ValueError, TypeError) as exc:
                 candidate["reason"] = str(exc) or type(exc).__name__
+                candidate["planning_status"] = "REJECTED"
                 candidates.append(candidate)
                 continue
             candidate["plan_id"] = plan.plan_id
@@ -397,6 +462,7 @@ class RadarScheduler:
                 "tp1": plan.tp1,
                 "tp2": plan.tp2,
             }
+            candidate["planning_status"] = "COMPLETED"
             plan_ids.append(plan.plan_id)
             candidates.append(candidate)
         rankings = self._ranking_table(
@@ -404,12 +470,35 @@ class RadarScheduler:
             candidates=candidates,
             skipped_symbols={item.symbol.upper(): item.error_type for item in skipped},
         )
+        first_planning_failure = planning_failures[0] if planning_failures else None
         return await self._persist_result(
             run_id,
             slot,
-            status="COMPLETED",
+            status="DATA_UNAVAILABLE" if planning_failures else "COMPLETED",
+            discovery_status="COMPLETED",
+            planning_status=(
+                "BLOCKED_DATA_UNAVAILABLE" if planning_failures else "COMPLETED"
+            ),
+            planning_failures=planning_failures,
             candidates=candidates,
             plan_ids=plan_ids,
+            error_type=(
+                str(first_planning_failure["error_type"])
+                if first_planning_failure is not None
+                else None
+            ),
+            unavailable=(
+                {
+                    "scope": "PLANNING",
+                    "source_id": first_planning_failure["source_id"],
+                    "resource": first_planning_failure["resource"],
+                    "symbol": first_planning_failure["symbol"],
+                    "reason_codes": first_planning_failure["reason_codes"],
+                    "failure_count": len(planning_failures),
+                }
+                if first_planning_failure is not None
+                else None
+            ),
             skipped_symbols=[
                 {"symbol": item.symbol, "error_type": item.error_type}
                 for item in skipped
@@ -419,6 +508,16 @@ class RadarScheduler:
             rankings=rankings,
             occurred_at=timestamp,
         )
+
+    @staticmethod
+    def _planning_failure(exc: DataUnavailable) -> dict:
+        return {
+            "symbol": exc.symbol,
+            "source_id": exc.source_id,
+            "resource": exc.resource,
+            "error_type": exc.error_type,
+            "reason_codes": list(exc.reason_codes),
+        }
 
     def _ranking_table(
         self,
@@ -534,6 +633,9 @@ class RadarScheduler:
         slot: datetime,
         *,
         status: str,
+        discovery_status: str | None = None,
+        planning_status: str | None = None,
+        planning_failures: list[dict] | None = None,
         candidates: list[dict],
         plan_ids: list[str],
         error_type: str | None = None,
@@ -547,12 +649,17 @@ class RadarScheduler:
         payload = {
             "run_id": run_id,
             "status": status,
+            "discovery_status": discovery_status or status,
+            "planning_status": planning_status or (
+                "COMPLETED" if status == "COMPLETED" else "NOT_RUN"
+            ),
             "scheduled_for": slot.isoformat(),
             "universe_size": len(self.universe),
             "candidates": candidates,
             "plan_ids": plan_ids,
             "error_type": error_type,
             "data_unavailable": unavailable,
+            "planning_failures": planning_failures or [],
             "skipped_symbols": skipped_symbols or [],
             "score_histogram": score_histogram or _empty_score_histogram(),
             "liquidity_refresh": liquidity_refresh,
