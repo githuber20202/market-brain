@@ -1,13 +1,8 @@
 name: Shadow Radar
 
+# Runtime paused at the owner's request; research history is retained.
 on:
   workflow_dispatch:
-    inputs:
-      force:
-        description: Bypass only the workflow time/session gate
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: write
@@ -19,6 +14,7 @@ concurrency:
 
 jobs:
   gate:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     outputs:
       due: ${{ steps.gate.outputs.due }}
@@ -33,8 +29,8 @@ jobs:
           python scripts/batch_gate.py --mode radar "${args[@]}"
 
   radar:
+    if: ${{ false }}
     needs: gate
-    if: needs.gate.outputs.due == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:

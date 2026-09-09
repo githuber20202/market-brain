@@ -1,20 +1,8 @@
 name: Shadow Session
 
+# Runtime paused at the owner's request; research history is retained.
 on:
-  schedule:
-    - cron: "0 6,7,8,9,10,11,12 * * 1-5"
-    - cron: "30 6,7 * * 1-5"
   workflow_dispatch:
-    inputs:
-      force:
-        description: Bypass only the session workflow gate
-        required: false
-        default: false
-        type: boolean
-  push:
-    branches: [session-trigger]
-    paths:
-      - "triggers/*.json"
 
 permissions:
   contents: write
@@ -23,6 +11,7 @@ permissions:
 
 jobs:
   gate:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     outputs:
       due: ${{ steps.gate.outputs.due }}
@@ -45,8 +34,8 @@ jobs:
           python scripts/session_gate.py "${args[@]}"
 
   wait:
+    if: ${{ false }}
     needs: gate
-    if: needs.gate.outputs.due == 'true'
     concurrency:
       group: market-brain-shadow-state
       cancel-in-progress: false
@@ -86,8 +75,8 @@ jobs:
         run: python -m market_brain.runtime.session --phase wait --budget-minutes 330
 
   phase_a:
+    if: ${{ false }}
     needs: [gate, wait]
-    if: needs.gate.outputs.due == 'true' && needs.wait.result == 'success'
     concurrency:
       group: market-brain-shadow-state
       cancel-in-progress: false
@@ -127,8 +116,8 @@ jobs:
         run: python -m market_brain.runtime.session --phase a --budget-minutes 330
 
   phase_b:
+    if: ${{ false }}
     needs: [gate, phase_a]
-    if: needs.gate.outputs.due == 'true' && needs.phase_a.result == 'success'
     concurrency:
       group: market-brain-shadow-state
       cancel-in-progress: false

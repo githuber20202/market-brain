@@ -1,22 +1,8 @@
 name: Premarket Prediction
 
+# Runtime paused at the owner's request; research history is retained.
 on:
   workflow_dispatch:
-    inputs:
-      force:
-        description: Bypass only the workflow time gate
-        required: false
-        default: false
-        type: boolean
-      checkpoint:
-        description: Required checkpoint when force=true
-        required: false
-        default: T-30
-        type: choice
-        options:
-          - T-30
-          - T-12
-          - T-3
 
 permissions:
   contents: write
@@ -28,6 +14,7 @@ concurrency:
 
 jobs:
   gate:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     outputs:
       due: ${{ steps.gate.outputs.due }}
@@ -46,8 +33,8 @@ jobs:
           python scripts/batch_gate.py --mode premarket "${args[@]}"
 
   prediction:
+    if: ${{ false }}
     needs: gate
-    if: needs.gate.outputs.due == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
