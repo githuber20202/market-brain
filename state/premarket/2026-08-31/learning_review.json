@@ -1,0 +1,26 @@
+{
+  "as_of": "2026-08-31T23:55:24.743852+00:00",
+  "bar_errors": {},
+  "broker_actions_allowed": false,
+  "data_state": "LEARNING_DATA_INCOMPLETE",
+  "missing_checkpoint_stages": [
+    "T-30",
+    "T-12",
+    "T-3"
+  ],
+  "missing_records": [],
+  "note": "Outcome measurement only; forward returns use the first available one-minute bar at or after each checkpoint offset.",
+  "pattern_change_permitted": false,
+  "records": [],
+  "schema_version": "market-premarket-learning.v1",
+  "session_id": "2026-08-31",
+  "summary": {
+    "complete_records": 0,
+    "finalist_average_eod_return_percent": null,
+    "finalist_average_mae_percent": null,
+    "finalist_average_mfe_percent": null,
+    "finalist_records": 0,
+    "records": 0
+  },
+  "weights_change_permitted": false
+}

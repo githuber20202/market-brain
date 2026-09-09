@@ -1,0 +1,4349 @@
+{
+  "as_of": "2026-09-04T13:18:00.018868+00:00",
+  "batch_id": "2026-09-04-Tm12-131800Z",
+  "blockers": [],
+  "broker_actions_allowed": false,
+  "checkpoint": "T-12",
+  "confidence": "LOW",
+  "coverage": {
+    "audit_rows": 61,
+    "external_discovered": 25,
+    "ranking_eligible": 50,
+    "ready_inputs": 0,
+    "required": 61,
+    "top_count": 10,
+    "usable_prices": 56
+  },
+  "data_state": "MISSING",
+  "delta_state": "AVAILABLE",
+  "external_audit": [
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "BC-Most Active Stocks",
+        "negative": false,
+        "published_at": "2026-09-02T14:30:17+00:00",
+        "publisher": "Associated Press",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/bc-most-active-stocks-143017957.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.09542925000000001,
+      "direct_driver": "BC-Most Active Stocks",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 8585750016.0,
+        "name": "American Airlines Group, Inc.",
+        "premarket_change_percent": 0.07709541,
+        "premarket_price": 12.98,
+        "regular_change_percent": -1.06788,
+        "regular_market_price": 12.97,
+        "regular_market_volume": 55602509.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "AAL"
+      },
+      "fetched_at": "2026-09-04T13:18:31.725755+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 57144020.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 0.4598,
+        "distance_from_vwap_percent": null,
+        "gap_percent": -0.9153,
+        "lower_highs_count": 1,
+        "premarket_high": 13.05,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 12.99,
+        "prior_close": 13.11,
+        "relative_strength_percent": -1.7622,
+        "return_15m_percent": -0.0769,
+        "sector_return_percent": null
+      },
+      "name": "American Airlines Group, Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": []
+      },
+      "quote_timestamp": "2026-09-04T13:18:26+00:00",
+      "ranking_allowed": false,
+      "raw_score": 15.0,
+      "reason_codes": [
+        "PREMARKET_MOMENTUM_TOO_WEAK"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:26+00:00",
+      "score": 15.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "BC-Most Active Stocks",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 0.4598
+          },
+          "score": 11.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": -0.9153,
+            "return_15m_percent": -0.0769
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": -1.7622
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "AAL",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap -0.92%; relative strength -1.76%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Aurora to Host Analyst & Investor Day on September 23, 2026",
+        "negative": false,
+        "published_at": "2026-09-02T13:00:00+00:00",
+        "publisher": "Business Wire",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/aurora-host-analyst-investor-day-130000207.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 1.1714211333333333,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 0.03,
+        "score": 5.59
+      },
+      "direct_driver": "Aurora to Host Analyst & Investor Day on September 23, 2026",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 12666261504.0,
+        "name": "Aurora Innovation, Inc.",
+        "premarket_change_percent": -0.47468686,
+        "premarket_price": 6.29,
+        "regular_change_percent": 8.03419,
+        "regular_market_price": 6.32,
+        "regular_market_volume": 55332703.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "AUR"
+      },
+      "fetched_at": "2026-09-04T13:18:32.285268+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 30490530.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 1.7188,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 7.5214,
+        "lower_highs_count": 1,
+        "premarket_high": 6.4,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 6.29,
+        "prior_close": 5.85,
+        "relative_strength_percent": 6.6745,
+        "return_15m_percent": 0.319,
+        "sector_return_percent": null
+      },
+      "name": "Aurora Innovation, Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:17:22+00:00",
+      "ranking_allowed": true,
+      "raw_score": 41.59,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:17:22+00:00",
+      "score": 41.59,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Aurora to Host Analyst & Investor Day on September 23, 2026",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 1.7188
+          },
+          "score": 6.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 7.5214,
+            "return_15m_percent": 0.319
+          },
+          "score": 16.59,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 6.6745
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "AUR",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +7.52%; relative strength +6.67%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Watch These 2 Energy Stocks \u2014 S&P 500 Addition Could Come Before Quarter's End",
+        "negative": false,
+        "published_at": "2026-09-04T01:16:15+00:00",
+        "publisher": "Stocktwits",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/dac885d0-36f8-307d-b309-f296a51b49c1/watch-these-2-energy-stocks-%E2%80%94.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.36255695,
+      "direct_driver": "Watch These 2 Energy Stocks \u2014 S&P 500 Addition Could Come Before Quarter's End",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 69375918080.0,
+        "name": "Bloom Energy Corporation",
+        "premarket_change_percent": -0.3870544,
+        "premarket_price": 234.2,
+        "regular_change_percent": 8.40851,
+        "regular_market_price": 235.55,
+        "regular_market_volume": 15587803.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "BE"
+      },
+      "fetched_at": "2026-09-04T13:18:32.753417+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 11921715.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 4.0343,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 7.6169,
+        "lower_highs_count": 2,
+        "premarket_high": 243.66,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 233.83,
+        "prior_close": 217.28,
+        "relative_strength_percent": 6.77,
+        "return_15m_percent": -0.8775,
+        "sector_return_percent": null
+      },
+      "name": "Bloom Energy Corporation",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": true,
+        "severe": true,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH",
+          "NEGATIVE_15M_RETURN",
+          "LOWER_HIGHS"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:11+00:00",
+      "ranking_allowed": true,
+      "raw_score": 30.0,
+      "reason_codes": [
+        "PREMARKET_DETERIORATION"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:11+00:00",
+      "score": 30.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Watch These 2 Energy Stocks \u2014 S&P 500 Addition Could Come Before Quarter's End",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 4.0343
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 7.6169,
+            "return_15m_percent": -0.8775
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 6.77
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "BE",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +7.62%; relative strength +6.77%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Robinhood Rallies 11% on Price Target Hikes, Webull Climbs 7%, Interactive Brokers Gains 4%",
+        "negative": false,
+        "published_at": "2026-09-03T14:03:10+00:00",
+        "publisher": "24/7 Wall St.",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/edbb90f5-9324-332e-ac6e-859cda44741b/robinhood-rallies-11%25-on.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.5542081166666667,
+      "direct_driver": "Robinhood Rallies 11% on Price Target Hikes, Webull Climbs 7%, Interactive Brokers Gains 4%",
+      "exchange": "NasdaqCM",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqCM",
+        "market_cap": 5396204032.0,
+        "name": "Webull Corporation",
+        "premarket_change_percent": -2.0569992,
+        "premarket_price": 9.7943,
+        "regular_change_percent": 11.1111,
+        "regular_market_price": 10.0,
+        "regular_market_volume": 32663462.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "BULL"
+      },
+      "fetched_at": "2026-09-04T13:18:33.252487+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 18488525.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 2.8519,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 8.6667,
+        "lower_highs_count": 2,
+        "premarket_high": 10.0671,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 9.78,
+        "prior_close": 9.0,
+        "relative_strength_percent": 7.8198,
+        "return_15m_percent": -0.1745,
+        "sector_return_percent": null
+      },
+      "name": "Webull Corporation",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": true,
+        "severe": true,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH",
+          "LOWER_HIGHS"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:00+00:00",
+      "ranking_allowed": true,
+      "raw_score": 32.0,
+      "reason_codes": [
+        "PREMARKET_DETERIORATION"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:00+00:00",
+      "score": 32.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Robinhood Rallies 11% on Price Target Hikes, Webull Climbs 7%, Interactive Brokers Gains 4%",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 2.8519
+          },
+          "score": 2.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 8.6667,
+            "return_15m_percent": -0.1745
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 7.8198
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "BULL",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +8.67%; relative strength +7.82%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Why Cipher Digital Stock Plummeted 30.6% Last Month But Is Rebounding in September",
+        "negative": false,
+        "published_at": "2026-09-04T11:48:00+00:00",
+        "publisher": "Motley Fool",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/54e7dc64-9830-30ae-bc18-09c0b974ad53/why-cipher-digital-stock.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.22943064999999999,
+      "direct_driver": "Why Cipher Digital Stock Plummeted 30.6% Last Month But Is Rebounding in September",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 7209083904.0,
+        "name": "Cipher Digital Inc.",
+        "premarket_change_percent": -1.2694354,
+        "premarket_price": 17.1495,
+        "regular_change_percent": 14.4269,
+        "regular_market_price": 17.37,
+        "regular_market_volume": 37130461.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "CIFR"
+      },
+      "fetched_at": "2026-09-04T13:18:33.765839+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 34373465.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 3.3518,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 12.9091,
+        "lower_highs_count": 2,
+        "premarket_high": 17.734,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 17.1396,
+        "prior_close": 15.18,
+        "relative_strength_percent": 12.0622,
+        "return_15m_percent": -0.1189,
+        "sector_return_percent": null
+      },
+      "name": "Cipher Digital Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": true,
+        "severe": true,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH",
+          "LOWER_HIGHS"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:20+00:00",
+      "ranking_allowed": true,
+      "raw_score": 32.0,
+      "reason_codes": [
+        "PREMARKET_DETERIORATION"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:20+00:00",
+      "score": 32.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Why Cipher Digital Stock Plummeted 30.6% Last Month But Is Rebounding in September",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 3.3518
+          },
+          "score": 2.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 12.9091,
+            "return_15m_percent": -0.1189
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 12.0622
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "CIFR",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +12.91%; relative strength +12.06%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "CLS Stock Jumps 12% As Broadcom AI Call Sparks Switch Rally",
+        "negative": false,
+        "published_at": "2026-09-03T20:22:30+00:00",
+        "publisher": "Stocktwits",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/eee95f4d-643c-3706-b7e8-e7e705205955/cls-stock-jumps-12%25-as.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 2.38771085,
+      "direct_driver": "CLS Stock Jumps 12% As Broadcom AI Call Sparks Switch Rally",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 39074267136.0,
+        "name": "Celestica, Inc.",
+        "premarket_change_percent": 2.1043863,
+        "premarket_price": 316.35,
+        "regular_change_percent": 11.5455,
+        "regular_market_price": 309.84,
+        "regular_market_volume": 3894130.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "CLS"
+      },
+      "fetched_at": "2026-09-04T13:18:34.262651+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 2359075.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 0.572,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 13.8892,
+        "lower_highs_count": 0,
+        "premarket_high": 318.17,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 316.35,
+        "prior_close": 277.77,
+        "relative_strength_percent": 13.0423,
+        "return_15m_percent": 0.9538,
+        "sector_return_percent": null
+      },
+      "name": "Celestica, Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": []
+      },
+      "quote_timestamp": "2026-09-04T13:16:11+00:00",
+      "ranking_allowed": false,
+      "raw_score": 46.77,
+      "reason_codes": [
+        "ADV_BELOW_MINIMUM"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:16:11+00:00",
+      "score": 46.77,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "CLS Stock Jumps 12% As Broadcom AI Call Sparks Switch Rally",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 0.572
+          },
+          "score": 12.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 13.8892,
+            "return_15m_percent": 0.9538
+          },
+          "score": 19.77,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 13.0423
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "CLS",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +13.89%; relative strength +13.04%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "What Are You Actually Buying In Applied Digital Stock?",
+        "negative": false,
+        "published_at": "2026-09-04T00:06:12+00:00",
+        "publisher": "Trefis",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/3dd3cec3-1235-3ce0-a3d6-c8fdab9a859e/what-are-you-actually-buying.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.12950636666666665,
+      "direct_driver": "What Are You Actually Buying In Applied Digital Stock?",
+      "exchange": "NasdaqCM",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqCM",
+        "market_cap": 3230758656.0,
+        "name": "CleanSpark, Inc.",
+        "premarket_change_percent": -2.782197,
+        "premarket_price": 12.23,
+        "regular_change_percent": 11.0327,
+        "regular_market_price": 12.58,
+        "regular_market_volume": 23474079.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "CLSK"
+      },
+      "fetched_at": "2026-09-04T13:18:34.770382+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 19333035.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 3.0111,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 8.0318,
+        "lower_highs_count": 0,
+        "premarket_high": 12.62,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 12.24,
+        "prior_close": 11.33,
+        "relative_strength_percent": 7.1849,
+        "return_15m_percent": -0.4878,
+        "sector_return_percent": null
+      },
+      "name": "CleanSpark, Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:27+00:00",
+      "ranking_allowed": true,
+      "raw_score": 34.0,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:27+00:00",
+      "score": 34.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "What Are You Actually Buying In Applied Digital Stock?",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 3.0111
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 8.0318,
+            "return_15m_percent": -0.4878
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 7.1849
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "CLSK",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +8.03%; relative strength +7.18%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Volkswagen Aims to Revive U.S. Business",
+        "negative": false,
+        "published_at": "2026-09-04T11:09:00+00:00",
+        "publisher": "The Wall Street Journal",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/6c95d503-cdce-3f31-8e92-c6246dce355a/volkswagen-aims-to-revive.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 5.037595733333333,
+      "direct_driver": "Volkswagen Aims to Revive U.S. Business",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 57461256192.0,
+        "name": "Ford Motor Company",
+        "premarket_change_percent": -0.41637382,
+        "premarket_price": 14.35,
+        "regular_change_percent": 1.90947,
+        "regular_market_price": 14.41,
+        "regular_market_volume": 40590494.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "F"
+      },
+      "fetched_at": "2026-09-04T13:18:35.255744+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 40210220.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 0.7298,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 1.4851,
+        "lower_highs_count": 0,
+        "premarket_high": 14.4555,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 14.35,
+        "prior_close": 14.14,
+        "relative_strength_percent": 0.6383,
+        "return_15m_percent": -0.039,
+        "sector_return_percent": null
+      },
+      "name": "Ford Motor Company",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": []
+      },
+      "quote_timestamp": "2026-09-04T13:13:33+00:00",
+      "ranking_allowed": true,
+      "raw_score": 24.62,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:13:33+00:00",
+      "score": 24.62,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Volkswagen Aims to Revive U.S. Business",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 0.7298
+          },
+          "score": 10.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 1.4851,
+            "return_15m_percent": -0.039
+          },
+          "score": 7.43,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 0.6383
+          },
+          "score": 3.19,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "F",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +1.49%; relative strength +0.64%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Figure Technology Solutions (FIGR) Stock Looks Fully Priced Despite Its 31% Run",
+        "negative": false,
+        "published_at": "2026-09-04T12:13:26+00:00",
+        "publisher": "Simply Wall St.",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/figure-technology-solutions-figr-stock-121326744.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 1.91292245,
+      "direct_driver": "Figure Technology Solutions (FIGR) Stock Looks Fully Priced Despite Its 31% Run",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 8124722688.0,
+        "name": "Figure Technology Solutions, In",
+        "premarket_change_percent": -1.5465274,
+        "premarket_price": 35.65,
+        "regular_change_percent": 9.09913,
+        "regular_market_price": 36.21,
+        "regular_market_volume": 5300378.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "FIGR"
+      },
+      "fetched_at": "2026-09-04T13:18:35.775347+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 4819395.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 3.3875,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 7.4119,
+        "lower_highs_count": 0,
+        "premarket_high": 36.9,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 35.65,
+        "prior_close": 33.19,
+        "relative_strength_percent": 6.565,
+        "return_15m_percent": 1.1491,
+        "sector_return_percent": null
+      },
+      "name": "Figure Technology Solutions, In",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:16:41+00:00",
+      "ranking_allowed": false,
+      "raw_score": 43.0,
+      "reason_codes": [
+        "ADV_BELOW_MINIMUM"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:16:41+00:00",
+      "score": 43.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Figure Technology Solutions (FIGR) Stock Looks Fully Priced Despite Its 31% Run",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 3.3875
+          },
+          "score": 8.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 7.4119,
+            "return_15m_percent": 1.1491
+          },
+          "score": 20.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 6.565
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "FIGR",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +7.41%; relative strength +6.57%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "BofA Adjusts Price Target on Hewlett Packard Enterprise to $88 From $82",
+        "negative": false,
+        "published_at": "2026-09-04T12:35:02+00:00",
+        "publisher": "MT Newswires",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/bofa-adjusts-price-target-hewlett-123502287.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.4547444,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 0.5,
+        "score": 12.66
+      },
+      "direct_driver": "BofA Adjusts Price Target on Hewlett Packard Enterprise to $88 From $82",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 72267186176.0,
+        "name": "Hewlett Packard Enterprise Comp",
+        "premarket_change_percent": -0.83804464,
+        "premarket_price": 53.98,
+        "regular_change_percent": 5.03569,
+        "regular_market_price": 54.44,
+        "regular_market_volume": 72021554.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "HPE"
+      },
+      "fetched_at": "2026-09-04T13:18:36.284664+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 20571915.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 1.8003,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 4.1868,
+        "lower_highs_count": 0,
+        "premarket_high": 54.99,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 54.0,
+        "prior_close": 51.83,
+        "relative_strength_percent": 3.3399,
+        "return_15m_percent": 0.7463,
+        "sector_return_percent": null
+      },
+      "name": "Hewlett Packard Enterprise Comp",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:09+00:00",
+      "ranking_allowed": true,
+      "raw_score": 41.73,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:09+00:00",
+      "score": 41.73,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "BofA Adjusts Price Target on Hewlett Packard Enterprise to $88 From $82",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 1.8003
+          },
+          "score": 8.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 4.1868,
+            "return_15m_percent": 0.7463
+          },
+          "score": 18.73,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 3.3399
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "HPE",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +4.19%; relative strength +3.34%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "PRODUCT_PARTNERSHIP",
+        "headline": "Will GeoCue Partnership Accelerate Ouster's Lidar Growth?",
+        "negative": false,
+        "published_at": "2026-09-03T14:22:00+00:00",
+        "publisher": "Zacks",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_CLASSIFIED"
+        ],
+        "score": 8.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/technology/articles/geocue-partnership-accelerate-ousters-lidar-142200032.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.5127995333333334,
+      "direct_driver": "Will GeoCue Partnership Accelerate Ouster's Lidar Growth?",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 23206760448.0,
+        "name": "Hesai Group",
+        "premarket_change_percent": -0.054162093,
+        "premarket_price": 18.45,
+        "regular_change_percent": 11.2718,
+        "regular_market_price": 18.46,
+        "regular_market_volume": 2761023.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "HSAI"
+      },
+      "fetched_at": "2026-09-04T13:18:36.767972+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 1777770.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 1.5434,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 11.513,
+        "lower_highs_count": 1,
+        "premarket_high": 18.79,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 18.5,
+        "prior_close": 16.59,
+        "relative_strength_percent": 10.6661,
+        "return_15m_percent": -0.8043,
+        "sector_return_percent": null
+      },
+      "name": "Hesai Group",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": true,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH",
+          "NEGATIVE_15M_RETURN"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:06+00:00",
+      "ranking_allowed": false,
+      "raw_score": 40.0,
+      "reason_codes": [
+        "ADV_BELOW_MINIMUM",
+        "PREMARKET_DETERIORATION"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:06+00:00",
+      "score": 40.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Will GeoCue Partnership Accelerate Ouster's Lidar Growth?",
+          "score": 8.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 1.5434
+          },
+          "score": 2.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 11.513,
+            "return_15m_percent": -0.8043
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 10.6661
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "HSAI",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +11.51%; relative strength +10.67%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "M_AND_A",
+        "headline": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+        "negative": false,
+        "published_at": "2026-09-04T12:37:50+00:00",
+        "publisher": "Simply Wall St.",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_CLASSIFIED"
+        ],
+        "score": 8.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/technology/ai/articles/week-cloud-ai-opti9-expands-123750589.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.07160368333333333,
+      "direct_driver": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 10857926656.0,
+        "name": "Hut 8 Corp.",
+        "premarket_change_percent": -1.3054762,
+        "premarket_price": 86.94,
+        "regular_change_percent": 9.18443,
+        "regular_market_price": 88.09,
+        "regular_market_volume": 5469436.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "HUT"
+      },
+      "fetched_at": "2026-09-04T13:18:37.296221+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 4907855.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 3.2608,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 7.5547,
+        "lower_highs_count": 2,
+        "premarket_high": 89.7,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 86.7751,
+        "prior_close": 80.68,
+        "relative_strength_percent": 6.7078,
+        "return_15m_percent": 0.5389,
+        "sector_return_percent": null
+      },
+      "name": "Hut 8 Corp.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": true,
+        "severe": true,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH",
+          "LOWER_HIGHS"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:33+00:00",
+      "ranking_allowed": false,
+      "raw_score": 44.69,
+      "reason_codes": [
+        "ADV_BELOW_MINIMUM",
+        "PREMARKET_DETERIORATION"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:33+00:00",
+      "score": 44.69,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+          "score": 8.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 3.2608
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 7.5547,
+            "return_15m_percent": 0.5389
+          },
+          "score": 17.69,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 6.7078
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "HUT",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +7.55%; relative strength +6.71%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Jim Cramer Backs CRWV: 'If You're Going For Neoclouds, Only One I Like Is CoreWeave'",
+        "negative": false,
+        "published_at": "2026-09-04T09:25:24+00:00",
+        "publisher": "Stocktwits",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/d1938e5a-87b6-3d09-8da2-930ca98a99d6/jim-cramer-backs-crwv%3A-%27if.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.07941993333333335,
+      "direct_driver": "Jim Cramer Backs CRWV: 'If You're Going For Neoclouds, Only One I Like Is CoreWeave'",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 16412544000.0,
+        "name": "IREN LIMITED",
+        "premarket_change_percent": -1.8007202,
+        "premarket_price": 40.9,
+        "regular_change_percent": 5.17678,
+        "regular_market_price": 41.65,
+        "regular_market_volume": 44874993.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "IREN"
+      },
+      "fetched_at": "2026-09-04T13:18:37.765196+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 45656570.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 3.3365,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 3.1566,
+        "lower_highs_count": 1,
+        "premarket_high": 42.26,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 40.85,
+        "prior_close": 39.6,
+        "relative_strength_percent": 2.3097,
+        "return_15m_percent": -0.5114,
+        "sector_return_percent": null
+      },
+      "name": "IREN LIMITED",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": true,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH",
+          "NEGATIVE_15M_RETURN"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:33+00:00",
+      "ranking_allowed": true,
+      "raw_score": 28.55,
+      "reason_codes": [
+        "PREMARKET_DETERIORATION"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:33+00:00",
+      "score": 28.55,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Jim Cramer Backs CRWV: 'If You're Going For Neoclouds, Only One I Like Is CoreWeave'",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 3.3365
+          },
+          "score": 2.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 3.1566,
+            "return_15m_percent": -0.5114
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 2.3097
+          },
+          "score": 11.55,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "IREN",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +3.16%; relative strength +2.31%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "BC-Most Active Stocks",
+        "negative": false,
+        "published_at": "2026-09-03T14:30:18+00:00",
+        "publisher": "Associated Press",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/bc-most-active-stocks-143018358.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.03871636666666667,
+      "direct_driver": "BC-Most Active Stocks",
+      "exchange": "NasdaqCM",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqCM",
+        "market_cap": 4481072128.0,
+        "name": "MARA Holdings, Inc.",
+        "premarket_change_percent": -3.1163857,
+        "premarket_price": 11.2385,
+        "regular_change_percent": 10.7927,
+        "regular_market_price": 11.6,
+        "regular_market_volume": 68928569.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "MARA"
+      },
+      "fetched_at": "2026-09-04T13:18:38.322982+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 50166745.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 2.9386,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 7.2588,
+        "lower_highs_count": 1,
+        "premarket_high": 11.57,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 11.23,
+        "prior_close": 10.47,
+        "relative_strength_percent": 6.412,
+        "return_15m_percent": -0.089,
+        "sector_return_percent": null
+      },
+      "name": "MARA Holdings, Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:36+00:00",
+      "ranking_allowed": true,
+      "raw_score": 38.0,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:36+00:00",
+      "score": 38.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "BC-Most Active Stocks",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 2.9386
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 7.2588,
+            "return_15m_percent": -0.089
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 6.412
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "MARA",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +7.26%; relative strength +6.41%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Assessment of the Global 6G Communications Optical and Optronic Opportunities 2026,  Reveals Why 6G Optical Isn't a New Market, But an Opportunity Layer on Today's Infrastructure",
+        "negative": false,
+        "published_at": "2026-09-03T13:53:00+00:00",
+        "publisher": "GlobeNewswire",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/technology/articles/assessment-global-6g-communications-optical-135300848.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.4294082166666667,
+      "direct_driver": "Assessment of the Global 6G Communications Optical and Optronic Opportunities 2026,  Reveals Why 6G Optical Isn't a New Market, But an Opportunity Layer on Today's Infrastructure",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 54698762240.0,
+        "name": "Nokia Corporation Sponsored",
+        "premarket_change_percent": 2.0993335,
+        "premarket_price": 9.97,
+        "regular_change_percent": -0.711379,
+        "regular_market_price": 9.77,
+        "regular_market_volume": 81929446.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "NOK"
+      },
+      "fetched_at": "2026-09-04T13:18:38.764493+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 68334700.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 1.3861,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 1.2195,
+        "lower_highs_count": 1,
+        "premarket_high": 10.1,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 9.96,
+        "prior_close": 9.84,
+        "relative_strength_percent": 0.3726,
+        "return_15m_percent": 0.0,
+        "sector_return_percent": null
+      },
+      "name": "Nokia Corporation Sponsored",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:13+00:00",
+      "ranking_allowed": true,
+      "raw_score": 15.96,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:13+00:00",
+      "score": 15.96,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Assessment of the Global 6G Communications Optical and Optronic Opportunities 2026,  Reveals Why 6G Optical Isn't a New Market, But an Opportunity Layer on Today's Infrastructure",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 1.3861
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 1.2195,
+            "return_15m_percent": 0.0
+          },
+          "score": 6.1,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 0.3726
+          },
+          "score": 1.86,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "NOK",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +1.22%; relative strength +0.37%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "IQST - IQSTEL Sets 2027 Targets for IDILIO TV: Potential Mobile Audience of 40 Million Users by Q2 and 500,000 Gross Subscribers by Year-End, Backed by Leadership Experience Building a 100 Million-User Audience",
+        "negative": false,
+        "published_at": "2026-09-03T11:59:00+00:00",
+        "publisher": "PR Newswire",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/media-advertising/articles/iqst-iqstel-sets-2027-targets-115900661.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.10488373333333333,
+      "direct_driver": "IQST - IQSTEL Sets 2027 Targets for IDILIO TV: Potential Mobile Audience of 40 Million Users by Q2 and 500,000 Gross Subscribers by Year-End, Backed by Leadership Experience Building a 100 Million-User Audience",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 75745198080.0,
+        "name": "Nu Holdings Ltd.",
+        "premarket_change_percent": -1.2755151,
+        "premarket_price": 15.48,
+        "regular_change_percent": 1.81819,
+        "regular_market_price": 15.68,
+        "regular_market_volume": 81808352.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "NU"
+      },
+      "fetched_at": "2026-09-04T13:18:39.293024+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 72889910.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 2.0514,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 0.4545,
+        "lower_highs_count": 1,
+        "premarket_high": 15.794,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 15.47,
+        "prior_close": 15.4,
+        "relative_strength_percent": -0.3923,
+        "return_15m_percent": -0.3863,
+        "sector_return_percent": null
+      },
+      "name": "Nu Holdings Ltd.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:33+00:00",
+      "ranking_allowed": true,
+      "raw_score": 8.27,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:33+00:00",
+      "score": 8.27,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "IQST - IQSTEL Sets 2027 Targets for IDILIO TV: Potential Mobile Audience of 40 Million Users by Q2 and 500,000 Gross Subscribers by Year-End, Backed by Leadership Experience Building a 100 Million-User Audience",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 2.0514
+          },
+          "score": 2.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 0.4545,
+            "return_15m_percent": -0.3863
+          },
+          "score": 2.27,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": -0.3923
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "NU",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +0.45%; relative strength -0.39%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "/C O R R E C T I O N -- PG&E Corporation/",
+        "negative": false,
+        "published_at": "2026-09-03T19:34:00+00:00",
+        "publisher": "PR Newswire",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/energy/articles/pg-e-launches-strategic-review-120000090.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 3.929536966666667,
+      "direct_driver": "/C O R R E C T I O N -- PG&E Corporation/",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 30745042944.0,
+        "name": "Pacific Gas & Electric Co.",
+        "premarket_change_percent": -0.6447002,
+        "premarket_price": 13.87,
+        "regular_change_percent": 4.72618,
+        "regular_market_price": 13.96,
+        "regular_market_volume": 65611284.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "PCG"
+      },
+      "fetched_at": "2026-09-04T13:18:39.772218+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 47478875.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 1.6291,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 4.051,
+        "lower_highs_count": 1,
+        "premarket_high": 14.0997,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 13.87,
+        "prior_close": 13.33,
+        "relative_strength_percent": 3.2041,
+        "return_15m_percent": -0.5735,
+        "sector_return_percent": null
+      },
+      "name": "Pacific Gas & Electric Co.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": true,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH",
+          "NEGATIVE_15M_RETURN"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:14:44+00:00",
+      "ranking_allowed": true,
+      "raw_score": 36.0,
+      "reason_codes": [
+        "PREMARKET_DETERIORATION"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:14:44+00:00",
+      "score": 36.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "/C O R R E C T I O N -- PG&E Corporation/",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 1.6291
+          },
+          "score": 2.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 4.051,
+            "return_15m_percent": -0.5735
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 3.2041
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "PCG",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +4.05%; relative strength +3.20%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "3 Russell 2000 Stocks We Approach with Caution",
+        "negative": false,
+        "published_at": "2026-09-03T13:19:18+00:00",
+        "publisher": "StockStory",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/3-russell-2000-stocks-approach-131918598.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 1.4378537,
+      "direct_driver": "3 Russell 2000 Stocks We Approach with Caution",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 6723618304.0,
+        "name": "Transocean Ltd (Switzerland)",
+        "premarket_change_percent": -0.49917153,
+        "premarket_price": 5.98,
+        "regular_change_percent": -3.21543,
+        "regular_market_price": 6.02,
+        "regular_market_volume": 43451538.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "RIG"
+      },
+      "fetched_at": "2026-09-04T13:18:40.271222+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 41148465.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 3.5873,
+        "distance_from_vwap_percent": null,
+        "gap_percent": -3.8585,
+        "lower_highs_count": 0,
+        "premarket_high": 6.2025,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 5.98,
+        "prior_close": 6.22,
+        "relative_strength_percent": -4.7054,
+        "return_15m_percent": -0.1669,
+        "sector_return_percent": null
+      },
+      "name": "Transocean Ltd (Switzerland)",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:17:14+00:00",
+      "ranking_allowed": false,
+      "raw_score": 6.0,
+      "reason_codes": [
+        "PREMARKET_MOMENTUM_TOO_WEAK"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:17:14+00:00",
+      "score": 6.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "3 Russell 2000 Stocks We Approach with Caution",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 3.5873
+          },
+          "score": 6.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": -3.8585,
+            "return_15m_percent": -0.1669
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": -4.7054
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "RIG",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap -3.86%; relative strength -4.71%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "What Are You Actually Buying In Applied Digital Stock?",
+        "negative": false,
+        "published_at": "2026-09-04T00:06:12+00:00",
+        "publisher": "Trefis",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/3dd3cec3-1235-3ce0-a3d6-c8fdab9a859e/what-are-you-actually-buying.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.22988736666666665,
+      "direct_driver": "What Are You Actually Buying In Applied Digital Stock?",
+      "exchange": "NasdaqCM",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqCM",
+        "market_cap": 7932974080.0,
+        "name": "Riot Platforms, Inc.",
+        "premarket_change_percent": -3.2639482,
+        "premarket_price": 20.45,
+        "regular_change_percent": 13.4424,
+        "regular_market_price": 21.14,
+        "regular_market_volume": 23375838.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "RIOT"
+      },
+      "fetched_at": "2026-09-04T13:18:40.793242+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 21455060.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 3.5448,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 9.7317,
+        "lower_highs_count": 1,
+        "premarket_high": 21.2,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 20.4485,
+        "prior_close": 18.635,
+        "relative_strength_percent": 8.8848,
+        "return_15m_percent": -0.0073,
+        "sector_return_percent": null
+      },
+      "name": "Riot Platforms, Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:27+00:00",
+      "ranking_allowed": true,
+      "raw_score": 34.0,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:27+00:00",
+      "score": 34.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "What Are You Actually Buying In Applied Digital Stock?",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 3.5448
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 9.7317,
+            "return_15m_percent": -0.0073
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 8.8848
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "RIOT",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +9.73%; relative strength +8.88%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Summit Therapeutics Says It Is Beating Merck With Its Cancer Drug",
+        "negative": false,
+        "published_at": "2026-09-03T16:00:00+00:00",
+        "publisher": "Barrons.com",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/3227a244-83a5-3806-82be-40cf153910a1/summit-therapeutics-says-it.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 1.9046604666666667,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 0.0,
+        "score": -0.3
+      },
+      "direct_driver": "Summit Therapeutics Says It Is Beating Merck With Its Cancer Drug",
+      "exchange": "NasdaqGM",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGM",
+        "market_cap": 13665451008.0,
+        "name": "Summit Therapeutics Inc.",
+        "premarket_change_percent": -1.8680661,
+        "premarket_price": 16.81,
+        "regular_change_percent": 17.3288,
+        "regular_market_price": 17.13,
+        "regular_market_volume": 14880873.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "SMMT"
+      },
+      "fetched_at": "2026-09-04T13:18:41.279628+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 6202785.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 2.6636,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 15.137,
+        "lower_highs_count": 1,
+        "premarket_high": 17.27,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 16.81,
+        "prior_close": 14.6,
+        "relative_strength_percent": 14.2901,
+        "return_15m_percent": 0.5984,
+        "sector_return_percent": null
+      },
+      "name": "Summit Therapeutics Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:16:47+00:00",
+      "ranking_allowed": true,
+      "raw_score": 42.99,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:16:47+00:00",
+      "score": 42.99,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Summit Therapeutics Says It Is Beating Merck With Its Cancer Drug",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 2.6636
+          },
+          "score": 6.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 15.137,
+            "return_15m_percent": 0.5984
+          },
+          "score": 17.99,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 14.2901
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "SMMT",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +15.14%; relative strength +14.29%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "M_AND_A",
+        "headline": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+        "negative": false,
+        "published_at": "2026-09-04T12:37:50+00:00",
+        "publisher": "Simply Wall St.",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_CLASSIFIED"
+        ],
+        "score": 8.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/technology/ai/articles/week-cloud-ai-opti9-expands-123750589.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.48015976666666665,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": -0.2108,
+        "score": 0.0
+      },
+      "direct_driver": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 123552505856.0,
+        "name": "Snowflake Inc.",
+        "premarket_change_percent": -1.755668,
+        "premarket_price": 350.3,
+        "regular_change_percent": 16.5544,
+        "regular_market_price": 356.47,
+        "regular_market_volume": 21794631.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "SNOW"
+      },
+      "fetched_at": "2026-09-04T13:18:41.809586+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 5114000.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 2.2312,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 14.7626,
+        "lower_highs_count": 1,
+        "premarket_high": 359.0,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 350.99,
+        "prior_close": 305.84,
+        "relative_strength_percent": 13.9158,
+        "return_15m_percent": -0.1423,
+        "sector_return_percent": null
+      },
+      "name": "Snowflake Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:13+00:00",
+      "ranking_allowed": true,
+      "raw_score": 42.0,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:13+00:00",
+      "score": 42.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+          "score": 8.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 2.2312
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 14.7626,
+            "return_15m_percent": -0.1423
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 13.9158
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "SNOW",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +14.76%; relative strength +13.92%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "PRODUCT_PARTNERSHIP",
+        "headline": "SoFi Pushes SoFiUSD Onto Kraken in Payward Partnership",
+        "negative": false,
+        "published_at": "2026-09-03T21:33:20+00:00",
+        "publisher": "GuruFocus.com",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_CLASSIFIED"
+        ],
+        "score": 8.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/crypto/articles/sofi-pushes-sofiusd-onto-kraken-213320800.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.12164776666666667,
+      "direct_driver": "SoFi Pushes SoFiUSD Onto Kraken in Payward Partnership",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 23906967552.0,
+        "name": "SoFi Technologies, Inc.",
+        "premarket_change_percent": -1.9972959,
+        "premarket_price": 18.1403,
+        "regular_change_percent": 3.75561,
+        "regular_market_price": 18.51,
+        "regular_market_volume": 43257470.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "SOFI"
+      },
+      "fetched_at": "2026-09-04T13:18:42.298866+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 43578075.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 2.2079,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 1.7937,
+        "lower_highs_count": 1,
+        "premarket_high": 18.57,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 18.16,
+        "prior_close": 17.84,
+        "relative_strength_percent": 0.9469,
+        "return_15m_percent": 0.1522,
+        "sector_return_percent": null
+      },
+      "name": "SoFi Technologies, Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:35+00:00",
+      "ranking_allowed": true,
+      "raw_score": 28.46,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:35+00:00",
+      "score": 28.46,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "SoFi Pushes SoFiUSD Onto Kraken in Payward Partnership",
+          "score": 8.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 2.2079
+          },
+          "score": 6.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 1.7937,
+            "return_15m_percent": 0.1522
+          },
+          "score": 9.73,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 0.9469
+          },
+          "score": 4.73,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "SOFI",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +1.79%; relative strength +0.95%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "How Putin\u2019s Space Failures Highlight SpaceX\u2019s Dominance",
+        "negative": false,
+        "published_at": "2026-09-04T12:55:00+00:00",
+        "publisher": "Barrons.com",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/c6701e37-c3b4-3401-9180-57f9ab0a4d2d/how-putin%E2%80%99s-space-failures.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.029656633333333335,
+      "direct_driver": "How Putin\u2019s Space Failures Highlight SpaceX\u2019s Dominance",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 1973839855616.0,
+        "name": "Space Exploration Technologies ",
+        "premarket_change_percent": -0.6811835,
+        "premarket_price": 148.72,
+        "regular_change_percent": 6.41745,
+        "regular_market_price": 149.74,
+        "regular_market_volume": 120960430.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "SPCX"
+      },
+      "fetched_at": "2026-09-04T13:18:42.779398+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 97711075.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 1.8229,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 5.7029,
+        "lower_highs_count": 1,
+        "premarket_high": 151.4962,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 148.7346,
+        "prior_close": 140.71,
+        "relative_strength_percent": 4.8561,
+        "return_15m_percent": -0.017,
+        "sector_return_percent": null
+      },
+      "name": "Space Exploration Technologies ",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:41+00:00",
+      "ranking_allowed": true,
+      "raw_score": 38.0,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:41+00:00",
+      "score": 38.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "How Putin\u2019s Space Failures Highlight SpaceX\u2019s Dominance",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 1.8229
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 5.7029,
+            "return_15m_percent": -0.017
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 4.8561
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "SPCX",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +5.70%; relative strength +4.86%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Market Chatter: Vale Holds Off on IPO for Vale Base Metals Subsidiary",
+        "negative": false,
+        "published_at": "2026-09-04T08:29:43+00:00",
+        "publisher": "MT Newswires",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/market-chatter-vale-holds-off-082943163.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 6.587512833333333,
+      "direct_driver": "Market Chatter: Vale Holds Off on IPO for Vale Base Metals Subsidiary",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 65155727360.0,
+        "name": "VALE S.A.",
+        "premarket_change_percent": -0.685152,
+        "premarket_price": 15.22,
+        "regular_change_percent": -2.67005,
+        "regular_market_price": 15.31,
+        "regular_market_volume": 43802480.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "VALE"
+      },
+      "fetched_at": "2026-09-04T13:18:43.250770+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 26584435.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 1.1213,
+        "distance_from_vwap_percent": null,
+        "gap_percent": -3.2422,
+        "lower_highs_count": 0,
+        "premarket_high": 15.3926,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 15.22,
+        "prior_close": 15.73,
+        "relative_strength_percent": -4.0891,
+        "return_15m_percent": 0.1316,
+        "sector_return_percent": null
+      },
+      "name": "VALE S.A.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:12:08+00:00",
+      "ranking_allowed": false,
+      "raw_score": 8.66,
+      "reason_codes": [
+        "PREMARKET_MOMENTUM_TOO_WEAK"
+      ],
+      "sample_id": "premarket:T-12:2026-09-04T13:12:08+00:00",
+      "score": 8.66,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Market Chatter: Vale Holds Off on IPO for Vale Base Metals Subsidiary",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 1.1213
+          },
+          "score": 8.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": -3.2422,
+            "return_15m_percent": 0.1316
+          },
+          "score": 0.66,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": -4.0891
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "VALE",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap -3.24%; relative strength -4.09%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Data Center Stocks Rally With Bitcoin: Cipher Mining Jumps 12%, TeraWulf Surges 8%, IREN Rises 4%",
+        "negative": false,
+        "published_at": "2026-09-03T18:43:45+00:00",
+        "publisher": "24/7 Wall St.",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/7f31bebd-522e-31ba-bff3-e0b60a90c139/data-center-stocks-rally-with.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.24587843333333334,
+      "direct_driver": "Data Center Stocks Rally With Bitcoin: Cipher Mining Jumps 12%, TeraWulf Surges 8%, IREN Rises 4%",
+      "exchange": "NasdaqCM",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqCM",
+        "market_cap": 8098261504.0,
+        "name": "TeraWulf Inc.",
+        "premarket_change_percent": -0.5545296,
+        "premarket_price": 16.14,
+        "regular_change_percent": 9.51417,
+        "regular_market_price": 16.23,
+        "regular_market_volume": 37138542.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "WULF"
+      },
+      "fetched_at": "2026-09-04T13:18:43.752706+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 31256410.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 3.2471,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 8.5695,
+        "lower_highs_count": 1,
+        "premarket_high": 16.63,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 16.09,
+        "prior_close": 14.82,
+        "relative_strength_percent": 7.7226,
+        "return_15m_percent": -0.1241,
+        "sector_return_percent": null
+      },
+      "name": "TeraWulf Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:29+00:00",
+      "ranking_allowed": true,
+      "raw_score": 34.0,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:29+00:00",
+      "score": 34.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Data Center Stocks Rally With Bitcoin: Cipher Mining Jumps 12%, TeraWulf Surges 8%, IREN Rises 4%",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 3.2471
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 8.5695,
+            "return_15m_percent": -0.1241
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 7.7226
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "WULF",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +8.57%; relative strength +7.72%; PM volume/ADV 0.000"
+    }
+  ],
+  "finalists": [],
+  "labels": [
+    "SHADOW",
+    "DELAYED",
+    "PREDICTION",
+    "WATCH"
+  ],
+  "liquidity_refresh": {
+    "failed": [],
+    "refreshed": 85,
+    "session_date": "2026-09-04"
+  },
+  "market_context": {
+    "benchmark": "SPY",
+    "benchmark_return_percent": 0.8469,
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "state": "DELAYED"
+  },
+  "market_open_et": "2026-09-04T09:30:00-04:00",
+  "market_state": "PREOPEN",
+  "missing_execution_fields": [
+    "authoritative_live_price",
+    "authoritative_live_volume",
+    "authoritative_vwap",
+    "bid",
+    "ask",
+    "spread",
+    "opening_range",
+    "trigger",
+    "entry",
+    "stop",
+    "targets",
+    "quantity"
+  ],
+  "news_errors": {},
+  "numeric_execution_allowed": false,
+  "ready_allowed": false,
+  "run_id": "premarket:2026-09-04:T-12",
+  "schema_version": "market-premarket-artifact.v1",
+  "session_id": "2026-09-04",
+  "skipped_symbols": [],
+  "status": "COMPLETED",
+  "top10": [
+    "ORCL",
+    "WDAY",
+    "META",
+    "SMMT",
+    "HOOD",
+    "SNOW",
+    "HPE",
+    "AUR",
+    "PYPL",
+    "MARA"
+  ],
+  "top10_rows": [
+    {
+      "audit_required": true,
+      "catalyst": {
+        "category": "M_AND_A",
+        "headline": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+        "negative": false,
+        "published_at": "2026-09-04T12:37:50+00:00",
+        "publisher": "Simply Wall St.",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_CLASSIFIED"
+        ],
+        "score": 8.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/technology/ai/articles/week-cloud-ai-opti9-expands-123750589.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.03649276666666667,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 1.06,
+        "score": 7.33
+      },
+      "direct_driver": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+      "exchange": "NYSE",
+      "external": false,
+      "external_discovery": null,
+      "fetched_at": "2026-09-04T13:18:05.189566+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 22538330.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 0.338,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 9.2487,
+        "lower_highs_count": 0,
+        "premarket_high": 159.77,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 159.23,
+        "prior_close": 145.75,
+        "relative_strength_percent": 7.5603,
+        "return_15m_percent": 0.6166,
+        "sector_return_percent": 1.6884
+      },
+      "name": "Oracle Corporation",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": []
+      },
+      "quote_timestamp": "2026-09-04T13:18:03+00:00",
+      "ranking_allowed": true,
+      "raw_score": 56.08,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:03+00:00",
+      "score": 56.08,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+          "score": 8.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 0.338
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 9.2487,
+            "return_15m_percent": 0.6166
+          },
+          "score": 18.08,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 7.5603
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "XLK",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "ORCL",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +9.25%; relative strength +7.56%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": true,
+      "catalyst": {
+        "category": "M_AND_A",
+        "headline": "Cramer Says This Software Giant Is Fighting a Takeover With a $4 Billion Buyback",
+        "negative": false,
+        "published_at": "2026-09-02T18:19:59+00:00",
+        "publisher": "24/7 Wall St.",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_CLASSIFIED"
+        ],
+        "score": 8.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/847bffc4-c8d7-3ed3-8dae-189096357fce/cramer-says-this-software.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 2.5785943333333337,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 1.55,
+        "score": 15.36
+      },
+      "direct_driver": "Cramer Says This Software Giant Is Fighting a Takeover With a $4 Billion Buyback",
+      "exchange": "Nasdaq",
+      "external": false,
+      "external_discovery": null,
+      "fetched_at": "2026-09-04T13:18:06.715660+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 5010020.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 0.4808,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 3.0517,
+        "lower_highs_count": 0,
+        "premarket_high": 208.0,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 207.0,
+        "prior_close": 200.87,
+        "relative_strength_percent": 1.3633,
+        "return_15m_percent": 1.3861,
+        "sector_return_percent": 1.6884
+      },
+      "name": "Workday Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": []
+      },
+      "quote_timestamp": "2026-09-04T13:15:32+00:00",
+      "ranking_allowed": true,
+      "raw_score": 49.82,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:15:32+00:00",
+      "score": 49.82,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Cramer Says This Software Giant Is Fighting a Takeover With a $4 Billion Buyback",
+          "score": 8.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 0.4808
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 3.0517,
+            "return_15m_percent": 1.3861
+          },
+          "score": 20.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 1.3633
+          },
+          "score": 6.82,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "XLK",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "WDAY",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +3.05%; relative strength +1.36%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": true,
+      "catalyst": {
+        "category": "EARNINGS_GUIDANCE",
+        "headline": "Arista Networks Offers Entry After 42% Gain Amid Earnings Beat; Data Center Demand Surging",
+        "negative": false,
+        "published_at": "2026-09-04T12:30:43+00:00",
+        "publisher": "Investor's Business Daily",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_CLASSIFIED"
+        ],
+        "score": 8.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/9c642f45-62a0-383b-9606-da2704f88787/arista-networks-offers-entry.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.18701303333333333,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 0.5867,
+        "score": 4.71
+      },
+      "direct_driver": "Arista Networks Offers Entry After 42% Gain Amid Earnings Beat; Data Center Demand Surging",
+      "exchange": "Nasdaq",
+      "external": false,
+      "external_discovery": null,
+      "fetched_at": "2026-09-04T13:18:18.220782+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 15768060.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 0.8821,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 2.878,
+        "lower_highs_count": 1,
+        "premarket_high": 615.34,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 609.9122,
+        "prior_close": 592.85,
+        "relative_strength_percent": 2.1931,
+        "return_15m_percent": 0.0221,
+        "sector_return_percent": 0.6849
+      },
+      "name": "Meta Platforms Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": []
+      },
+      "quote_timestamp": "2026-09-04T13:18:07+00:00",
+      "ranking_allowed": true,
+      "raw_score": 43.47,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:07+00:00",
+      "score": 43.47,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Arista Networks Offers Entry After 42% Gain Amid Earnings Beat; Data Center Demand Surging",
+          "score": 8.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 0.8821
+          },
+          "score": 10.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 2.878,
+            "return_15m_percent": 0.0221
+          },
+          "score": 14.5,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 2.1931
+          },
+          "score": 10.97,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "XLC",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "META",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +2.88%; relative strength +2.19%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Summit Therapeutics Says It Is Beating Merck With Its Cancer Drug",
+        "negative": false,
+        "published_at": "2026-09-03T16:00:00+00:00",
+        "publisher": "Barrons.com",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/3227a244-83a5-3806-82be-40cf153910a1/summit-therapeutics-says-it.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 1.9046604666666667,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 0.0,
+        "score": -0.3
+      },
+      "direct_driver": "Summit Therapeutics Says It Is Beating Merck With Its Cancer Drug",
+      "exchange": "NasdaqGM",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGM",
+        "market_cap": 13665451008.0,
+        "name": "Summit Therapeutics Inc.",
+        "premarket_change_percent": -1.8680661,
+        "premarket_price": 16.81,
+        "regular_change_percent": 17.3288,
+        "regular_market_price": 17.13,
+        "regular_market_volume": 14880873.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "SMMT"
+      },
+      "fetched_at": "2026-09-04T13:18:41.279628+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 6202785.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 2.6636,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 15.137,
+        "lower_highs_count": 1,
+        "premarket_high": 17.27,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 16.81,
+        "prior_close": 14.6,
+        "relative_strength_percent": 14.2901,
+        "return_15m_percent": 0.5984,
+        "sector_return_percent": null
+      },
+      "name": "Summit Therapeutics Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:16:47+00:00",
+      "ranking_allowed": true,
+      "raw_score": 42.99,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:16:47+00:00",
+      "score": 42.99,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Summit Therapeutics Says It Is Beating Merck With Its Cancer Drug",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 2.6636
+          },
+          "score": 6.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 15.137,
+            "return_15m_percent": 0.5984
+          },
+          "score": 17.99,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 14.2901
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "SMMT",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +15.14%; relative strength +14.29%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": true,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Why a Big CEO Bust Up Has Set AMC Stock Jumping",
+        "negative": false,
+        "published_at": "2026-09-04T12:30:00+00:00",
+        "publisher": "Barrons.com",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/m/d9209df9-b64c-31f2-af66-c2be26b6683c/why-a-big-ceo-bust-up-has-set.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.04526401666666667,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 0.65,
+        "score": 1.91
+      },
+      "direct_driver": "Why a Big CEO Bust Up Has Set AMC Stock Jumping",
+      "exchange": "Nasdaq",
+      "external": false,
+      "external_discovery": null,
+      "fetched_at": "2026-09-04T13:18:16.715841+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 20325490.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 4.1243,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 12.7675,
+        "lower_highs_count": 1,
+        "premarket_high": 125.84,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 120.65,
+        "prior_close": 106.99,
+        "relative_strength_percent": 11.7963,
+        "return_15m_percent": 0.4078,
+        "sector_return_percent": 0.9712
+      },
+      "name": "Robinhood Markets Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:14+00:00",
+      "ranking_allowed": true,
+      "raw_score": 42.04,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:14+00:00",
+      "score": 42.04,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Why a Big CEO Bust Up Has Set AMC Stock Jumping",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 4.1243
+          },
+          "score": 6.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 12.7675,
+            "return_15m_percent": 0.4078
+          },
+          "score": 17.04,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 11.7963
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "XLF",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "HOOD",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +12.77%; relative strength +11.80%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "M_AND_A",
+        "headline": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+        "negative": false,
+        "published_at": "2026-09-04T12:37:50+00:00",
+        "publisher": "Simply Wall St.",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_CLASSIFIED"
+        ],
+        "score": 8.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/technology/ai/articles/week-cloud-ai-opti9-expands-123750589.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.48015976666666665,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": -0.2108,
+        "score": 0.0
+      },
+      "direct_driver": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 123552505856.0,
+        "name": "Snowflake Inc.",
+        "premarket_change_percent": -1.755668,
+        "premarket_price": 350.3,
+        "regular_change_percent": 16.5544,
+        "regular_market_price": 356.47,
+        "regular_market_volume": 21794631.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "SNOW"
+      },
+      "fetched_at": "2026-09-04T13:18:41.809586+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 5114000.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 2.2312,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 14.7626,
+        "lower_highs_count": 1,
+        "premarket_high": 359.0,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 350.99,
+        "prior_close": 305.84,
+        "relative_strength_percent": 13.9158,
+        "return_15m_percent": -0.1423,
+        "sector_return_percent": null
+      },
+      "name": "Snowflake Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:13+00:00",
+      "ranking_allowed": true,
+      "raw_score": 42.0,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:13+00:00",
+      "score": 42.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "This Week In Cloud AI - Opti9 Expands Canadian Reach with Strategic Hut 8 Acquisition",
+          "score": 8.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 2.2312
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 14.7626,
+            "return_15m_percent": -0.1423
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 13.9158
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "SNOW",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +14.76%; relative strength +13.92%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "BofA Adjusts Price Target on Hewlett Packard Enterprise to $88 From $82",
+        "negative": false,
+        "published_at": "2026-09-04T12:35:02+00:00",
+        "publisher": "MT Newswires",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 0.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/bofa-adjusts-price-target-hewlett-123502287.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.4547444,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 0.5,
+        "score": 12.66
+      },
+      "direct_driver": "BofA Adjusts Price Target on Hewlett Packard Enterprise to $88 From $82",
+      "exchange": "NYSE",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NYSE",
+        "market_cap": 72267186176.0,
+        "name": "Hewlett Packard Enterprise Comp",
+        "premarket_change_percent": -0.83804464,
+        "premarket_price": 53.98,
+        "regular_change_percent": 5.03569,
+        "regular_market_price": 54.44,
+        "regular_market_volume": 72021554.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "HPE"
+      },
+      "fetched_at": "2026-09-04T13:18:36.284664+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 20571915.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 1.8003,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 4.1868,
+        "lower_highs_count": 0,
+        "premarket_high": 54.99,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 54.0,
+        "prior_close": 51.83,
+        "relative_strength_percent": 3.3399,
+        "return_15m_percent": 0.7463,
+        "sector_return_percent": null
+      },
+      "name": "Hewlett Packard Enterprise Comp",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:09+00:00",
+      "ranking_allowed": true,
+      "raw_score": 41.73,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:09+00:00",
+      "score": 41.73,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "BofA Adjusts Price Target on Hewlett Packard Enterprise to $88 From $82",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 1.8003
+          },
+          "score": 8.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 4.1868,
+            "return_15m_percent": 0.7463
+          },
+          "score": 18.73,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 3.3399
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "HPE",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +4.19%; relative strength +3.34%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "Aurora to Host Analyst & Investor Day on September 23, 2026",
+        "negative": false,
+        "published_at": "2026-09-02T13:00:00+00:00",
+        "publisher": "Business Wire",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/aurora-host-analyst-investor-day-130000207.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 1.1714211333333333,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": 0.03,
+        "score": 5.59
+      },
+      "direct_driver": "Aurora to Host Analyst & Investor Day on September 23, 2026",
+      "exchange": "NasdaqGS",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqGS",
+        "market_cap": 12666261504.0,
+        "name": "Aurora Innovation, Inc.",
+        "premarket_change_percent": -0.47468686,
+        "premarket_price": 6.29,
+        "regular_change_percent": 8.03419,
+        "regular_market_price": 6.32,
+        "regular_market_volume": 55332703.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "AUR"
+      },
+      "fetched_at": "2026-09-04T13:18:32.285268+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 30490530.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 1.7188,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 7.5214,
+        "lower_highs_count": 1,
+        "premarket_high": 6.4,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 6.29,
+        "prior_close": 5.85,
+        "relative_strength_percent": 6.6745,
+        "return_15m_percent": 0.319,
+        "sector_return_percent": null
+      },
+      "name": "Aurora Innovation, Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:17:22+00:00",
+      "ranking_allowed": true,
+      "raw_score": 41.59,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:17:22+00:00",
+      "score": 41.59,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "Aurora to Host Analyst & Investor Day on September 23, 2026",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 1.7188
+          },
+          "score": 6.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 7.5214,
+            "return_15m_percent": 0.319
+          },
+          "score": 16.59,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 6.6745
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "AUR",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +7.52%; relative strength +6.67%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": true,
+      "catalyst": {
+        "category": "M_AND_A",
+        "headline": "PayPal Stock Jumps on Fresh Takeover Speculation",
+        "negative": false,
+        "published_at": "2026-09-04T12:28:59+00:00",
+        "publisher": "GuruFocus.com",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "UNVERIFIED_PUBLISHER",
+          "CATALYST_CLASSIFIED"
+        ],
+        "score": 8.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/paypal-stock-jumps-fresh-takeover-122859647.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 2.2791689,
+      "delta": {
+        "premarket_volume": 0.0,
+        "price": -0.0752,
+        "score": -5.49
+      },
+      "direct_driver": "PayPal Stock Jumps on Fresh Takeover Speculation",
+      "exchange": "Nasdaq",
+      "external": false,
+      "external_discovery": null,
+      "fetched_at": "2026-09-04T13:18:19.750134+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 12228010.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 0.9692,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 3.2098,
+        "lower_highs_count": 2,
+        "premarket_high": 56.977,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 56.4248,
+        "prior_close": 54.67,
+        "relative_strength_percent": 2.2386,
+        "return_15m_percent": -0.0623,
+        "sector_return_percent": 0.9712
+      },
+      "name": "PayPal Holdings Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "LOWER_HIGHS"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:16:03+00:00",
+      "ranking_allowed": true,
+      "raw_score": 40.19,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:16:03+00:00",
+      "score": 40.19,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "PayPal Stock Jumps on Fresh Takeover Speculation",
+          "score": 8.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 0.9692
+          },
+          "score": 6.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 3.2098,
+            "return_15m_percent": -0.0623
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 2.2386
+          },
+          "score": 11.19,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "XLF",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "PYPL",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +3.21%; relative strength +2.24%; PM volume/ADV 0.000"
+    },
+    {
+      "audit_required": false,
+      "catalyst": {
+        "category": "OTHER",
+        "headline": "BC-Most Active Stocks",
+        "negative": false,
+        "published_at": "2026-09-03T14:30:18+00:00",
+        "publisher": "Associated Press",
+        "reason_codes": [
+          "DIRECT_NEWS_MATCH",
+          "TRUSTED_PUBLISHER",
+          "CATALYST_UNCLASSIFIED"
+        ],
+        "score": 4.0,
+        "source_id": "YAHOO_NEWS_SEARCH",
+        "url": "https://finance.yahoo.com/markets/stocks/articles/bc-most-active-stocks-143018358.html",
+        "verified": false
+      },
+      "data_state": "DELAYED",
+      "delay_minutes": 0.03871636666666667,
+      "direct_driver": "BC-Most Active Stocks",
+      "exchange": "NasdaqCM",
+      "external": true,
+      "external_discovery": {
+        "exchange": "NasdaqCM",
+        "market_cap": 4481072128.0,
+        "name": "MARA Holdings, Inc.",
+        "premarket_change_percent": -3.1163857,
+        "premarket_price": 11.2385,
+        "regular_change_percent": 10.7927,
+        "regular_market_price": 11.6,
+        "regular_market_volume": 68928569.0,
+        "source_id": "YAHOO_PREDEFINED_SCREENER",
+        "symbol": "MARA"
+      },
+      "fetched_at": "2026-09-04T13:18:38.322982+00:00",
+      "finalist_eligible": false,
+      "metrics": {
+        "adv20": 50166745.0,
+        "benchmark_return_percent": 0.8469,
+        "distance_from_premarket_high_percent": 2.9386,
+        "distance_from_vwap_percent": null,
+        "gap_percent": 7.2588,
+        "lower_highs_count": 1,
+        "premarket_high": 11.57,
+        "premarket_volume": 0.0,
+        "premarket_volume_fraction_adv20": 0.0,
+        "premarket_vwap": null,
+        "price": 11.23,
+        "prior_close": 10.47,
+        "relative_strength_percent": 6.412,
+        "return_15m_percent": -0.089,
+        "sector_return_percent": null
+      },
+      "name": "MARA Holdings, Inc.",
+      "news_error": null,
+      "premarket_deterioration": {
+        "confirmed": false,
+        "severe": false,
+        "signals": [
+          "DISTANCE_FROM_PREMARKET_HIGH"
+        ]
+      },
+      "quote_timestamp": "2026-09-04T13:18:36+00:00",
+      "ranking_allowed": true,
+      "raw_score": 38.0,
+      "reason_codes": [],
+      "sample_id": "premarket:T-12:2026-09-04T13:18:36+00:00",
+      "score": 38.0,
+      "score_caps": [
+        "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+        "NO_VERIFIED_CATALYST_CAP_74"
+      ],
+      "score_components": {
+        "catalyst_or_continuation": {
+          "evidence": "BC-Most Active Stocks",
+          "score": 4.0,
+          "state": "MISSING"
+        },
+        "entry_invalidation_structure": {
+          "evidence": {
+            "distance_from_premarket_high_percent": 2.9386
+          },
+          "score": 4.0,
+          "state": "DELAYED"
+        },
+        "price_momentum": {
+          "evidence": {
+            "gap_percent": 7.2588,
+            "return_15m_percent": -0.089
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "relative_strength_sector": {
+          "evidence": {
+            "relative_strength_percent": 6.412
+          },
+          "score": 15.0,
+          "state": "DELAYED"
+        },
+        "risk_reward": {
+          "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+          "score": 0.0,
+          "state": "MISSING"
+        },
+        "volume_liquidity": {
+          "evidence": {
+            "premarket_volume_fraction_adv20": 0.0
+          },
+          "score": 0.0,
+          "state": "DELAYED"
+        }
+      },
+      "sector_proxy": "SPY",
+      "source_id": "YAHOO_PREMARKET_DELAYED",
+      "status": "WATCH",
+      "symbol": "MARA",
+      "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+      "why_rising_now": "Premarket gap +7.26%; relative strength +6.41%; PM volume/ADV 0.000"
+    }
+  ],
+  "warnings": [
+    "ACCOUNT_AND_EXECUTION_FIELDS_SUPPRESSED",
+    "CALENDAR_STATIC_NYSE_ONLY",
+    "YAHOO_PUBLIC_DATA_DELAYED"
+  ]
+}

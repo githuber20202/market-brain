@@ -1,0 +1,45 @@
+{
+  "alerts": 177,
+  "last_completed_slot": "2026-09-09T15:30:00-04:00",
+  "learning_status": "BLOCKED",
+  "mode": "radar",
+  "plans": 51,
+  "session_coverage": {
+    "incomplete_slots": [
+      "radar:2026-09-09:0950:MISSED",
+      "radar:2026-09-09:1000:MISSED",
+      "radar:2026-09-09:1010:MISSED",
+      "radar:2026-09-09:1020:MISSED",
+      "radar:2026-09-09:1040:MISSED",
+      "radar:2026-09-09:1050:MISSED",
+      "radar:2026-09-09:1100:MISSED",
+      "radar:2026-09-09:1110:MISSED",
+      "radar:2026-09-09:1210:MISSED",
+      "radar:2026-09-09:1220:MISSED",
+      "radar:2026-09-09:1240:MISSED",
+      "radar:2026-09-09:1400:MISSED",
+      "radar:2026-09-09:1540:NEVER_RAN",
+      "radar:2026-09-09:1550:NEVER_RAN"
+    ],
+    "learning_status": "BLOCKED",
+    "premarket": {
+      "expected": 3,
+      "missed": 0,
+      "never_ran": 0,
+      "ok": 3
+    },
+    "radar": {
+      "expected": 37,
+      "missed": 12,
+      "never_ran": 2,
+      "ok": 23,
+      "unavailable": 0
+    },
+    "session_status": "INCOMPLETE"
+  },
+  "session_status": "INCOMPLETE",
+  "shadow_trades": 1,
+  "status": "COMPLETED",
+  "updated_at": "2026-09-09T19:31:03.698318+00:00",
+  "workflow_status": "COMPLETED"
+}

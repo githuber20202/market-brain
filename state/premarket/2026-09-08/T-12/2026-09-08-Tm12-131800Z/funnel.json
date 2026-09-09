@@ -1,0 +1,1201 @@
+[
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "PRODUCT_PARTNERSHIP",
+      "headline": "Nokia launches industry-first initiative to help operators accelerate network innovation in the AI era",
+      "negative": false,
+      "published_at": "2026-09-08T07:00:00+00:00",
+      "publisher": "GlobeNewswire",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 12.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/technology/ai/articles/nokia-launches-industry-first-initiative-070000392.html",
+      "verified": true
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.0718669,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": -0.0195,
+      "score": -5.18
+    },
+    "direct_driver": "Nokia launches industry-first initiative to help operators accelerate network innovation in the AI era",
+    "exchange": "NYSE",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NYSE",
+      "market_cap": 56154406912.0,
+      "name": "Nokia Corporation Sponsored",
+      "premarket_change_percent": 3.9790993,
+      "premarket_price": 10.4499,
+      "regular_change_percent": 2.6612,
+      "regular_market_price": 10.03,
+      "regular_market_volume": 45518995.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "NOK"
+    },
+    "fetched_at": "2026-09-08T13:18:37.312014+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 68121490.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 1.1385,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 6.653,
+      "lower_highs_count": 1,
+      "premarket_high": 10.54,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 10.42,
+      "prior_close": 9.77,
+      "relative_strength_percent": 7.1555,
+      "return_15m_percent": 0.048,
+      "sector_return_percent": null
+    },
+    "name": "Nokia Corporation Sponsored",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": [
+        "DISTANCE_FROM_PREMARKET_HIGH"
+      ]
+    },
+    "quote_timestamp": "2026-09-08T13:18:33+00:00",
+    "ranking_allowed": true,
+    "raw_score": 48.24,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-08T13:18:33+00:00",
+    "score": 48.24,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Nokia launches industry-first initiative to help operators accelerate network innovation in the AI era",
+        "score": 12.0,
+        "state": "VERIFIED"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 1.1385
+        },
+        "score": 6.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 6.653,
+          "return_15m_percent": 0.048
+        },
+        "score": 15.24,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 7.1555
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "NOK",
+    "why_may_rise": "Verified headline catalyst: PRODUCT_PARTNERSHIP",
+    "why_rising_now": "Premarket gap +6.65%; relative strength +7.16%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "PRODUCT_PARTNERSHIP",
+      "headline": "Palantir Partners With Nebius to Offer AI Compute, Inference Infrastructure",
+      "negative": false,
+      "published_at": "2026-09-08T11:41:45+00:00",
+      "publisher": "MT Newswires",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 8.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/technology/ai/articles/palantir-partners-nebius-offer-ai-114145356.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.047612716666666666,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": -0.03,
+      "score": -7.87
+    },
+    "direct_driver": "Palantir Partners With Nebius to Offer AI Compute, Inference Infrastructure",
+    "exchange": "NasdaqGS",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NasdaqGS",
+      "market_cap": 61545304064.0,
+      "name": "Nebius Group N.V.",
+      "premarket_change_percent": 2.769559,
+      "premarket_price": 232.66,
+      "regular_change_percent": 7.4823117,
+      "regular_market_price": 226.39,
+      "regular_market_volume": 14970670.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "NBIS"
+    },
+    "fetched_at": "2026-09-08T13:18:36.856763+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 21859085.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 0.3169,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 10.5066,
+      "lower_highs_count": 2,
+      "premarket_high": 233.5,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 232.76,
+      "prior_close": 210.63,
+      "relative_strength_percent": 11.0091,
+      "return_15m_percent": -0.0194,
+      "sector_return_percent": null
+    },
+    "name": "Nebius Group N.V.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": [
+        "LOWER_HIGHS"
+      ]
+    },
+    "quote_timestamp": "2026-09-08T13:18:34+00:00",
+    "ranking_allowed": true,
+    "raw_score": 47.0,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-08T13:18:34+00:00",
+    "score": 47.0,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Palantir Partners With Nebius to Offer AI Compute, Inference Infrastructure",
+        "score": 8.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.3169
+        },
+        "score": 9.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 10.5066,
+          "return_15m_percent": -0.0194
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 11.0091
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "NBIS",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +10.51%; relative strength +11.01%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Cloverleaf Joins Michigan Responsible Growth Pledge",
+      "negative": false,
+      "published_at": "2026-09-08T12:30:00+00:00",
+      "publisher": "PR Newswire",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/real-estate/articles/cloverleaf-joins-michigan-responsible-growth-123000731.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.20499346666666665,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.4248,
+      "score": 6.12
+    },
+    "direct_driver": "Cloverleaf Joins Michigan Responsible Growth Pledge",
+    "exchange": "NYSE",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-08T13:18:05.299608+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 22719525.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 0.3072,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 8.5269,
+      "lower_highs_count": 2,
+      "premarket_high": 167.69,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 167.1748,
+      "prior_close": 154.04,
+      "relative_strength_percent": 7.2095,
+      "return_15m_percent": 0.2247,
+      "sector_return_percent": 1.3174
+    },
+    "name": "Oracle Corporation",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": [
+        "LOWER_HIGHS"
+      ]
+    },
+    "quote_timestamp": "2026-09-08T13:17:53+00:00",
+    "ranking_allowed": true,
+    "raw_score": 46.12,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-08T13:17:53+00:00",
+    "score": 46.12,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Cloverleaf Joins Michigan Responsible Growth Pledge",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.3072
+        },
+        "score": 11.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 8.5269,
+          "return_15m_percent": 0.2247
+        },
+        "score": 16.12,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 7.2095
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XLK",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "ORCL",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +8.53%; relative strength +7.21%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Sector Update: Tech",
+      "negative": false,
+      "published_at": "2026-09-08T12:59:28+00:00",
+      "publisher": "MT Newswires",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 0.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/sector-tech-125928747.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.021363633333333333,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.39,
+      "score": 7.59
+    },
+    "direct_driver": "Sector Update: Tech",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-08T13:18:09.281818+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 97868430.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 0.1485,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 10.0142,
+      "lower_highs_count": 1,
+      "premarket_high": 101.0,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 100.85,
+      "prior_close": 91.67,
+      "relative_strength_percent": 5.387,
+      "return_15m_percent": 0.5183,
+      "sector_return_percent": 4.6272
+    },
+    "name": "Intel Corporation",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-08T13:18:08+00:00",
+    "ranking_allowed": true,
+    "raw_score": 45.59,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-08T13:18:08+00:00",
+    "score": 45.59,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Sector Update: Tech",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.1485
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 10.0142,
+          "return_15m_percent": 0.5183
+        },
+        "score": 17.59,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 5.387
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SMH",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "INTC",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +10.01%; relative strength +5.39%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Investors Heavily Search Super Micro Computer, Inc. (SMCI): Here is What You Need to Know",
+      "negative": false,
+      "published_at": "2026-09-08T13:00:05+00:00",
+      "publisher": "Zacks",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 0.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/investors-heavily-search-super-micro-130005705.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.03860123333333333,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.12,
+      "score": 6.52
+    },
+    "direct_driver": "Investors Heavily Search Super Micro Computer, Inc. (SMCI): Here is What You Need to Know",
+    "exchange": "NasdaqGS",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NasdaqGS",
+      "market_cap": 26009260032.0,
+      "name": "Super Micro Computer, Inc.",
+      "premarket_change_percent": 1.01036,
+      "premarket_price": 39.99,
+      "regular_change_percent": 4.5418572,
+      "regular_market_price": 39.59,
+      "regular_market_volume": 53633172.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "SMCI"
+    },
+    "fetched_at": "2026-09-08T13:18:40.316074+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 54843980.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 0.4484,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 5.5189,
+      "lower_highs_count": 1,
+      "premarket_high": 40.14,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 39.96,
+      "prior_close": 37.87,
+      "relative_strength_percent": 6.0214,
+      "return_15m_percent": 0.3768,
+      "sector_return_percent": null
+    },
+    "name": "Super Micro Computer, Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-08T13:18:38+00:00",
+    "ranking_allowed": true,
+    "raw_score": 44.88,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-08T13:18:38+00:00",
+    "score": 44.88,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Investors Heavily Search Super Micro Computer, Inc. (SMCI): Here is What You Need to Know",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.4484
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 5.5189,
+          "return_15m_percent": 0.3768
+        },
+        "score": 16.88,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 6.0214
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "SMCI",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +5.52%; relative strength +6.02%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Nvidia Is Worth $5 Trillion. But This Could Be the Next Big Catalyst for the Stock",
+      "negative": false,
+      "published_at": "2026-09-08T13:00:37+00:00",
+      "publisher": "24/7 Wall St.",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 0.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/c97eb9e3-290a-3189-a961-4332cd440920/nvidia-is-worth-%245-trillion..html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.04631045,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 1.8506,
+      "score": -1.32
+    },
+    "direct_driver": "Nvidia Is Worth $5 Trillion. But This Could Be the Next Big Catalyst for the Stock",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-08T13:18:08.778627+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 17504245.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 0.047,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 7.1466,
+      "lower_highs_count": 1,
+      "premarket_high": 488.99,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 488.76,
+      "prior_close": 456.16,
+      "relative_strength_percent": 2.5194,
+      "return_15m_percent": 0.4191,
+      "sector_return_percent": 4.6272
+    },
+    "name": "Advanced Micro Devices Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-08T13:18:06+00:00",
+    "ranking_allowed": true,
+    "raw_score": 42.69,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-08T13:18:06+00:00",
+    "score": 42.69,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Nvidia Is Worth $5 Trillion. But This Could Be the Next Big Catalyst for the Stock",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.047
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 7.1466,
+          "return_15m_percent": 0.4191
+        },
+        "score": 17.1,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 2.5194
+        },
+        "score": 12.6,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SMH",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "AMD",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +7.15%; relative strength +2.52%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "PRODUCT_PARTNERSHIP",
+      "headline": "Qualcomm Announces Multi-Generational Product Collaboration with Amazon to Build Next-Generation AI Data Center Infrastructure",
+      "negative": false,
+      "published_at": "2026-09-08T13:00:00+00:00",
+      "publisher": "PR Newswire",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 12.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/technology/ai/articles/qualcomm-announces-multi-generational-product-130000757.html",
+      "verified": true
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.030592983333333334,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": -1.1,
+      "score": 1.0
+    },
+    "direct_driver": "Qualcomm Announces Multi-Generational Product Collaboration with Amazon to Build Next-Generation AI Data Center Infrastructure",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-08T13:18:22.835579+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 9096190.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 3.2053,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 7.6645,
+      "lower_highs_count": 2,
+      "premarket_high": 187.5,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 181.49,
+      "prior_close": 168.57,
+      "relative_strength_percent": 3.0373,
+      "return_15m_percent": -2.0986,
+      "sector_return_percent": 4.6272
+    },
+    "name": "QUALCOMM Incorporated",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": true,
+      "severe": true,
+      "signals": [
+        "DISTANCE_FROM_PREMARKET_HIGH",
+        "NEGATIVE_15M_RETURN",
+        "LOWER_HIGHS"
+      ]
+    },
+    "quote_timestamp": "2026-09-08T13:18:21+00:00",
+    "ranking_allowed": true,
+    "raw_score": 42.0,
+    "reason_codes": [
+      "PREMARKET_DETERIORATION"
+    ],
+    "sample_id": "premarket:T-12:2026-09-08T13:18:21+00:00",
+    "score": 42.0,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Qualcomm Announces Multi-Generational Product Collaboration with Amazon to Build Next-Generation AI Data Center Infrastructure",
+        "score": 12.0,
+        "state": "VERIFIED"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 3.2053
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 7.6645,
+          "return_15m_percent": -2.0986
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 3.0373
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SMH",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "QCOM",
+    "why_may_rise": "Verified headline catalyst: PRODUCT_PARTNERSHIP",
+    "why_rising_now": "Premarket gap +7.66%; relative strength +3.04%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Intel, Amgen, Novartis, Bloom Energy, and More Stocks That Explain Today\u2019s Market",
+      "negative": false,
+      "published_at": "2026-09-08T11:05:00+00:00",
+      "publisher": "Barrons.com",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/5b112dff-b85f-35e5-a3f5-79ce6f8a8bba/intel%2C-amgen%2C-novartis%2C-bloom.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.0632581,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 5.2658,
+      "score": 2.59
+    },
+    "direct_driver": "Intel, Amgen, Novartis, Bloom Energy, and More Stocks That Explain Today\u2019s Market",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-08T13:18:10.795486+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 13284545.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 2.7214,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 13.4763,
+      "lower_highs_count": 1,
+      "premarket_high": 1813.91,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 1764.5458,
+      "prior_close": 1554.99,
+      "relative_strength_percent": 8.8491,
+      "return_15m_percent": 0.2754,
+      "sector_return_percent": 4.6272
+    },
+    "name": "Sandisk Corporation",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": [
+        "DISTANCE_FROM_PREMARKET_HIGH"
+      ]
+    },
+    "quote_timestamp": "2026-09-08T13:18:07+00:00",
+    "ranking_allowed": true,
+    "raw_score": 41.38,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-08T13:18:07+00:00",
+    "score": 41.38,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Intel, Amgen, Novartis, Bloom Energy, and More Stocks That Explain Today\u2019s Market",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 2.7214
+        },
+        "score": 6.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 13.4763,
+          "return_15m_percent": 0.2754
+        },
+        "score": 16.38,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 8.8491
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SMH",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "SNDK",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +13.48%; relative strength +8.85%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Two Chip-Equipment Stocks Just Crushed Nvidia. Is the AI Rally Broadening?",
+      "negative": false,
+      "published_at": "2026-09-05T18:43:32+00:00",
+      "publisher": "Insider Monkey",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 0.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/technology/articles/two-chip-equipment-stocks-just-184332143.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.13883818333333334,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": -0.1391,
+      "score": -5.19
+    },
+    "direct_driver": "Two Chip-Equipment Stocks Just Crushed Nvidia. Is the AI Rally Broadening?",
+    "exchange": "NasdaqGS",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NasdaqGS",
+      "market_cap": 242495094784.0,
+      "name": "KLA Corporation",
+      "premarket_change_percent": 2.553874,
+      "premarket_price": 190.34,
+      "regular_change_percent": 7.32046,
+      "regular_market_price": 185.6,
+      "regular_market_volume": 12725635.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "KLAC"
+    },
+    "fetched_at": "2026-09-08T13:18:36.330291+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 9029810.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 0.3455,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 10.0613,
+      "lower_highs_count": 1,
+      "premarket_high": 191.0,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 190.34,
+      "prior_close": 172.94,
+      "relative_strength_percent": 10.5638,
+      "return_15m_percent": -0.0269,
+      "sector_return_percent": null
+    },
+    "name": "KLA Corporation",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-08T13:18:28+00:00",
+    "ranking_allowed": true,
+    "raw_score": 41.0,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-08T13:18:28+00:00",
+    "score": 41.0,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Two Chip-Equipment Stocks Just Crushed Nvidia. Is the AI Rally Broadening?",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.3455
+        },
+        "score": 11.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 10.0613,
+          "return_15m_percent": -0.0269
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 10.5638
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "KLAC",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +10.06%; relative strength +10.56%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "5 Leveraged ETF Areas of Last Week",
+      "negative": false,
+      "published_at": "2026-09-08T13:00:00+00:00",
+      "publisher": "Zacks",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 0.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/5-leveraged-etf-areas-last-130000107.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.06397596666666666,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.23,
+      "score": -0.79
+    },
+    "direct_driver": "5 Leveraged ETF Areas of Last Week",
+    "exchange": "NasdaqGS",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NasdaqGS",
+      "market_cap": 17606541312.0,
+      "name": "IREN LIMITED",
+      "premarket_change_percent": 2.3276653,
+      "premarket_price": 45.72,
+      "regular_change_percent": 7.274907,
+      "regular_market_price": 44.68,
+      "regular_market_volume": 36266193.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "IREN"
+    },
+    "fetched_at": "2026-09-08T13:18:35.838558+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 45847220.0,
+      "benchmark_return_percent": -0.5025,
+      "distance_from_premarket_high_percent": 0.6088,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 9.7479,
+      "lower_highs_count": 2,
+      "premarket_high": 45.99,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 45.71,
+      "prior_close": 41.65,
+      "relative_strength_percent": 10.2504,
+      "return_15m_percent": 0.4836,
+      "sector_return_percent": null
+    },
+    "name": "IREN LIMITED",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": [
+        "LOWER_HIGHS"
+      ]
+    },
+    "quote_timestamp": "2026-09-08T13:18:32+00:00",
+    "ranking_allowed": true,
+    "raw_score": 40.42,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-08T13:18:32+00:00",
+    "score": 40.42,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "5 Leveraged ETF Areas of Last Week",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.6088
+        },
+        "score": 8.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 9.7479,
+          "return_15m_percent": 0.4836
+        },
+        "score": 17.42,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 10.2504
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "IREN",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +9.75%; relative strength +10.25%; PM volume/ADV 0.000"
+  }
+]

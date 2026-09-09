@@ -1,0 +1,1186 @@
+[
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "M_AND_A",
+      "headline": "Cramer Says This Software Giant Is Fighting a Takeover With a $4 Billion Buyback",
+      "negative": false,
+      "published_at": "2026-09-02T18:19:59+00:00",
+      "publisher": "24/7 Wall St.",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 8.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/847bffc4-c8d7-3ed3-8dae-189096357fce/cramer-says-this-software.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 2.1120102,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.31,
+      "score": -0.65
+    },
+    "direct_driver": "Cramer Says This Software Giant Is Fighting a Takeover With a $4 Billion Buyback",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:27:06.720612+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 5039500.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.3597,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 3.337,
+      "lower_highs_count": 1,
+      "premarket_high": 205.74,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 205.0,
+      "prior_close": 198.38,
+      "relative_strength_percent": 3.2918,
+      "return_15m_percent": 0.4902,
+      "sector_return_percent": 0.0453
+    },
+    "name": "Workday Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:25:00+00:00",
+    "ranking_allowed": true,
+    "raw_score": 53.45,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:25:00+00:00",
+    "score": 53.45,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Cramer Says This Software Giant Is Fighting a Takeover With a $4 Billion Buyback",
+        "score": 8.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.3597
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 3.337,
+          "return_15m_percent": 0.4902
+        },
+        "score": 17.45,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 3.2918
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XLK",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "WDAY",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +3.34%; relative strength +3.29%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "PRODUCT_PARTNERSHIP",
+      "headline": "CNH Industrial Partners With Bourgault for Co-Branded Seeding Line",
+      "negative": false,
+      "published_at": "2026-08-31T17:12:41+00:00",
+      "publisher": "MT Newswires",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 8.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/technology/articles/cnh-industrial-partners-bourgault-co-171241659.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 7.561880133333333,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": -0.01,
+      "score": -4.94
+    },
+    "direct_driver": "CNH Industrial Partners With Bourgault for Co-Branded Seeding Line",
+    "exchange": "NYSE",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NYSE",
+      "market_cap": 21951365120.0,
+      "name": "CNH Industrial N.V.",
+      "premarket_change_percent": 0.14630215,
+      "premarket_price": 13.69,
+      "regular_change_percent": 9.2,
+      "regular_market_price": 13.65,
+      "regular_market_volume": 53791621.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "CNH"
+    },
+    "fetched_at": "2026-09-03T13:27:34.712808+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 22536420.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.2187,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 9.52,
+      "lower_highs_count": 1,
+      "premarket_high": 13.72,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 13.69,
+      "prior_close": 12.5,
+      "relative_strength_percent": 8.7648,
+      "return_15m_percent": 0.0731,
+      "sector_return_percent": null
+    },
+    "name": "CNH Industrial N.V.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:20:01+00:00",
+    "ranking_allowed": true,
+    "raw_score": 51.37,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:20:01+00:00",
+    "score": 51.37,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "CNH Industrial Partners With Bourgault for Co-Branded Seeding Line",
+        "score": 8.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.2187
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 9.52,
+          "return_15m_percent": 0.0731
+        },
+        "score": 15.37,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 8.7648
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "CNH",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +9.52%; relative strength +8.76%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "PRODUCT_PARTNERSHIP",
+      "headline": "MX.0 UK Launches in Sheffield, Bringing Manufacturer-Led Digital Transformation Event to the UK",
+      "negative": false,
+      "published_at": "2026-09-03T10:10:00+00:00",
+      "publisher": "PR Newswire",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 12.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/technology/articles/mx-0-uk-launches-sheffield-101000446.html",
+      "verified": true
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.3620317333333333,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": -0.0039,
+      "score": -0.49
+    },
+    "direct_driver": "MX.0 UK Launches in Sheffield, Bringing Manufacturer-Led Digital Transformation Event to the UK",
+    "exchange": "NYSE",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NYSE",
+      "market_cap": 56384606208.0,
+      "name": "Ford Motor Company",
+      "premarket_change_percent": 0.6367512,
+      "premarket_price": 14.2401,
+      "regular_change_percent": 2.16763,
+      "regular_market_price": 14.14,
+      "regular_market_volume": 58045480.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "F"
+    },
+    "fetched_at": "2026-09-03T13:27:36.721904+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 41175495.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.0975,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 2.9342,
+      "lower_highs_count": 1,
+      "premarket_high": 14.26,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 14.2461,
+      "prior_close": 13.84,
+      "relative_strength_percent": 2.1791,
+      "return_15m_percent": 0.0323,
+      "sector_return_percent": null
+    },
+    "name": "Ford Motor Company",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:27:15+00:00",
+    "ranking_allowed": true,
+    "raw_score": 50.73,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:27:15+00:00",
+    "score": 50.73,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "MX.0 UK Launches in Sheffield, Bringing Manufacturer-Led Digital Transformation Event to the UK",
+        "score": 12.0,
+        "state": "VERIFIED"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.0975
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 2.9342,
+          "return_15m_percent": 0.0323
+        },
+        "score": 14.83,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 2.1791
+        },
+        "score": 10.9,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "F",
+    "why_may_rise": "Verified headline catalyst: PRODUCT_PARTNERSHIP",
+    "why_rising_now": "Premarket gap +2.93%; relative strength +2.18%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Reddit Is One of Today\u2019s Top S&P 500 Stocks. It Has a Lot to Do With Its Google Data Deal.",
+      "negative": false,
+      "published_at": "2026-09-02T20:38:00+00:00",
+      "publisher": "Barrons.com",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/bd233345-a6bb-378c-b67e-336edc5b108e/reddit-is-one-of-today%E2%80%99s-top.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.20383598333333333,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.59,
+      "score": 3.7
+    },
+    "direct_driver": "Reddit Is One of Today\u2019s Top S&P 500 Stocks. It Has a Lot to Do With Its Google Data Deal.",
+    "exchange": "NYSE",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NYSE",
+      "market_cap": 30417889280.0,
+      "name": "Reddit, Inc.",
+      "premarket_change_percent": 0.9364984,
+      "premarket_price": 159.5907,
+      "regular_change_percent": 9.30587,
+      "regular_market_price": 158.1,
+      "regular_market_volume": 6221847.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "RDDT"
+    },
+    "fetched_at": "2026-09-03T13:27:42.230159+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 6994340.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.2694,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 10.0456,
+      "lower_highs_count": 1,
+      "premarket_high": 159.6,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 159.17,
+      "prior_close": 144.64,
+      "relative_strength_percent": 9.2905,
+      "return_15m_percent": 0.7405,
+      "sector_return_percent": null
+    },
+    "name": "Reddit, Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:27:30+00:00",
+    "ranking_allowed": true,
+    "raw_score": 50.7,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:27:30+00:00",
+    "score": 50.7,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Reddit Is One of Today\u2019s Top S&P 500 Stocks. It Has a Lot to Do With Its Google Data Deal.",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.2694
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 10.0456,
+          "return_15m_percent": 0.7405
+        },
+        "score": 18.7,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 9.2905
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "RDDT",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +10.05%; relative strength +9.29%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "BC-Most Active Stocks",
+      "negative": false,
+      "published_at": "2026-09-02T14:30:17+00:00",
+      "publisher": "Associated Press",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/bc-most-active-stocks-143017957.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.0616488,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.05,
+      "score": 9.85
+    },
+    "direct_driver": "BC-Most Active Stocks",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:27:26.698928+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 72135285.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.0,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 9.8011,
+      "lower_highs_count": 0,
+      "premarket_high": 7.73,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 7.73,
+      "prior_close": 7.04,
+      "relative_strength_percent": 10.0789,
+      "return_15m_percent": 0.1698,
+      "sector_return_percent": -0.2777
+    },
+    "name": "Ondas Holdings Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:27:23+00:00",
+    "ranking_allowed": true,
+    "raw_score": 49.85,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:27:23+00:00",
+    "score": 49.85,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "BC-Most Active Stocks",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.0
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 9.8011,
+          "return_15m_percent": 0.1698
+        },
+        "score": 15.85,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 10.0789
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XAR",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "ONDS",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +9.80%; relative strength +10.08%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Credo, Dell, Palo Alto, PG&E, Uber, MongoDB, and More Stocks That Explain Today\u2019s Market",
+      "negative": false,
+      "published_at": "2026-09-02T20:21:00+00:00",
+      "publisher": "Barrons.com",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/ac2d4863-67cf-3a37-9639-c1b87a367e0f/credo%2C-dell%2C-palo-alto%2C-pg%26e%2C.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.47039101666666666,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.3756,
+      "score": 11.54
+    },
+    "direct_driver": "Credo, Dell, Palo Alto, PG&E, Uber, MongoDB, and More Stocks That Explain Today\u2019s Market",
+    "exchange": "NasdaqGS",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NasdaqGS",
+      "market_cap": 8262438400.0,
+      "name": "GitLab Inc.",
+      "premarket_change_percent": 1.4317384,
+      "premarket_price": 50.3,
+      "regular_change_percent": 9.98004,
+      "regular_market_price": 49.59,
+      "regular_market_volume": 28957521.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "GTLB"
+    },
+    "fetched_at": "2026-09-03T13:27:38.223461+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 6053410.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.2663,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 11.6336,
+      "lower_highs_count": 1,
+      "premarket_high": 50.47,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 50.3356,
+      "prior_close": 45.09,
+      "relative_strength_percent": 10.8785,
+      "return_15m_percent": 0.5082,
+      "sector_return_percent": null
+    },
+    "name": "GitLab Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:27:10+00:00",
+    "ranking_allowed": true,
+    "raw_score": 49.54,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:27:10+00:00",
+    "score": 49.54,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Credo, Dell, Palo Alto, PG&E, Uber, MongoDB, and More Stocks That Explain Today\u2019s Market",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.2663
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 11.6336,
+          "return_15m_percent": 0.5082
+        },
+        "score": 17.54,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 10.8785
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "GTLB",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +11.63%; relative strength +10.88%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Assessment of the U.S. Nuclear Power and Small Modular Reactor Market 2026 Now Available \u2014 Reveals Why Big Tech Is Becoming an Active Force in Nuclear Project Formation, Not Just a Power Buyer",
+      "negative": false,
+      "published_at": "2026-09-03T13:01:00+00:00",
+      "publisher": "GlobeNewswire",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/energy/articles/assessment-u-nuclear-power-small-130100032.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.0364116,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 1.2973,
+      "score": 7.11
+    },
+    "direct_driver": "Assessment of the U.S. Nuclear Power and Small Modular Reactor Market 2026 Now Available \u2014 Reveals Why Big Tech Is Becoming an Active Force in Nuclear Project Formation, Not Just a Power Buyer",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:27:18.184696+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 15370265.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.055,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 4.5818,
+      "lower_highs_count": 1,
+      "premarket_high": 605.38,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 605.0473,
+      "prior_close": 578.54,
+      "relative_strength_percent": 3.0215,
+      "return_15m_percent": 0.3651,
+      "sector_return_percent": 1.5602
+    },
+    "name": "Meta Platforms Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:27:16+00:00",
+    "ranking_allowed": true,
+    "raw_score": 48.83,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:27:16+00:00",
+    "score": 48.83,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Assessment of the U.S. Nuclear Power and Small Modular Reactor Market 2026 Now Available \u2014 Reveals Why Big Tech Is Becoming an Active Force in Nuclear Project Formation, Not Just a Power Buyer",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.055
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 4.5818,
+          "return_15m_percent": 0.3651
+        },
+        "score": 16.83,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 3.0215
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XLC",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "META",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +4.58%; relative strength +3.02%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Robinhood Earns Transaction Revenue Directly on Crypto. That Cuts Both Ways.",
+      "negative": false,
+      "published_at": "2026-09-03T10:35:00+00:00",
+      "publisher": "Motley Fool",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 0.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/ef133051-df78-30c3-a3d6-fe005708867d/robinhood-earns-transaction.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.062375,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 1.41,
+      "score": 6.55
+    },
+    "direct_driver": "Robinhood Earns Transaction Revenue Directly on Crypto. That Cuts Both Ways.",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:27:16.742500+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 18369350.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.1133,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 9.4194,
+      "lower_highs_count": 1,
+      "premarket_high": 113.3885,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 113.26,
+      "prior_close": 103.51,
+      "relative_strength_percent": 7.9858,
+      "return_15m_percent": 0.9897,
+      "sector_return_percent": 1.4336
+    },
+    "name": "Robinhood Markets Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:27:13+00:00",
+    "ranking_allowed": true,
+    "raw_score": 47.95,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:27:13+00:00",
+    "score": 47.95,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Robinhood Earns Transaction Revenue Directly on Crypto. That Cuts Both Ways.",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.1133
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 9.4194,
+          "return_15m_percent": 0.9897
+        },
+        "score": 19.95,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 7.9858
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XLF",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "HOOD",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +9.42%; relative strength +7.99%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Tesla Cybercab: Here's What To Expect From Thursday's Event",
+      "negative": false,
+      "published_at": "2026-09-03T13:08:09+00:00",
+      "publisher": "Investor's Business Daily",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 0.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/ac70a980-561d-380d-aa13-2c3c0038032a/tesla-cybercab%3A-here%27s-what.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.18636704999999998,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.52,
+      "score": 13.71
+    },
+    "direct_driver": "Tesla Cybercab: Here's What To Expect From Thursday's Event",
+    "exchange": "NYSE",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:27:19.182023+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 17258350.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.1785,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 3.2961,
+      "lower_highs_count": 0,
+      "premarket_high": 77.859,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 77.72,
+      "prior_close": 75.24,
+      "relative_strength_percent": 2.6765,
+      "return_15m_percent": 0.7076,
+      "sector_return_percent": 0.6196
+    },
+    "name": "Uber Technologies Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:27:08+00:00",
+    "ranking_allowed": true,
+    "raw_score": 46.92,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:27:08+00:00",
+    "score": 46.92,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Tesla Cybercab: Here's What To Expect From Thursday's Event",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.1785
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 3.2961,
+          "return_15m_percent": 0.7076
+        },
+        "score": 18.54,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 2.6765
+        },
+        "score": 13.38,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XLY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "UBER",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +3.30%; relative strength +2.68%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Price Prediction: SoFi\u2019s Price Target For 2027 May Surprise Investors",
+      "negative": false,
+      "published_at": "2026-09-03T13:00:46+00:00",
+      "publisher": "24/7 Wall St.",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 0.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/a9fdbca2-6c27-3ce8-a69d-6235b5d783a9/price-prediction%3A-sofi%E2%80%99s.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.030072449999999997,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.05,
+      "score": 3.41
+    },
+    "direct_driver": "Price Prediction: SoFi\u2019s Price Target For 2027 May Surprise Investors",
+    "exchange": "NasdaqGS",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NasdaqGS",
+      "market_cap": 23041613824.0,
+      "name": "SoFi Technologies, Inc.",
+      "premarket_change_percent": 1.0050466,
+      "premarket_price": 18.0193,
+      "regular_change_percent": 4.63344,
+      "regular_market_price": 17.84,
+      "regular_market_volume": 40464233.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "SOFI"
+    },
+    "fetched_at": "2026-09-03T13:27:43.804347+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 43675380.0,
+      "benchmark_return_percent": 0.7552,
+      "distance_from_premarket_high_percent": 0.0555,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 5.6305,
+      "lower_highs_count": 1,
+      "premarket_high": 18.02,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 18.01,
+      "prior_close": 17.05,
+      "relative_strength_percent": 4.8753,
+      "return_15m_percent": 0.2817,
+      "sector_return_percent": null
+    },
+    "name": "SoFi Technologies, Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:27:42+00:00",
+    "ranking_allowed": true,
+    "raw_score": 44.41,
+    "reason_codes": [],
+    "sample_id": "premarket:T-3:2026-09-03T13:27:42+00:00",
+    "score": 44.41,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Price Prediction: SoFi\u2019s Price Target For 2027 May Surprise Investors",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.0555
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 5.6305,
+          "return_15m_percent": 0.2817
+        },
+        "score": 16.41,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 4.8753
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "SOFI",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +5.63%; relative strength +4.88%; PM volume/ADV 0.000"
+  }
+]

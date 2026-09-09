@@ -1,0 +1,13 @@
+{
+  "as_of": "2026-09-09T19:31:03.698318+00:00",
+  "consecutive_failures": 0,
+  "head_sha": "6fc3365c148a967241101ebe2933b8a00371203e",
+  "last_completed_tick": "2026-09-09T19:31:03.698295+00:00",
+  "last_scheduled_tick": "2026-09-09T15:30:00-04:00",
+  "lease_expires_at": "2026-09-09T19:56:03.698318+00:00",
+  "next_due_tick": "2026-09-09T15:40:00-04:00",
+  "phase": "b",
+  "policy_version": "2026-09-02.1",
+  "session_id": "2026-09-09",
+  "workflow_run_id": "34341866570"
+}

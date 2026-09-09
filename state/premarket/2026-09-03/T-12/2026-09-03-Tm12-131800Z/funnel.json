@@ -1,0 +1,1187 @@
+[
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "PRODUCT_PARTNERSHIP",
+      "headline": "CNH Industrial Partners With Bourgault for Co-Branded Seeding Line",
+      "negative": false,
+      "published_at": "2026-08-31T17:12:41+00:00",
+      "publisher": "MT Newswires",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 8.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/technology/articles/cnh-industrial-partners-bourgault-co-171241659.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.9537232,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.02,
+      "score": 2.74
+    },
+    "direct_driver": "CNH Industrial Partners With Bourgault for Co-Branded Seeding Line",
+    "exchange": "NYSE",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NYSE",
+      "market_cap": 21951365120.0,
+      "name": "CNH Industrial N.V.",
+      "premarket_change_percent": 0.21945672,
+      "premarket_price": 13.7,
+      "regular_change_percent": 9.2,
+      "regular_market_price": 13.65,
+      "regular_market_volume": 53791621.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "CNH"
+    },
+    "fetched_at": "2026-09-03T13:18:35.223392+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 22536420.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.1458,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 9.6,
+      "lower_highs_count": 0,
+      "premarket_high": 13.72,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 13.7,
+      "prior_close": 12.5,
+      "relative_strength_percent": 8.8491,
+      "return_15m_percent": 0.6613,
+      "sector_return_percent": null
+    },
+    "name": "CNH Industrial N.V.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:17:38+00:00",
+    "ranking_allowed": true,
+    "raw_score": 56.31,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:17:38+00:00",
+    "score": 56.31,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "CNH Industrial Partners With Bourgault for Co-Branded Seeding Line",
+        "score": 8.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.1458
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 9.6,
+          "return_15m_percent": 0.6613
+        },
+        "score": 18.31,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 8.8491
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "CNH",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +9.60%; relative strength +8.85%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "M_AND_A",
+      "headline": "Cramer Says This Software Giant Is Fighting a Takeover With a $4 Billion Buyback",
+      "negative": false,
+      "published_at": "2026-09-02T18:19:59+00:00",
+      "publisher": "24/7 Wall St.",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 8.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/847bffc4-c8d7-3ed3-8dae-189096357fce/cramer-says-this-software.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 1.2027881666666667,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.44,
+      "score": 3.35
+    },
+    "direct_driver": "Cramer Says This Software Giant Is Fighting a Takeover With a $4 Billion Buyback",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:18:07.167290+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 5039500.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.1512,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 3.1808,
+      "lower_highs_count": 0,
+      "premarket_high": 205.0,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 204.69,
+      "prior_close": 198.38,
+      "relative_strength_percent": 3.159,
+      "return_15m_percent": 0.2203,
+      "sector_return_percent": 0.0218
+    },
+    "name": "Workday Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:16:55+00:00",
+    "ranking_allowed": true,
+    "raw_score": 54.1,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:16:55+00:00",
+    "score": 54.1,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Cramer Says This Software Giant Is Fighting a Takeover With a $4 Billion Buyback",
+        "score": 8.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.1512
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 3.1808,
+          "return_15m_percent": 0.2203
+        },
+        "score": 16.1,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 3.159
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XLK",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "WDAY",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +3.18%; relative strength +3.16%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "PRODUCT_PARTNERSHIP",
+      "headline": "MX.0 UK Launches in Sheffield, Bringing Manufacturer-Led Digital Transformation Event to the UK",
+      "negative": false,
+      "published_at": "2026-09-03T10:10:00+00:00",
+      "publisher": "PR Newswire",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 12.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/technology/articles/mx-0-uk-launches-sheffield-101000446.html",
+      "verified": true
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.053855499999999994,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.0029,
+      "score": -0.99
+    },
+    "direct_driver": "MX.0 UK Launches in Sheffield, Bringing Manufacturer-Led Digital Transformation Event to the UK",
+    "exchange": "NYSE",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NYSE",
+      "market_cap": 56384606208.0,
+      "name": "Ford Motor Company",
+      "premarket_change_percent": 0.75689393,
+      "premarket_price": 14.2571,
+      "regular_change_percent": 2.16763,
+      "regular_market_price": 14.14,
+      "regular_market_volume": 58045480.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "F"
+    },
+    "fetched_at": "2026-09-03T13:18:37.231330+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 41175495.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.0498,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 2.9624,
+      "lower_highs_count": 1,
+      "premarket_high": 14.2571,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 14.25,
+      "prior_close": 13.84,
+      "relative_strength_percent": 2.2116,
+      "return_15m_percent": 0.0702,
+      "sector_return_percent": null
+    },
+    "name": "Ford Motor Company",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:18:34+00:00",
+    "ranking_allowed": true,
+    "raw_score": 51.22,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:18:34+00:00",
+    "score": 51.22,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "MX.0 UK Launches in Sheffield, Bringing Manufacturer-Led Digital Transformation Event to the UK",
+        "score": 12.0,
+        "state": "VERIFIED"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.0498
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 2.9624,
+          "return_15m_percent": 0.0702
+        },
+        "score": 15.16,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 2.2116
+        },
+        "score": 11.06,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "F",
+    "why_may_rise": "Verified headline catalyst: PRODUCT_PARTNERSHIP",
+    "why_rising_now": "Premarket gap +2.96%; relative strength +2.21%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "PRODUCT_PARTNERSHIP",
+      "headline": "Nscale and Figure Sign Strategic Partnership to Power the Next Generation of Physical AI",
+      "negative": false,
+      "published_at": "2026-09-03T13:00:00+00:00",
+      "publisher": "PR Newswire",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_CLASSIFIED"
+      ],
+      "score": 12.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/technology/ai/articles/nscale-figure-sign-strategic-partnership-130000906.html",
+      "verified": true
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.019330999999999997,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.1192,
+      "score": 0.62
+    },
+    "direct_driver": "Nscale and Figure Sign Strategic Partnership to Power the Next Generation of Physical AI",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:18:02.159860+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 126377490.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.1895,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 3.9125,
+      "lower_highs_count": 2,
+      "premarket_high": 226.3762,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 225.9473,
+      "prior_close": 217.44,
+      "relative_strength_percent": 3.4044,
+      "return_15m_percent": -0.01,
+      "sector_return_percent": 0.5081
+    },
+    "name": "NVIDIA Corporation",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": [
+        "LOWER_HIGHS"
+      ]
+    },
+    "quote_timestamp": "2026-09-03T13:18:01+00:00",
+    "ranking_allowed": true,
+    "raw_score": 51.0,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:18:01+00:00",
+    "score": 51.0,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Nscale and Figure Sign Strategic Partnership to Power the Next Generation of Physical AI",
+        "score": 12.0,
+        "state": "VERIFIED"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.1895
+        },
+        "score": 9.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 3.9125,
+          "return_15m_percent": -0.01
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 3.4044
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SMH",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "NVDA",
+    "why_may_rise": "Verified headline catalyst: PRODUCT_PARTNERSHIP",
+    "why_rising_now": "Premarket gap +3.91%; relative strength +3.40%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Reddit Is One of Today\u2019s Top S&P 500 Stocks. It Has a Lot to Do With Its Google Data Deal.",
+      "negative": false,
+      "published_at": "2026-09-02T20:38:00+00:00",
+      "publisher": "Barrons.com",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/bd233345-a6bb-378c-b67e-336edc5b108e/reddit-is-one-of-today%E2%80%99s-top.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.32926974999999997,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": -0.02,
+      "score": -2.74
+    },
+    "direct_driver": "Reddit Is One of Today\u2019s Top S&P 500 Stocks. It Has a Lot to Do With Its Google Data Deal.",
+    "exchange": "NYSE",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NYSE",
+      "market_cap": 30417889280.0,
+      "name": "Reddit, Inc.",
+      "premarket_change_percent": 0.28461003,
+      "premarket_price": 158.56,
+      "regular_change_percent": 9.30587,
+      "regular_market_price": 158.1,
+      "regular_market_volume": 6221847.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "RDDT"
+    },
+    "fetched_at": "2026-09-03T13:18:41.756185+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 6994340.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.1385,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 9.6377,
+      "lower_highs_count": 0,
+      "premarket_high": 158.8,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 158.58,
+      "prior_close": 144.64,
+      "relative_strength_percent": 8.8869,
+      "return_15m_percent": -0.0115,
+      "sector_return_percent": null
+    },
+    "name": "Reddit, Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:18:22+00:00",
+    "ranking_allowed": true,
+    "raw_score": 47.0,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:18:22+00:00",
+    "score": 47.0,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Reddit Is One of Today\u2019s Top S&P 500 Stocks. It Has a Lot to Do With Its Google Data Deal.",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.1385
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 9.6377,
+          "return_15m_percent": -0.0115
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 8.8869
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "RDDT",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +9.64%; relative strength +8.89%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "IQST - IQSTEL Sets 2027 Targets for IDILIO TV: Potential Mobile Audience of 40 Million Users by Q2 and 500,000 Gross Subscribers by Year-End, Backed by Leadership Experience Building a 100 Million-User Audience",
+      "negative": false,
+      "published_at": "2026-09-03T11:59:00+00:00",
+      "publisher": "PR Newswire",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/media-advertising/articles/iqst-iqstel-sets-2027-targets-115900661.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.12894203333333334,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": -0.03,
+      "score": -5.28
+    },
+    "direct_driver": "IQST - IQSTEL Sets 2027 Targets for IDILIO TV: Potential Mobile Audience of 40 Million Users by Q2 and 500,000 Gross Subscribers by Year-End, Backed by Leadership Experience Building a 100 Million-User Audience",
+    "exchange": "NYSE",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NYSE",
+      "market_cap": 74392608768.0,
+      "name": "Nu Holdings Ltd.",
+      "premarket_change_percent": 1.5264673,
+      "premarket_price": 15.63,
+      "regular_change_percent": 6.50069,
+      "regular_market_price": 15.4,
+      "regular_market_volume": 80770188.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "NU"
+    },
+    "fetched_at": "2026-09-03T13:18:40.736522+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 71583180.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.4464,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 7.953,
+      "lower_highs_count": 1,
+      "premarket_high": 15.68,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 15.61,
+      "prior_close": 14.46,
+      "relative_strength_percent": 7.2021,
+      "return_15m_percent": -0.128,
+      "sector_return_percent": null
+    },
+    "name": "Nu Holdings Ltd.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:18:33+00:00",
+    "ranking_allowed": true,
+    "raw_score": 45.0,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:18:33+00:00",
+    "score": 45.0,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "IQST - IQSTEL Sets 2027 Targets for IDILIO TV: Potential Mobile Audience of 40 Million Users by Q2 and 500,000 Gross Subscribers by Year-End, Backed by Leadership Experience Building a 100 Million-User Audience",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.4464
+        },
+        "score": 11.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 7.953,
+          "return_15m_percent": -0.128
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 7.2021
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "NU",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +7.95%; relative strength +7.20%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "AI Is Turbocharging Investment Scams and Draining Retirement Savings",
+      "negative": false,
+      "published_at": "2026-09-02T12:10:00+00:00",
+      "publisher": "Barrons.com",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/f51a3939-d59e-39ea-8960-f1ca7167c5c3/ai-is-turbocharging.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.08655395,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": -0.0645,
+      "score": -5.37
+    },
+    "direct_driver": "AI Is Turbocharging Investment Scams and Draining Retirement Savings",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:18:20.193237+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 12005575.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.1536,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 4.8006,
+      "lower_highs_count": 1,
+      "premarket_high": 55.0,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 54.9155,
+      "prior_close": 52.4,
+      "relative_strength_percent": 3.5069,
+      "return_15m_percent": -0.0446,
+      "sector_return_percent": 1.2937
+    },
+    "name": "PayPal Holdings Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:18:15+00:00",
+    "ranking_allowed": true,
+    "raw_score": 45.0,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:18:15+00:00",
+    "score": 45.0,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "AI Is Turbocharging Investment Scams and Draining Retirement Savings",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.1536
+        },
+        "score": 11.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 4.8006,
+          "return_15m_percent": -0.0446
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 3.5069
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XLF",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "PYPL",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +4.80%; relative strength +3.51%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "HPE and Oracle expand AI data center networking deal",
+      "negative": false,
+      "published_at": "2026-09-03T12:50:08+00:00",
+      "publisher": "Quartz",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "UNVERIFIED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 0.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/m/e492a859-319c-38cd-a3f2-4645790119c3/hpe-and-oracle-expand-ai-data.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.06113453333333333,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.45,
+      "score": -14.33
+    },
+    "direct_driver": "HPE and Oracle expand AI data center networking deal",
+    "exchange": "NYSE",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:18:05.668072+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 22438370.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.1557,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 4.3731,
+      "lower_highs_count": 1,
+      "premarket_high": 147.73,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 147.5,
+      "prior_close": 141.32,
+      "relative_strength_percent": 4.3513,
+      "return_15m_percent": 0.3333,
+      "sector_return_percent": 0.0218
+    },
+    "name": "Oracle Corporation",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:18:02+00:00",
+    "ranking_allowed": true,
+    "raw_score": 44.67,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:18:02+00:00",
+    "score": 44.67,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "HPE and Oracle expand AI data center networking deal",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.1557
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 4.3731,
+          "return_15m_percent": 0.3333
+        },
+        "score": 16.67,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 4.3513
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XLK",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "ORCL",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +4.37%; relative strength +4.35%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": false,
+    "catalyst": {
+      "category": "NONE",
+      "headline": null,
+      "negative": false,
+      "published_at": null,
+      "publisher": null,
+      "reason_codes": [
+        "NO_DIRECT_CATALYST"
+      ],
+      "score": 0.0,
+      "source_id": null,
+      "url": null,
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.41230365,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 0.01,
+      "score": -1.39
+    },
+    "direct_driver": null,
+    "exchange": "NYSE",
+    "external": true,
+    "external_discovery": {
+      "exchange": "NYSE",
+      "market_cap": 13930696704.0,
+      "name": "Hecla Mining Company",
+      "premarket_change_percent": 4.2619805,
+      "premarket_price": 21.65,
+      "regular_change_percent": 8.68655,
+      "regular_market_price": 20.77,
+      "regular_market_volume": 28206413.0,
+      "source_id": "YAHOO_PREDEFINED_SCREENER",
+      "symbol": "HL"
+    },
+    "fetched_at": "2026-09-03T13:18:38.738219+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 37329800.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.3221,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 13.3438,
+      "lower_highs_count": 0,
+      "premarket_high": 21.73,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 21.66,
+      "prior_close": 19.11,
+      "relative_strength_percent": 12.5929,
+      "return_15m_percent": -0.0923,
+      "sector_return_percent": null
+    },
+    "name": "Hecla Mining Company",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": []
+    },
+    "quote_timestamp": "2026-09-03T13:18:14+00:00",
+    "ranking_allowed": true,
+    "raw_score": 43.0,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:18:14+00:00",
+    "score": 43.0,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": null,
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.3221
+        },
+        "score": 13.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 13.3438,
+          "return_15m_percent": -0.0923
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 12.5929
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "SPY",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "HL",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +13.34%; relative strength +12.59%; PM volume/ADV 0.000"
+  },
+  {
+    "audit_required": true,
+    "catalyst": {
+      "category": "OTHER",
+      "headline": "Assessment of the U.S. Nuclear Power and Small Modular Reactor Market 2026 Now Available \u2014 Reveals Why Big Tech Is Becoming an Active Force in Nuclear Project Formation, Not Just a Power Buyer",
+      "negative": false,
+      "published_at": "2026-09-03T13:01:00+00:00",
+      "publisher": "GlobeNewswire",
+      "reason_codes": [
+        "DIRECT_NEWS_MATCH",
+        "TRUSTED_PUBLISHER",
+        "CATALYST_UNCLASSIFIED"
+      ],
+      "score": 4.0,
+      "source_id": "YAHOO_NEWS_SEARCH",
+      "url": "https://finance.yahoo.com/energy/articles/assessment-u-nuclear-power-small-130100032.html",
+      "verified": false
+    },
+    "data_state": "DELAYED",
+    "delay_minutes": 0.028212366666666665,
+    "delta": {
+      "premarket_volume": 0.0,
+      "price": 2.26,
+      "score": -5.01
+    },
+    "direct_driver": "Assessment of the U.S. Nuclear Power and Small Modular Reactor Market 2026 Now Available \u2014 Reveals Why Big Tech Is Becoming an Active Force in Nuclear Project Formation, Not Just a Power Buyer",
+    "exchange": "Nasdaq",
+    "external": false,
+    "external_discovery": null,
+    "fetched_at": "2026-09-03T13:18:18.692742+00:00",
+    "finalist_eligible": false,
+    "metrics": {
+      "adv20": 15370265.0,
+      "benchmark_return_percent": 0.7509,
+      "distance_from_premarket_high_percent": 0.2693,
+      "distance_from_vwap_percent": null,
+      "gap_percent": 4.3575,
+      "lower_highs_count": 2,
+      "premarket_high": 605.38,
+      "premarket_volume": 0.0,
+      "premarket_volume_fraction_adv20": 0.0,
+      "premarket_vwap": null,
+      "price": 603.75,
+      "prior_close": 578.54,
+      "relative_strength_percent": 2.7432,
+      "return_15m_percent": -0.0414,
+      "sector_return_percent": 1.6144
+    },
+    "name": "Meta Platforms Inc.",
+    "news_error": null,
+    "premarket_deterioration": {
+      "confirmed": false,
+      "severe": false,
+      "signals": [
+        "LOWER_HIGHS"
+      ]
+    },
+    "quote_timestamp": "2026-09-03T13:18:17+00:00",
+    "ranking_allowed": true,
+    "raw_score": 41.72,
+    "reason_codes": [],
+    "sample_id": "premarket:T-12:2026-09-03T13:18:17+00:00",
+    "score": 41.72,
+    "score_caps": [
+      "PREOPEN_EXECUTION_FIELDS_MISSING_CAP_79",
+      "NO_VERIFIED_CATALYST_CAP_74"
+    ],
+    "score_components": {
+      "catalyst_or_continuation": {
+        "evidence": "Assessment of the U.S. Nuclear Power and Small Modular Reactor Market 2026 Now Available \u2014 Reveals Why Big Tech Is Becoming an Active Force in Nuclear Project Formation, Not Just a Power Buyer",
+        "score": 4.0,
+        "state": "MISSING"
+      },
+      "entry_invalidation_structure": {
+        "evidence": {
+          "distance_from_premarket_high_percent": 0.2693
+        },
+        "score": 9.0,
+        "state": "DELAYED"
+      },
+      "price_momentum": {
+        "evidence": {
+          "gap_percent": 4.3575,
+          "return_15m_percent": -0.0414
+        },
+        "score": 15.0,
+        "state": "DELAYED"
+      },
+      "relative_strength_sector": {
+        "evidence": {
+          "relative_strength_percent": 2.7432
+        },
+        "score": 13.72,
+        "state": "DELAYED"
+      },
+      "risk_reward": {
+        "evidence": "PREOPEN_NO_EXECUTION_GEOMETRY",
+        "score": 0.0,
+        "state": "MISSING"
+      },
+      "volume_liquidity": {
+        "evidence": {
+          "premarket_volume_fraction_adv20": 0.0
+        },
+        "score": 0.0,
+        "state": "DELAYED"
+      }
+    },
+    "sector_proxy": "XLC",
+    "source_id": "YAHOO_PREMARKET_DELAYED",
+    "status": "WATCH",
+    "symbol": "META",
+    "why_may_rise": "Momentum continuation hypothesis; catalyst not fully verified",
+    "why_rising_now": "Premarket gap +4.36%; relative strength +2.74%; PM volume/ADV 0.000"
+  }
+]
