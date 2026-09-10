@@ -490,6 +490,7 @@ class BatchRuntime:
                 "FAILED" if result.get("status") == "FAILED" else "COMPLETED"
             ),
             "session_status": coverage["session_status"],
+            "planning_status": coverage["planning_status"],
             "learning_status": coverage["learning_status"],
             "session_coverage": coverage,
             "last_completed_slot": completed_slots[-1] if completed_slots else None,

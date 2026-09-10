@@ -7,7 +7,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from market_brain.domain.models import LiquidityProfile
+from market_brain.domain.models import LiquidityProfile, MarketSnapshot
 from market_brain.engines.liquidity import apply_keyless_liquidity_gate
 from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import InMemoryEventStore
@@ -282,8 +282,6 @@ def test_keyless_liquidity_gate_uses_adv_age_and_broken_bar_sanity():
 
 
 def test_keyless_liquidity_gate_uses_fresh_cboe_bid_ask_for_spread():
-    from market_brain.domain.models import MarketSnapshot
-
     cfg = _cfg(max_spread_bps=20, keyless_max_bar_range_pct=3.0)
     profile = LiquidityProfile("TEST", 6_000_000, 99.0, FIXED_NOW)
     snapshot = MarketSnapshot(
@@ -309,6 +307,47 @@ def test_keyless_liquidity_gate_uses_fresh_cboe_bid_ask_for_spread():
     snapshot.metadata["last_bar_high"] = 104.0
     assert "KEYLESS_BAR_RANGE_TOO_WIDE" in apply_keyless_liquidity_gate(
         snapshot, profile, cfg
+    )
+
+
+@pytest.mark.asyncio
+async def test_planning_unavailable_reports_the_actual_blocker_and_all_reasons(monkeypatch):
+    now = datetime(2026, 8, 28, 14, 0, tzinfo=UTC)
+
+    class Provider:
+        async def snapshot(self, symbol: str, decision: bool = False) -> MarketSnapshot:
+            del decision
+            return MarketSnapshot(
+                symbol=symbol,
+                last=100.0,
+                source_id="YAHOO_DELAYED",
+                authoritative=False,
+            )
+
+    service = DecisionService(
+        InMemoryEventStore(),
+        cfg=_cfg(),
+        market_data=Provider(),
+    )
+
+    async def fake_profile(symbol: str, *, now=None):
+        del symbol, now
+        return LiquidityProfile("TEST", 4_000_000, 100.0, FIXED_NOW)
+
+    async def fake_reasons(snapshot: MarketSnapshot, *, now=None):
+        del snapshot, now
+        return ["ADV_TOO_LOW", "PRICE_CROSS_CHECK_FAILED"]
+
+    monkeypatch.setattr(service, "ensure_liquidity_profile", fake_profile)
+    monkeypatch.setattr(service, "_market_liquidity_reasons", fake_reasons)
+
+    with pytest.raises(DataUnavailable) as caught:
+        await service.prepare_plan_market_data("TEST", now=now)
+
+    assert caught.value.error_type == "PRICE_CROSS_CHECK_FAILED"
+    assert caught.value.reason_codes == (
+        "ADV_TOO_LOW",
+        "PRICE_CROSS_CHECK_FAILED",
     )
 
 

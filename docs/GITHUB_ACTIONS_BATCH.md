@@ -42,8 +42,8 @@ The public state branch contains:
   next due tick, policy version, code SHA, lease expiry, and `as_of`;
 - `state/lease.json`: owner and a 25-minute expiry; a stale lease may be recovered;
 - `state/handoff.json`: A→B ownership plus SHA-256 of the restored `market.dump`;
-- `state/latest.json`: separate `workflow_status`, `session_status`, and
-  `learning_status` values;
+- `state/latest.json`: separate `workflow_status`, `session_status`,
+  `planning_status`, and `learning_status` values;
 - `reports/radar/<date>.csv`: the full eligible universe and every score component
   for each discovery slot, retained for the latest ten session files.
 
@@ -61,11 +61,20 @@ Digest and Issue print:
 
 `Session coverage: radar expected=37 ok=… unavailable=… missed=… never_ran=…; premarket expected=3 ok=… missed=…`
 
-The three independent states are:
+The independent states are:
 
 - `workflow_status`: `COMPLETED` or `FAILED`;
-- `session_status`: `COMPLETE`, `INCOMPLETE`, or `NEVER_RAN`;
-- `learning_status`: `READY` only for complete usable evidence, otherwise `BLOCKED`.
+- `session_status`: `COMPLETE`, `INCOMPLETE`, or `NEVER_RAN`, based on scheduled
+  Discovery and Premarket evidence;
+- `planning_status`: `COMPLETE`, `INCOMPLETE`, `BLOCKED`, or `NEVER_RAN`;
+- `learning_status`: `READY` only when the scheduled observational evidence is
+  complete and usable, otherwise `BLOCKED`.
+
+Each `RADAR_RUN` also stores `discovery_status`, `planning_status`, and candidate-level
+`planning_failures`. A Planning data failure keeps plan creation fail-closed for the
+entire slot while preserving a valid full-universe ranking for learning. Market-anchor
+failure, an excessive universe failure ratio, or no usable ranking remains a Discovery
+failure and therefore blocks session learning.
 
 An incomplete session appends `SESSION_INCOMPLETE` with the exact slot list to the
 ledger so weekly and replay reports cannot treat the date as complete. A date with no

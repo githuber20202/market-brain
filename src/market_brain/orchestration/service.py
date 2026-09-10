@@ -830,12 +830,17 @@ class DecisionService:
                 "KEYLESS_BAR_RANGE_TOO_WIDE",
                 "PRICE_CROSS_CHECK_FAILED",
             }
-            if any(reason in unavailable_reasons for reason in blocking):
+            unavailable_reason = next(
+                (reason for reason in blocking if reason in unavailable_reasons),
+                None,
+            )
+            if unavailable_reason is not None:
                 raise DataUnavailable(
                     source_id=snapshot.source_id or "KEYLESS_DELAYED",
                     resource="planning_snapshot",
                     symbol=normalized,
-                    error_type=blocking[0],
+                    error_type=unavailable_reason,
+                    reason_codes=blocking,
                 )
             raise ValueError(blocking[0])
         benchmark = benchmark_return_pct

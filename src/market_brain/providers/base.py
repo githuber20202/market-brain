@@ -24,6 +24,7 @@ class DataUnavailable(RuntimeError):
         resource: str,
         symbol: str,
         error_type: str,
+        reason_codes: Sequence[str] = (),
         skipped_symbols: Sequence[SkippedSymbol] = (),
     ) -> None:
         super().__init__("DATA_UNAVAILABLE")
@@ -31,6 +32,10 @@ class DataUnavailable(RuntimeError):
         self.resource = resource
         self.symbol = symbol.upper()
         self.error_type = error_type
+        normalized_reasons = tuple(
+            dict.fromkeys(str(reason) for reason in reason_codes if str(reason))
+        )
+        self.reason_codes = normalized_reasons or (error_type,)
         self.skipped_symbols = tuple(skipped_symbols)
 
 

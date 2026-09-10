@@ -100,6 +100,24 @@ class KeylessPreflightService(FakeService):
             )
 
 
+class RecoveringKeylessPreflightService(KeylessPreflightService):
+    def __init__(self):
+        super().__init__()
+        self.unavailable = True
+
+    async def prepare_plan_market_data(self, symbol: str, *, now):
+        del now
+        self.prepared.append(symbol)
+        if symbol == "MSFT" and self.unavailable:
+            self.unavailable = False
+            raise DataUnavailable(
+                source_id="YAHOO_DELAYED",
+                resource="chart:1m",
+                symbol=symbol,
+                error_type="HTTP_503",
+            )
+
+
 class KeylessFailureRatioService(FakeService):
     def __init__(self):
         super().__init__()
@@ -463,7 +481,7 @@ async def test_data_unavailable_slot_fails_closed_and_next_slot_catches_up(tmp_p
 
 
 @pytest.mark.asyncio
-async def test_keyless_preflight_prevents_partial_plans_when_later_symbol_fails(tmp_path: Path):
+async def test_keyless_preflight_preserves_discovery_and_blocks_all_plans(tmp_path: Path):
     paths = _files(
         tmp_path,
         symbols=("AAPL", "MSFT"),
@@ -485,9 +503,87 @@ async def test_keyless_preflight_prevents_partial_plans_when_later_symbol_fails(
 
     assert result is not None
     assert result["status"] == "DATA_UNAVAILABLE"
+    assert result["discovery_status"] == "COMPLETED"
+    assert result["planning_status"] == "BLOCKED_DATA_UNAVAILABLE"
+    assert result["planning_failures"] == [
+        {
+            "symbol": "MSFT",
+            "source_id": "YAHOO_DELAYED",
+            "resource": "chart:1m",
+            "error_type": "HTTP_503",
+            "reason_codes": ["HTTP_503"],
+        }
+    ]
     assert service.prepared == ["AAPL", "MSFT"]
     assert service.plan_calls == []
     assert await service.store.list_plans() == []
+    assert [row["data_status"] for row in result["rankings"]] == ["OK", "OK"]
+    assert result["candidates"][0]["planning_status"] == "WITHHELD_FAIL_CLOSED"
+    assert result["candidates"][1]["planning_status"] == "DATA_UNAVAILABLE"
+    assert result["candidates"][1]["reason"] == "HTTP_503"
+    assert [event.event_type for event in service.store.events] == [
+        "RADAR_RUN",
+        "DATA_UNAVAILABLE",
+    ]
+
+    missed = await scheduler.mark_missed(
+        datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN),
+        now=datetime(2026, 8, 28, 10, 1, tzinfo=EASTERN),
+    )
+    assert missed["status"] == "MISSED"
+    assert missed["discovery_status"] == "COMPLETED"
+    assert missed["planning_status"] == "BLOCKED_DATA_UNAVAILABLE"
+    assert missed["planning_failures"] == result["planning_failures"]
+    assert [row["data_status"] for row in missed["rankings"]] == ["OK", "OK"]
+
+
+@pytest.mark.asyncio
+async def test_keyless_planning_failure_still_retries_and_can_recover(tmp_path: Path):
+    paths = _files(
+        tmp_path,
+        symbols=("AAPL", "MSFT"),
+        quality=("AAPL", "MSFT"),
+    )
+    service = RecoveringKeylessPreflightService()
+    scheduler = RadarScheduler(
+        service=service,
+        screener=FakeScreener([_row("AAPL"), _row("MSFT")]),
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    scheduler.validate_startup(now=datetime(2026, 8, 28, 9, 49, tzinfo=EASTERN))
+
+    first = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    )
+    recovered = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 10, 0, tzinfo=EASTERN)
+    )
+
+    assert first is not None and first["status"] == "DATA_UNAVAILABLE"
+    assert first["discovery_status"] == "COMPLETED"
+    assert recovered is not None and recovered["status"] == "COMPLETED"
+    assert recovered["scheduled_for"].endswith("09:50:00-04:00")
+    assert recovered["planning_status"] == "COMPLETED"
+    assert len(recovered["plan_ids"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_empty_discovery_evidence_keeps_entire_slot_unavailable(tmp_path: Path):
+    scheduler, service, _screener = _scheduler(tmp_path, [])
+
+    result = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    )
+
+    assert result is not None
+    assert result["status"] == "DATA_UNAVAILABLE"
+    assert result["discovery_status"] == "DATA_UNAVAILABLE"
+    assert result["planning_status"] == "NOT_RUN"
+    assert result["error_type"] == "DISCOVERY_EVIDENCE_MISSING"
+    assert result["plan_ids"] == []
+    assert service.plan_calls == []
 
 
 @pytest.mark.asyncio

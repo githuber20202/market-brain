@@ -103,6 +103,7 @@ class DailyDigest:
             "session_coverage": session_coverage,
             "workflow_status": "COMPLETED",
             "session_status": session_coverage["session_status"],
+            "planning_status": session_coverage["planning_status"],
             "learning_status": session_coverage["learning_status"],
             "plan_rejections": plan_rejections,
             "score_histogram": score_histogram,
@@ -128,6 +129,7 @@ class DailyDigest:
                             "session_date": session_date.isoformat(),
                             "workflow_status": "COMPLETED",
                             "session_status": session_coverage["session_status"],
+                            "planning_status": session_coverage["planning_status"],
                             "learning_status": session_coverage["learning_status"],
                             "incomplete_slots": session_coverage["incomplete_slots"],
                             "coverage": session_coverage,
@@ -229,9 +231,17 @@ def _format_text(payload: dict[str, Any]) -> str:
                 "Statuses: "
                 f"workflow_status={payload['workflow_status']} "
                 f"session_status={payload['session_status']} "
+                f"planning_status={payload['planning_status']} "
                 f"learning_status={payload['learning_status']}"
             ),
             coverage_line(payload["session_coverage"]),
+            (
+                "Planning coverage: "
+                f"expected={payload['session_coverage']['planning']['expected']} "
+                f"ok={payload['session_coverage']['planning']['ok']} "
+                f"blocked={payload['session_coverage']['planning']['blocked']} "
+                f"not_run={payload['session_coverage']['planning']['not_run']}"
+            ),
             f"Stream: {stream_state} | uptime={uptime}",
             f"Signals created: {payload['signals_created']}",
             (
@@ -317,20 +327,24 @@ def _data_availability(events) -> dict[str, int]:
     for event in events:
         if event.event_type == "RADAR_RUN":
             latest[event.aggregate_id] = event.payload
+
+    def discovery_status(row: dict) -> str:
+        return str(row.get("discovery_status") or row.get("status") or "UNKNOWN")
+
     return {
         "slots_ok": sum(
-            row.get("status") == "COMPLETED" for row in latest.values()
+            discovery_status(row) == "COMPLETED" for row in latest.values()
         ),
         "slots_unavailable": sum(
-            row.get("status") == "DATA_UNAVAILABLE"
+            discovery_status(row) == "DATA_UNAVAILABLE"
             or (
-                row.get("status") == "MISSED"
+                discovery_status(row) == "MISSED"
                 and row.get("previous_status") == "DATA_UNAVAILABLE"
             )
             for row in latest.values()
         ),
         "slots_missed": sum(
-            row.get("status") == "MISSED" for row in latest.values()
+            discovery_status(row) == "MISSED" for row in latest.values()
         ),
     }
 

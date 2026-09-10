@@ -152,6 +152,11 @@ BBO נשאר חובה, וחסרונו מחזיר `BBO_MISSING`.
 - אירוע `RADAR_RUN` שומר לכל מועמד את רכיבי הציון
   (`momentum/volume/relative/structure/rr/total`) וכן histogram של
   `0–20`, ‏`20–40`, ‏`40–65`, ‏`65+`; ה־Daily Digest מציג את אותו histogram.
+- ‏`RADAR_RUN` מפריד בין `discovery_status` לבין `planning_status`. כשל נתונים
+  במועמד Planning חוסם סגור את כל יצירת ה־Plans באותו slot, אך אינו מוחק טבלת
+  דירוג תקינה. הכשל נשמר ב־`planning_failures` עם הסימבול, המקור וכל
+  `reason_codes`. כשל ב־SPY, חריגה מיחס הכשלים המותר או היעדר דירוג שמיש עדיין
+  מסמנים את ה־Discovery כולו כ־`DATA_UNAVAILABLE`.
 
 מנוע ה־Replay בונה את אותם inputs מנרות היום ומפרופיל יומי, ואז קורא לאותן
 פונקציות `compute_features` ו־`score_features`. אסור להזריק ציון סף קבוע ל־Replay;
