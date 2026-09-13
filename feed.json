@@ -1,0 +1,94 @@
+{
+  "schema_version": "market-public-feed.v1",
+  "mode": "RESEARCH_ONLY",
+  "ready_allowed": false,
+  "orders_allowed": false,
+  "exported_at": "2026-09-13T08:53:46.390Z",
+  "producer": {
+    "status": "MANUAL_EXPORT",
+    "checked_session_date_et": "2026-09-13",
+    "pending_kinds": []
+  },
+  "records": [
+    {
+      "receipt_id": "2026-09-11-REVIEW",
+      "session_date_et": "2026-09-11",
+      "kind": "REVIEW",
+      "completed_at": "2026-09-11T20:17:23.000Z",
+      "published_at": null,
+      "source_version": null,
+      "source_modified_at": "2026-09-11T20:18:43.797Z",
+      "delivery_status": "REPORTED_PARTIAL",
+      "candidates": []
+    },
+    {
+      "receipt_id": "2026-09-11-POSTOPEN",
+      "session_date_et": "2026-09-11",
+      "kind": "POSTOPEN",
+      "completed_at": "2026-09-11T14:08:52.127Z",
+      "published_at": "2026-09-11T14:08:52.127Z",
+      "source_version": "1",
+      "source_modified_at": "2026-09-11T14:09:05.045Z",
+      "delivery_status": "REPORTED_BLOCKED",
+      "candidates": [
+        {
+          "ticker": "NVDA",
+          "decision": "WATCH",
+          "rank": 3
+        },
+        {
+          "ticker": "DELL",
+          "decision": "WATCH",
+          "rank": 1
+        },
+        {
+          "ticker": "ORCL",
+          "decision": "WATCH",
+          "rank": 2
+        },
+        {
+          "ticker": "MRNA",
+          "decision": "EXCLUDED",
+          "rank": null
+        },
+        {
+          "ticker": "MSTR",
+          "decision": "EXCLUDED",
+          "rank": null
+        },
+        {
+          "ticker": "ALAB",
+          "decision": "EXCLUDED",
+          "rank": null
+        },
+        {
+          "ticker": "CHG",
+          "decision": "EXCLUDED",
+          "rank": null
+        }
+      ]
+    },
+    {
+      "receipt_id": "2026-09-11-PREOPEN",
+      "session_date_et": "2026-09-11",
+      "kind": "PREOPEN",
+      "completed_at": "2026-09-11T13:07:20.662Z",
+      "published_at": null,
+      "source_version": null,
+      "source_modified_at": "2026-09-11T13:07:39.415Z",
+      "delivery_status": "REPORTED_MATCH",
+      "candidates": [
+        {
+          "ticker": "ORCL",
+          "decision": "WATCH",
+          "rank": null
+        },
+        {
+          "ticker": "CPRT",
+          "decision": "EXCLUDED",
+          "rank": null
+        }
+      ]
+    }
+  ]
+}
