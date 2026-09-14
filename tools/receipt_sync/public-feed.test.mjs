@@ -99,3 +99,45 @@ test('rejects a receipt with mismatched active policy revision', () => {
   receipt.resource_verification.resources[0].resource_revision = '2026-09-09.OLD';
   assert.throws(() => project(receipt), /PUBLIC_POSTOPEN_ALTERNATE_RESOURCE_INVALID/);
 });
+
+test('records a canonical post-open delivery only after matching readback', () => {
+  const receipt = {
+    schema: 'market-research-receipt.v1',
+    resource_revision: '2026-09-10.RECOVERY.4',
+    run_id: '2026-09-14-POSTOPEN',
+    session_date_et: '2026-09-14',
+    scheduled_for: '2026-09-14T14:00:00Z',
+    started_at: '2026-09-14T14:00:01Z',
+    completed_at: '2026-09-14T14:10:00Z',
+    published_at: '2026-09-14T14:10:00Z',
+    mode: 'RESEARCH_ONLY',
+    ready_allowed: false,
+    orders_allowed: false,
+    order_action_performed: false,
+    resource_verification: { status: 'PASS' },
+    price_research: { audit_rows: [] },
+    candidates: [],
+    exclusions: [],
+    publication_freshness: { observations: [] },
+    watchlist_intended: { status: 'SUBMITTED', research_shortlist: [] },
+    watchlist_readback: { status: 'PASS', instruments: [] },
+    delivery: { full_replace: { performed: true } },
+    delivery_status: 'DELIVERED_AND_READBACK_VERIFIED'
+  };
+  const bytes = new TextEncoder().encode(JSON.stringify(receipt));
+  const metadata = {
+    resource_id: 'libfile_source',
+    file_id: 'file_source',
+    version_id: '1',
+    size_bytes: bytes.byteLength,
+    modified_at: '2026-09-14T14:10:01Z'
+  };
+  const summary = publicSummary(bytes, metadata, metadata, receiptName, now);
+  assert.equal(summary.delivery_status, 'REPORTED_MATCH');
+
+  receipt.watchlist_readback.status = 'UNCHANGED_CONFIRMED';
+  const changedBytes = new TextEncoder().encode(JSON.stringify(receipt));
+  const changedMetadata = { ...metadata, size_bytes: changedBytes.byteLength };
+  assert.throws(() => publicSummary(changedBytes, changedMetadata, changedMetadata, receiptName, now),
+    /PUBLIC_DELIVERY_CONFLICT/);
+});

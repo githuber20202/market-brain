@@ -128,7 +128,14 @@ export function publicSummary(bytes, before, after, receiptName, exportedAt) {
       candidates = projected.candidates.filter(row => row.decision !== 'NOT_RECORDED')
         .map(row => ({ ticker: row.ticker, decision: row.decision, rank: row.candidate_rank }));
       const d = projected.delivery;
-      if (d.write_performed === true && ['PASS', 'MATCH'].includes(d.reported_readback_status)) delivery = 'REPORTED_MATCH';
+      if (kind === 'POSTOPEN' && parsed.delivery_status === 'DELIVERED_AND_READBACK_VERIFIED') {
+        if (parsed.delivery?.full_replace?.performed !== true
+          || parsed.watchlist_intended?.status !== 'SUBMITTED'
+          || !['PASS', 'MATCH'].includes(d.reported_readback_status)) {
+          fail('PUBLIC_DELIVERY_CONFLICT');
+        }
+        delivery = 'REPORTED_MATCH';
+      } else if (d.write_performed === true && ['PASS', 'MATCH'].includes(d.reported_readback_status)) delivery = 'REPORTED_MATCH';
       else if (['BLOCKED_RESOURCE_UNAVAILABLE_WATCHLIST_UNCHANGED', 'BLOCKED', 'RESOURCE_UNAVAILABLE'].includes(d.reported_status)) delivery = 'REPORTED_BLOCKED';
       else if (['DELIVERY_FAILED', 'FAILED'].includes(d.reported_status)) delivery = 'REPORTED_FAILED';
     }
