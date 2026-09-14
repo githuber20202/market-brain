@@ -3,10 +3,10 @@
   "mode": "RESEARCH_ONLY",
   "ready_allowed": false,
   "orders_allowed": false,
-  "exported_at": "2026-09-13T12:37:20.845Z",
+  "exported_at": "2026-09-14T13:24:36.537Z",
   "producer": {
-    "status": "MANUAL_EXPORT",
-    "checked_session_date_et": "2026-09-13",
+    "status": "OK",
+    "checked_session_date_et": "2026-09-14",
     "pending_kinds": []
   },
   "records": [
