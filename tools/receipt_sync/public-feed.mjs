@@ -15,6 +15,95 @@ const keys = (value, expected) => {
     || Object.keys(value).some(key => !expected.includes(key))) fail('PUBLIC_FIELDS_REJECTED');
 };
 const utc = value => value == null ? null : instant(value) ? new Date(value).toISOString() : fail('PUBLIC_TIME_INVALID');
+const dayET = value => new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+}).format(new Date(value));
+const sameStrings = (left, right) => Array.isArray(left) && Array.isArray(right)
+  && left.length === right.length && left.every((value, index) => value === right[index]);
+
+// A narrow adapter for the alternate post-open receipt emitted on 2026-09-14.
+// It accepts only the observed fail-closed profile and never projects free text,
+// prices, links, account data, source identities or broker identifiers.
+function alternatePostopenSummary(d, sessionDate) {
+  if (!object(d) || d.schema_version !== 'market-research-receipt.v1'
+    || d.run_type !== 'POSTOPEN_REFRESH' || d.mode !== 'RESEARCH_ONLY'
+    || d.session_date_et !== sessionDate || !instant(d.started_at_utc)
+    || !instant(d.publication_refresh_completed_at_utc)
+    || dayET(d.started_at_utc) !== sessionDate
+    || Date.parse(d.publication_refresh_completed_at_utc) < Date.parse(d.started_at_utc)) {
+    fail('PUBLIC_POSTOPEN_ALTERNATE_INVALID');
+  }
+
+  const verification = d.resource_verification;
+  if (!object(verification) || verification.content_and_identity_status !== 'PASS'
+    || verification.reads_complete_to_has_more_false !== true
+    || verification.status !== 'RESOURCE_UNAVAILABLE'
+    || verification.watchlist_write_allowed !== false
+    || !Array.isArray(verification.resources)
+    || verification.resources.length < 5 || verification.resources.length > 20) {
+    fail('PUBLIC_POSTOPEN_ALTERNATE_RESOURCE_INVALID');
+  }
+  const requiredRoles = new Set([
+    'ACTIVE_SOURCE_OF_TRUTH', 'ACTIVE_RULES', 'ACTIVE_RUNTIME',
+    'ACTIVE_UNIVERSE', 'ACTIVE_STATIC_RELEASE_MANIFEST'
+  ]);
+  for (const resource of verification.resources) {
+    if (!object(resource) || resource.status !== 'PASS_CONTENT_IDENTITY'
+      || typeof resource.file_id !== 'string' || typeof resource.library_file_id !== 'string') {
+      fail('PUBLIC_POSTOPEN_ALTERNATE_RESOURCE_INVALID');
+    }
+    if (requiredRoles.has(resource.document_role)) {
+      if (resource.document_role === 'ACTIVE_UNIVERSE') {
+        if (typeof resource.resource_revision !== 'string' || !resource.resource_revision.startsWith('UNIVERSE_')) {
+          fail('PUBLIC_POSTOPEN_ALTERNATE_RESOURCE_INVALID');
+        }
+      } else if (resource.resource_revision !== '2026-09-10.RECOVERY.4') {
+        fail('PUBLIC_POSTOPEN_ALTERNATE_RESOURCE_INVALID');
+      }
+      requiredRoles.delete(resource.document_role);
+    }
+  }
+  if (requiredRoles.size) fail('PUBLIC_POSTOPEN_ALTERNATE_RESOURCE_INVALID');
+
+  const limits = d.output_limits;
+  if (!object(limits) || ['ready', 'entry', 'stop', 'targets', 'quantity', 'orders']
+    .some(key => !(key in limits) || limits[key] !== null)) {
+    fail('PUBLIC_POSTOPEN_ALTERNATE_GUARDRAIL_MISSING');
+  }
+  const delivery = d.delivery;
+  if (!object(delivery) || delivery.status !== 'WATCHLIST_WRITE_BLOCKED_RESOURCE_UNAVAILABLE'
+    || delivery.favorites_modified !== false || delivery.market_universe_modified !== false
+    || delivery.order_actions_performed !== false
+    || !object(delivery.today_candidates_before)
+    || !object(delivery.today_candidates_after_readback)
+    || delivery.today_candidates_after_readback.status !== 'UNCHANGED_CONFIRMED'
+    || !sameStrings(delivery.today_candidates_before.symbols, delivery.today_candidates_after_readback.symbols)) {
+    fail('PUBLIC_POSTOPEN_ALTERNATE_GUARDRAIL_MISSING');
+  }
+
+  if (!Array.isArray(d.research_candidates) || d.research_candidates.length > 20) {
+    fail('PUBLIC_POSTOPEN_ALTERNATE_CANDIDATES_INVALID');
+  }
+  const symbols = new Set();
+  const ranks = new Set();
+  const candidates = d.research_candidates.map(row => {
+    if (!object(row) || !ticker(row.symbol) || symbols.has(row.symbol)
+      || !['WATCH', 'EXCLUDED', 'BLOCKED'].includes(row.status)
+      || !(row.rank === null || Number.isInteger(row.rank) && row.rank >= 1 && row.rank <= 10)
+      || row.rank !== null && ranks.has(row.rank)) {
+      fail('PUBLIC_POSTOPEN_ALTERNATE_CANDIDATES_INVALID');
+    }
+    symbols.add(row.symbol);
+    if (row.rank !== null) ranks.add(row.rank);
+    return { ticker: row.symbol, decision: row.status, rank: row.rank };
+  });
+  return {
+    completedAt: d.publication_refresh_completed_at_utc,
+    publishedAt: null,
+    candidates,
+    delivery: 'REPORTED_BLOCKED'
+  };
+}
 
 // This is a data-only projection, not a new research or ranking algorithm.
 // No free text, links, quotes, account information, broker IDs or source IDs
@@ -27,16 +116,22 @@ export function publicSummary(bytes, before, after, receiptName, exportedAt) {
   const kind = { RESEARCH: 'PREOPEN', POSTOPEN: 'POSTOPEN', DELIVERY_REVIEW: 'REVIEW' }[match[1]];
   let completedAt, publishedAt = null, candidates = [], delivery = 'NOT_RECORDED';
   if (kind !== 'REVIEW') {
-    const projected = projectReceipt(bytes, before, exportedAt);
-    if (projected.run_id !== `${match[2]}-${kind}`) fail('PUBLIC_SOURCE_DATE_CONFLICT');
-    completedAt = projected.completed_at;
-    publishedAt = projected.published_at;
-    candidates = projected.candidates.filter(row => row.decision !== 'NOT_RECORDED')
-      .map(row => ({ ticker: row.ticker, decision: row.decision, rank: row.candidate_rank }));
-    const d = projected.delivery;
-    if (d.write_performed === true && ['PASS', 'MATCH'].includes(d.reported_readback_status)) delivery = 'REPORTED_MATCH';
-    else if (['BLOCKED_RESOURCE_UNAVAILABLE_WATCHLIST_UNCHANGED', 'BLOCKED', 'RESOURCE_UNAVAILABLE'].includes(d.reported_status)) delivery = 'REPORTED_BLOCKED';
-    else if (['DELIVERY_FAILED', 'FAILED'].includes(d.reported_status)) delivery = 'REPORTED_FAILED';
+    const raw = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    const parsed = parseReceiptJSON(raw);
+    if (kind === 'POSTOPEN' && parsed.schema_version === 'market-research-receipt.v1') {
+      ({ completedAt, publishedAt, candidates, delivery } = alternatePostopenSummary(parsed, match[2]));
+    } else {
+      const projected = projectReceipt(bytes, before, exportedAt);
+      if (projected.run_id !== `${match[2]}-${kind}`) fail('PUBLIC_SOURCE_DATE_CONFLICT');
+      completedAt = projected.completed_at;
+      publishedAt = projected.published_at;
+      candidates = projected.candidates.filter(row => row.decision !== 'NOT_RECORDED')
+        .map(row => ({ ticker: row.ticker, decision: row.decision, rank: row.candidate_rank }));
+      const d = projected.delivery;
+      if (d.write_performed === true && ['PASS', 'MATCH'].includes(d.reported_readback_status)) delivery = 'REPORTED_MATCH';
+      else if (['BLOCKED_RESOURCE_UNAVAILABLE_WATCHLIST_UNCHANGED', 'BLOCKED', 'RESOURCE_UNAVAILABLE'].includes(d.reported_status)) delivery = 'REPORTED_BLOCKED';
+      else if (['DELIVERY_FAILED', 'FAILED'].includes(d.reported_status)) delivery = 'REPORTED_FAILED';
+    }
   } else {
     const raw = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     const d = parseReceiptJSON(raw);
