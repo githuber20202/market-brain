@@ -3,13 +3,87 @@
   "mode": "RESEARCH_ONLY",
   "ready_allowed": false,
   "orders_allowed": false,
-  "exported_at": "2026-09-14T13:24:36.537Z",
+  "exported_at": "2026-09-14T14:53:22.183Z",
   "producer": {
     "status": "OK",
     "checked_session_date_et": "2026-09-14",
     "pending_kinds": []
   },
   "records": [
+    {
+      "receipt_id": "2026-09-14-POSTOPEN",
+      "session_date_et": "2026-09-14",
+      "kind": "POSTOPEN",
+      "completed_at": "2026-09-14T14:27:21.201Z",
+      "published_at": null,
+      "source_version": null,
+      "source_modified_at": "2026-09-14T14:29:06.378Z",
+      "delivery_status": "REPORTED_BLOCKED",
+      "candidates": [
+        {
+          "ticker": "CRWD",
+          "decision": "WATCH",
+          "rank": 1
+        },
+        {
+          "ticker": "PANW",
+          "decision": "WATCH",
+          "rank": 2
+        },
+        {
+          "ticker": "COIN",
+          "decision": "WATCH",
+          "rank": 3
+        }
+      ]
+    },
+    {
+      "receipt_id": "2026-09-14-PREOPEN",
+      "session_date_et": "2026-09-14",
+      "kind": "PREOPEN",
+      "completed_at": "2026-09-14T13:42:57.065Z",
+      "published_at": "2026-09-14T13:42:57.065Z",
+      "source_version": null,
+      "source_modified_at": "2026-09-14T13:44:29.270Z",
+      "delivery_status": "REPORTED_MATCH",
+      "candidates": [
+        {
+          "ticker": "NOW",
+          "decision": "WATCH",
+          "rank": 2
+        },
+        {
+          "ticker": "ADBE",
+          "decision": "WATCH",
+          "rank": 4
+        },
+        {
+          "ticker": "WDAY",
+          "decision": "WATCH",
+          "rank": 3
+        },
+        {
+          "ticker": "COIN",
+          "decision": "EXCLUDED",
+          "rank": null
+        },
+        {
+          "ticker": "CHG",
+          "decision": "EXCLUDED",
+          "rank": null
+        },
+        {
+          "ticker": "CRWD",
+          "decision": "WATCH",
+          "rank": 1
+        },
+        {
+          "ticker": "PANW",
+          "decision": "WATCH",
+          "rank": 5
+        }
+      ]
+    },
     {
       "receipt_id": "2026-09-11-REVIEW",
       "session_date_et": "2026-09-11",
