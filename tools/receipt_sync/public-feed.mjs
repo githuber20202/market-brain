@@ -25,7 +25,8 @@ const sameStrings = (left, right) => Array.isArray(left) && Array.isArray(right)
 // It accepts only the observed fail-closed profile and never projects free text,
 // prices, links, account data, source identities or broker identifiers.
 function alternatePostopenSummary(d, sessionDate) {
-  if (!object(d) || d.schema_version !== 'market-research-receipt.v1'
+  if (sessionDate !== '2026-09-14'
+    || !object(d) || d.schema_version !== 'market-research-receipt.v1'
     || d.run_type !== 'POSTOPEN_REFRESH' || d.mode !== 'RESEARCH_ONLY'
     || d.session_date_et !== sessionDate || !instant(d.started_at_utc)
     || !instant(d.publication_refresh_completed_at_utc)

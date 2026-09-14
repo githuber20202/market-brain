@@ -52,7 +52,7 @@ function fixture() {
   };
 }
 
-function project(receipt) {
+function project(receipt, name = receiptName) {
   const bytes = new TextEncoder().encode(JSON.stringify(receipt));
   const metadata = {
     resource_id: 'libfile_source',
@@ -61,7 +61,7 @@ function project(receipt) {
     size_bytes: bytes.byteLength,
     modified_at: '2026-09-14T14:29:06.378386Z'
   };
-  return publicSummary(bytes, metadata, metadata, receiptName, now);
+  return publicSummary(bytes, metadata, metadata, name, now);
 }
 
 test('projects only bounded public fields from the alternate post-open profile', () => {
@@ -98,6 +98,15 @@ test('rejects a receipt with mismatched active policy revision', () => {
   const receipt = fixture();
   receipt.resource_verification.resources[0].resource_revision = '2026-09-09.OLD';
   assert.throws(() => project(receipt), /PUBLIC_POSTOPEN_ALTERNATE_RESOURCE_INVALID/);
+});
+
+test('does not accept the one-time alternate profile for later sessions', () => {
+  const receipt = fixture();
+  receipt.session_date_et = '2026-09-15';
+  receipt.started_at_utc = '2026-09-15T14:18:24Z';
+  receipt.publication_refresh_completed_at_utc = '2026-09-15T14:27:21.201Z';
+  assert.throws(() => project(receipt, 'MARKET_POSTOPEN_RECEIPT_2026-09-15.json'),
+    /PUBLIC_POSTOPEN_ALTERNATE_INVALID/);
 });
 
 test('records a canonical post-open delivery only after matching readback', () => {
