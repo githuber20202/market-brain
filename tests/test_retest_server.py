@@ -301,7 +301,13 @@ class LiquidityProvider:
     async def bars(self, symbol, timeframe, start, end):
         assert self.store.depth == 0
         return [
-            {"t": (self.now - timedelta(days=25-index)).isoformat(), "v": 3_000_000 + index, "c": 100 + index / 10}
+            {
+                "t": (self.now - timedelta(days=25-index)).isoformat(),
+                "v": 3_000_000 + index,
+                "c": 100 + index / 10,
+                "h": 101 + index / 10,
+                "l": 99 + index / 10,
+            }
             for index in range(25)
         ]
 
