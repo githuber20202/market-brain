@@ -196,7 +196,7 @@ def main() -> None:
     now = datetime.fromisoformat(args.now) if args.now else datetime.now(UTC)
     repo = args.repo.resolve()
     subprocess.run(
-        ["git", "fetch", "origin", "shadow-state:refs/remotes/origin/market-state"],
+        ["git", "fetch", "origin", "market-state:refs/remotes/origin/market-state"],
         cwd=repo,
         check=False,
         capture_output=True,
