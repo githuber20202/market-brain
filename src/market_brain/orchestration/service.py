@@ -48,7 +48,7 @@ from market_brain.engines.liquidity import (
 from market_brain.engines.plan import build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.ranking import score_features
-from market_brain.engines.volatility import wilder_atr
+from market_brain.engines.volatility import ATR_PERIOD, wilder_atr
 from market_brain.engines.wallet import size_from_wallet
 from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import EventStore, InMemoryEventStore
@@ -407,7 +407,7 @@ class DecisionService:
         eastern = ZoneInfo("America/New_York")
         local = timestamp.astimezone(eastern)
         end = local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
-        start = end - timedelta(days=max(45, self.cfg.atr_period * 3))
+        start = end - timedelta(days=max(45, ATR_PERIOD * 3))
         rows = await self.market_data.bars(symbol.upper(), "1Day", start, end)
         parsed: list[tuple[datetime, float, float, float, float]] = []
         for row in rows:
@@ -449,7 +449,7 @@ class DecisionService:
         latest = parsed[-20:]
         atr14 = wilder_atr(
             [(row[3], row[4], row[2]) for row in parsed],
-            period=self.cfg.atr_period,
+            period=ATR_PERIOD,
         )
         if atr14 is None or atr14 <= 0:
             raise RuntimeError("ATR_PROFILE_INSUFFICIENT_HISTORY")
