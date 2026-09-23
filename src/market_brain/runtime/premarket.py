@@ -12,6 +12,7 @@ from market_brain.ledger.events import LedgerEvent
 from market_brain.orchestration.universe import (
     EASTERN,
     UniverseEntry,
+    load_manual_quality,
     load_market_calendar,
     load_universe,
 )
@@ -34,6 +35,7 @@ class PremarketFunnel:
         universe_dir: Path,
         calendar_path: Path,
         cfg: Settings,
+        quality_path: Path | None = None,
         state_dir: Path,
     ) -> None:
         self.store = store
@@ -42,6 +44,7 @@ class PremarketFunnel:
         self.universe_dir = universe_dir
         self.calendar_path = calendar_path
         self.cfg = cfg
+        self.quality_path = quality_path or cfg.quality_path
         self.state_dir = state_dir
 
     async def run(self, checkpoint: str, *, now: datetime) -> dict[str, Any]:
@@ -164,6 +167,11 @@ class PremarketFunnel:
             "CALENDAR_STATIC_NYSE_ONLY",
             "ACCOUNT_AND_EXECUTION_FIELDS_SUPPRESSED",
         ]
+        try:
+            quality_records = load_manual_quality(self.quality_path)
+        except (RuntimeError, ValueError, OSError):
+            quality_records = {}
+            warnings.append("QUALITY_UNAVAILABLE")
         universe_symbols = {entry.symbol for entry in universe}
         external_metadata: dict[str, dict] = {}
         if hasattr(self.provider, "external_movers"):
@@ -260,6 +268,7 @@ class PremarketFunnel:
                 external=False,
                 external_metadata=None,
                 timestamp=timestamp,
+                quality_record=quality_records.get(entry.symbol),
             )
             audit.append(row)
             if row["ranking_allowed"]:
@@ -293,6 +302,7 @@ class PremarketFunnel:
                 external=True,
                 external_metadata=metadata,
                 timestamp=timestamp,
+                quality_record=quality_records.get(symbol),
             )
             external_rows.append(row)
             if row["ranking_allowed"]:
@@ -409,6 +419,7 @@ class PremarketFunnel:
         external: bool,
         external_metadata: dict | None,
         timestamp: datetime,
+        quality_record,
     ) -> dict[str, Any]:
         catalyst = assess_catalyst(news, as_of=timestamp)
         scoring = score_premarket_candidate(
@@ -421,6 +432,19 @@ class PremarketFunnel:
             minimum_adv=self.cfg.min_adv_keyless,
             finalist_score=self.cfg.premarket_finalist_score,
         )
+        profitability_reason = None
+        if entry.instrument_type == "EQUITY":
+            if quality_record is None or quality_record.profitability_pass is None:
+                profitability_reason = "PROFITABILITY_MISSING"
+            elif quality_record.profitability_pass is False:
+                profitability_reason = "PROFITABILITY_GATE_FAILED"
+        if profitability_reason is not None:
+            scoring["ranking_allowed"] = False
+            scoring["finalist_eligible"] = False
+            scoring["reason_codes"] = [
+                *scoring.get("reason_codes", []),
+                profitability_reason,
+            ]
         quote_timestamp = snapshot.metadata.get("quote_timestamp")
         return {
             "symbol": entry.symbol,
@@ -438,6 +462,11 @@ class PremarketFunnel:
             "delay_minutes": snapshot.delay_minutes,
             "catalyst": catalyst.to_dict(),
             "news_error": news_error,
+            "quality_source": quality_record.source if quality_record is not None else None,
+            "ttm_net_income": quality_record.ttm_net_income if quality_record is not None else None,
+            "profitability_pass": (
+                quality_record.profitability_pass if quality_record is not None else None
+            ),
             "why_may_rise": _why_may_rise(catalyst.to_dict()),
             "why_rising_now": _why_rising_now(scoring["metrics"]),
             "direct_driver": catalyst.headline,

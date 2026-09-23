@@ -56,6 +56,27 @@ def market_transport(seen: list[tuple[str, dict]]):
     return httpx.MockTransport(handler)
 
 
+def test_plans_rejects_loss_making_company_before_market_call():
+    with TestClient(api_main.app) as client:
+        response = client.post(
+            "/plans",
+            json={
+                "symbol": "IONQ",
+                "quality_score": 90,
+                "quality_as_of": datetime.now(UTC).isoformat(),
+                "ttm_net_income": -1000000,
+                "profitability_pass": False,
+                "lane": "EVENT_MOMENTUM",
+                "catalyst_verified": True,
+                "catalyst_strength": 1.0,
+                "structure_score": 15,
+                "rr_score": 10,
+            },
+        )
+    assert response.status_code == 422
+    assert response.json()["detail"] == "PROFITABILITY_GATE_FAILED"
+
+
 def test_plans_rejects_snapshot_and_price_fields():
     with TestClient(api_main.app) as client:
         response = client.post(

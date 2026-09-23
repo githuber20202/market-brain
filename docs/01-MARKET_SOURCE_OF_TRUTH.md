@@ -1,6 +1,6 @@
 # MARKET BRAIN V4 — Source of Truth
 
-Version: `BROKERLESS-2026-08-28.1`
+Version: `BROKERLESS-2026-09-23.1`
 
 ## Mission
 
@@ -37,6 +37,8 @@ AI is never in the hot execution path and cannot bypass deterministic rules.
 - EVENT_MOMENTUM: strong event evidence may trade medium-quality companies at reduced risk.
 - SPECULATIVE: disabled by default.
 
+All equity lanes share a non-bypassable profitability gate: `TTM Net Income > 0` must be documented. Non-positive earnings return `PROFITABILITY_GATE_FAILED`; missing profitability returns `PROFITABILITY_MISSING`. A catalyst may change the lane or risk budget only after this gate passes. ETFs are exempt because company profitability is not applicable.
+
 ## BUY_NOW
 
 Allowed only when a non-expired Trade Plan has authoritative market data, fresh BBO, acceptable spread, valid retest, price above VWAP, trigger reached, no chase, valid 1:1.5 and 1:2 targets, and Risk Wallet capacity.
@@ -57,5 +59,6 @@ Every plan, rejection, reservation, fill confirmation, position decision and exi
 - No averaging down.
 - No stop widening.
 - No stale plan reuse.
+- No equity plan when TTM net income is missing or non-positive.
 - No trade management for an unknown position.
 

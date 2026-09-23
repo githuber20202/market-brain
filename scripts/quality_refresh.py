@@ -89,7 +89,10 @@ def _write_quality_csv(path: Path, scores: list[QualityScore]) -> None:
     buffer = io.StringIO()
     writer = csv.DictWriter(
         buffer,
-        fieldnames=("symbol", "quality_score", "as_of", "source", "partial"),
+        fieldnames=(
+            "symbol", "quality_score", "as_of", "source", "partial",
+            "ttm_net_income", "profitability_pass",
+        ),
         lineterminator="\n",
     )
     writer.writeheader()
@@ -101,6 +104,10 @@ def _write_quality_csv(path: Path, scores: list[QualityScore]) -> None:
                 "as_of": score.as_of.isoformat(),
                 "source": score.source,
                 "partial": str(score.partial).lower(),
+                "ttm_net_income": "" if score.ttm_net_income is None else score.ttm_net_income,
+                "profitability_pass": (
+                    "" if score.profitability_pass is None else str(score.profitability_pass).lower()
+                ),
             }
         )
     path.parent.mkdir(parents=True, exist_ok=True)

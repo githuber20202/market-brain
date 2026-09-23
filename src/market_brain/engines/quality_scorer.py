@@ -12,6 +12,7 @@ REVENUE_TAGS = (
     "RevenueFromContractWithCustomerExcludingAssessedTax",
 )
 OPERATING_INCOME_TAGS = ("OperatingIncomeLoss",)
+NET_INCOME_TAGS = ("NetIncomeLoss", "ProfitLoss")
 LONG_TERM_DEBT_TAGS = ("LongTermDebt", "LongTermDebtNoncurrent")
 CURRENT_DEBT_TAGS = ("DebtCurrent", "LongTermDebtCurrent")
 CASH_TAGS = (
@@ -41,6 +42,8 @@ class QualityScore:
     as_of: datetime
     source: str
     partial: bool
+    ttm_net_income: float | None
+    profitability_pass: bool | None
     metrics: dict[str, MetricScore]
     dilution_penalty: int
     missing_metrics: tuple[str, ...]
@@ -62,6 +65,7 @@ def score_companyfacts(
 
     revenue = _quarterly_series(facts, REVENUE_TAGS, "USD")
     operating_income = _quarterly_series(facts, OPERATING_INCOME_TAGS, "USD")
+    net_income = _quarterly_series(facts, NET_INCOME_TAGS, "USD")
     cfo = _quarterly_series(facts, CFO_TAGS, "USD")
     capex = _quarterly_series(facts, CAPEX_TAGS, "USD")
     diluted_shares = _quarterly_series(facts, DILUTED_SHARES_TAGS, "shares")
@@ -69,6 +73,7 @@ def score_companyfacts(
     revenue_growth = _yoy_growth(revenue)
     operating_margin = _trailing_margin(operating_income, revenue)
     fcf_margin = _fcf_margin(cfo, capex, revenue)
+    ttm_net_income = _trailing_sum(net_income)
     leverage = _leverage(facts, operating_income)
     dilution = _yoy_growth(diluted_shares)
     if dilution is None:
@@ -85,6 +90,7 @@ def score_companyfacts(
         leverage=leverage[0],
         fcf_margin=fcf_margin,
         dilution=dilution,
+        ttm_net_income=ttm_net_income,
         facts_as_of={
             "revenue_growth_yoy": _latest_date(revenue),
             "operating_margin": _latest_common_date(operating_income, revenue),
@@ -103,6 +109,7 @@ def score_yahoo_fundamentals(
     quarterly_revenue = _yahoo_series(snapshot, "quarterlyTotalRevenue")
     annual_operating = _yahoo_series(snapshot, "annualOperatingIncome")
     quarterly_operating = _yahoo_series(snapshot, "quarterlyOperatingIncome")
+    quarterly_net_income = _yahoo_series(snapshot, "quarterlyNetIncome")
     annual_debt = _yahoo_series(snapshot, "annualTotalDebt")
     annual_cash = _yahoo_series(snapshot, "annualCashAndCashEquivalents")
     annual_fcf = _yahoo_series(snapshot, "annualFreeCashFlow")
@@ -128,6 +135,8 @@ def score_yahoo_fundamentals(
         fcf_margin = _latest_ratio(annual_fcf, annual_revenue)
         fcf_date = _latest_common_date(annual_fcf, annual_revenue)
 
+    ttm_net_income = _trailing_sum(quarterly_net_income)
+
     leverage, leverage_date = _yahoo_leverage(
         annual_debt,
         annual_cash,
@@ -146,6 +155,7 @@ def score_yahoo_fundamentals(
         leverage=leverage,
         fcf_margin=fcf_margin,
         dilution=dilution,
+        ttm_net_income=ttm_net_income,
         facts_as_of={
             "revenue_growth_yoy": _latest_date(revenue_growth_series),
             "operating_margin": operating_date,
@@ -165,6 +175,7 @@ def _build_quality_score(
     leverage: float | None,
     fcf_margin: float | None,
     dilution: float | None,
+    ttm_net_income: float | None,
     facts_as_of: dict[str, str | None],
 ) -> QualityScore:
     metrics = {
@@ -192,6 +203,9 @@ def _build_quality_score(
     missing = [name for name, metric in metrics.items() if metric.value is None]
     if dilution is None:
         missing.append("dilution_yoy")
+    if ttm_net_income is None:
+        missing.append("ttm_net_income")
+    profitability_pass = None if ttm_net_income is None else ttm_net_income > 0.0
     penalty = _dilution_penalty(dilution)
     total = max(0, min(100, sum(metric.points for metric in metrics.values()) - penalty))
     return QualityScore(
@@ -200,6 +214,8 @@ def _build_quality_score(
         as_of=as_of,
         source=source,
         partial=bool(missing),
+        ttm_net_income=ttm_net_income,
+        profitability_pass=profitability_pass,
         metrics=metrics,
         dilution_penalty=penalty,
         missing_metrics=tuple(missing),
@@ -250,6 +266,13 @@ def _annual_yoy_growth(series: dict[date, float]) -> float | None:
     if len(ordered) < 2 or ordered[-2][1] <= 0:
         return None
     return ordered[-1][1] / ordered[-2][1] - 1.0
+
+
+def _trailing_sum(series: dict[date, float]) -> float | None:
+    ordered = sorted(series.items())
+    if len(ordered) < 4:
+        return None
+    return sum(value for _day, value in ordered[-4:])
 
 
 def _trailing_margin(numerator: dict[date, float], revenue: dict[date, float]) -> float | None:

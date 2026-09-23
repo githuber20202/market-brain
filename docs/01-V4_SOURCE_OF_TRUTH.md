@@ -39,6 +39,7 @@ audit. מזהה `UNRESOLVED` נשאר `MISSING` ואינו נכנס לדירוג
 והציון מוגבל ל־79. ללא Catalyst ישיר, מסווג וממקור אמין, הציון מוגבל ל־74.
 הפלט הוא Top 10 ועד שתי מועמדות `PREDICTION/WATCH`; הוא לעולם אינו `READY`,
 אינו כולל Trigger/Stop/Targets/quantity ואינו מאפשר פעולה אצל ברוקר.
+ל־`EQUITY` מופעל גם כאן Profitability Hard Gate: חברה עם `TTM Net Income <= 0` או ללא ארבעה רבעוני Net Income נשארת בשורת ה־audit אך אינה `ranking_allowed`, ולכן אינה יכולה להיכנס ל־Top 10 או ל־Finalists. External mover ללא Quality מתועד נחסם באותה צורה.
 
 Premarket Deterioration מאושר כאשר מתקיימים לפחות שניים מהבאים: מרחק של 1% או
 יותר מהשיא, תשואת 15 דקות של ‎-0.5% או פחות, ושני lower highs. מועמד כזה חסום
@@ -83,7 +84,8 @@ Radar מעתיקה אותו אל `data/quality.csv` רק כאשר גיל כל ש
 במסלול EDGAR המקור הוא הדוחות הרשמיים ב־SEC. במסלול Yahoo המקור הוא endpoint
 ציבורי ללא מפתח שמציג עיבוד של נתוני הדוחות, ולא את הדוחות עצמם. ה־provenance
 נשמר כ־`YAHOO_FUNDAMENTALS`, ואין להציג אותו כמקור SEC רשמי. הכנסות, רווח
-תפעולי, חוב, מזומן, FCF ומספר מניות נלקחים מסדרות annual/quarterly; כאשר אין
+תפעולי, חוב, מזומן, FCF ומספר מניות נלקחים מסדרות annual/quarterly; רווח נקי לצורך
+Profitability Gate מחושב מארבעת הרבעונים האחרונים בלבד, ללא fallback שנתי. כאשר אין
 שמונה רבעונים לצמיחת YoY או לדילול, משתמשים בשתי נקודות annual האחרונות.
 
 ה־Universe מגדיר `instrument_type`. רק `EQUITY` נכנס לרענון איכות. `ETF`
@@ -92,6 +94,8 @@ Radar מעתיקה אותו אל `data/quality.csv` רק כאשר גיל כל ש
 
 הציון דטרמיניסטי ומחושב מארבעה מדדים, 0–25 נקודות לכל מדד. נתון חסר מקבל 0
 במדד שלו ומסמן `partial=true`; אין השלמת ערכים משוערים.
+
+**Profitability Hard Gate:** לכל `EQUITY` נדרש `TTM Net Income > 0` ממקור איכות מתועד. `TTM Net Income <= 0` נחסם עם `PROFITABILITY_GATE_FAILED`; נתון חסר נחסם עם `PROFITABILITY_MISSING`. השער מופעל לפני בחירת `CORE_MOMENTUM` או `EVENT_MOMENTUM`, ו־Catalyst חזק אינו רשאי לעקוף אותו. `ETF` פטור מהשער משום שאיכות חברה אינה חלה עליו.
 
 | מדד | 25 | 20 | 15 | 10 | 5 | 0 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -225,6 +229,7 @@ Shadow trade:
 
 - Unknown cash or position state blocks quantity and `BUY_NOW`.
 - Missing market authority blocks `BUY_NOW`.
+- Missing or non-positive TTM net income blocks equity Trade Plans; catalyst evidence cannot bypass profitability.
 - Unacknowledged fills never create positions.
 - Unacknowledged exits never remove positions.
 - No model or agent may bypass deterministic risk, structure, market-authority, or Portfolio Twin gates.

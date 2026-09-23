@@ -154,8 +154,11 @@ def _files(tmp_path: Path, *, symbols: tuple[str, ...], quality: tuple[str, ...]
     (universe_dir / "universe.csv").write_text(universe_rows)
     quality_path = tmp_path / "quality.csv"
     quality_path.write_text(
-        "symbol,quality_score,as_of\n"
-        + "".join(f"{symbol},85,2026-08-01T00:00:00+00:00\n" for symbol in quality)
+        "symbol,quality_score,as_of,ttm_net_income,profitability_pass\n"
+        + "".join(
+            f"{symbol},85,2026-08-01T00:00:00+00:00,1000000,true\n"
+            for symbol in quality
+        )
     )
     calendar_path = tmp_path / "market_calendar.csv"
     calendar_path.write_text(
@@ -237,8 +240,8 @@ async def test_radar_accepts_automated_quality_for_core_lane(
 ):
     paths = _files(tmp_path, symbols=("AAPL",), quality=())
     paths[1].write_text(
-        "symbol,quality_score,as_of,source,partial\n"
-        f"AAPL,85,2026-08-28T00:00:00+00:00,{source},false\n"
+        "symbol,quality_score,as_of,source,partial,ttm_net_income,profitability_pass\n"
+        f"AAPL,85,2026-08-28T00:00:00+00:00,{source},false,1000000,true\n"
     )
     service = FakeService()
     scheduler = RadarScheduler(
@@ -344,7 +347,7 @@ async def test_symbol_without_quality_gets_no_core_plan(tmp_path: Path):
 
     assert result is not None
     assert service.plan_calls == []
-    assert result["candidates"][0]["reason"] == "QUALITY_MISSING_CORE_BLOCKED"
+    assert result["candidates"][0]["reason"] == "PROFITABILITY_MISSING"
 
 
 @pytest.mark.asyncio
@@ -370,17 +373,69 @@ async def test_plan_floor_rejection_is_recorded_in_radar_run(tmp_path: Path):
 
 
 @pytest.mark.asyncio
-async def test_missing_quality_with_catalyst_uses_event_lane(tmp_path: Path):
+async def test_missing_quality_with_catalyst_is_profitability_blocked(tmp_path: Path):
     scheduler, service, _screener = _scheduler(
         tmp_path,
         [_row("MSFT", catalyst=True)],
         symbols=("MSFT",),
         quality=(),
     )
-    await scheduler.run_pending(now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN))
+    result = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    )
 
+    assert result is not None
+    assert service.plan_calls == []
+    assert result["candidates"][0]["reason"] == "PROFITABILITY_MISSING"
+
+
+@pytest.mark.asyncio
+async def test_loss_making_company_is_blocked_even_with_catalyst(tmp_path: Path):
+    paths = _files(tmp_path, symbols=("IONQ",), quality=())
+    paths[1].write_text(
+        "symbol,quality_score,as_of,source,partial,ttm_net_income,profitability_pass\n"
+        "IONQ,45,2026-08-28T00:00:00+00:00,YAHOO_FUNDAMENTALS,false,-100000000,false\n"
+    )
+    service = FakeService()
+    scheduler = RadarScheduler(
+        service=service,
+        screener=FakeScreener([_row("IONQ", catalyst=True)]),
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    slot = datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    scheduler.validate_startup(now=slot)
+
+    result = await scheduler.run_pending(now=slot)
+
+    assert result is not None
+    assert service.plan_calls == []
+    assert result["candidates"][0]["reason"] == "PROFITABILITY_GATE_FAILED"
+
+
+@pytest.mark.asyncio
+async def test_profitable_medium_quality_with_strong_catalyst_uses_event_lane(tmp_path: Path):
+    paths = _files(tmp_path, symbols=("TEST",), quality=())
+    paths[1].write_text(
+        "symbol,quality_score,as_of,source,partial,ttm_net_income,profitability_pass\n"
+        "TEST,45,2026-08-28T00:00:00+00:00,YAHOO_FUNDAMENTALS,false,1000000,true\n"
+    )
+    service = FakeService()
+    scheduler = RadarScheduler(
+        service=service,
+        screener=FakeScreener([_row("TEST", catalyst=True)]),
+        universe_dir=paths[0],
+        quality_path=paths[1],
+        calendar_path=paths[2],
+    )
+    slot = datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    scheduler.validate_startup(now=slot)
+
+    result = await scheduler.run_pending(now=slot)
+
+    assert result is not None
     assert service.plan_calls[0]["lane"] == StrategyLane.EVENT_MOMENTUM
-    assert service.plan_calls[0]["quality"].tier == "UNRATED"
 
 
 @pytest.mark.asyncio

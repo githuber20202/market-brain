@@ -288,9 +288,7 @@ class RadarScheduler:
             for row in rows[: self.plans_per_run]:
                 snapshot = row.get("snapshot", {})
                 symbol = str(snapshot.get("symbol", "")).upper()
-                eligible = instrument_types.get(symbol) == "ETF" or symbol in self.quality or bool(
-                    snapshot.get("catalyst_verified", False)
-                )
+                eligible = instrument_types.get(symbol) == "ETF" or symbol in self.quality
                 if not eligible:
                     continue
                 try:
@@ -332,11 +330,7 @@ class RadarScheduler:
             manual_quality = self.quality.get(symbol)
             catalyst_verified = bool(snapshot.get("catalyst_verified", False))
             catalyst_strength = float(snapshot.get("catalyst_strength", 0.0) or 0.0)
-            if manual_quality is not None:
-                quality = manual_quality.profile()
-                lane = StrategyLane.CORE_MOMENTUM
-                candidate["quality_source"] = manual_quality.source
-            elif instrument_types.get(symbol) == "ETF":
+            if instrument_types.get(symbol) == "ETF":
                 quality = QualityProfile(
                     symbol=symbol,
                     score=0.0,
@@ -356,20 +350,34 @@ class RadarScheduler:
                 )
                 lane = StrategyLane.CORE_MOMENTUM
                 candidate["quality_source"] = "NOT_APPLICABLE_ETF"
-            elif catalyst_verified:
-                quality = QualityProfile(
-                    symbol=symbol,
-                    score=35.0,
-                    tier="UNRATED",
-                    risk_multiplier=0.0,
-                    as_of=timestamp.astimezone(UTC),
-                )
-                lane = StrategyLane.EVENT_MOMENTUM
-                candidate["quality_source"] = "MISSING_EVENT_ONLY"
-            else:
-                candidate["reason"] = "QUALITY_MISSING_CORE_BLOCKED"
+            elif manual_quality is None:
+                candidate["reason"] = "PROFITABILITY_MISSING"
                 candidates.append(candidate)
                 continue
+            elif manual_quality.profitability_pass is not True:
+                candidate["quality_source"] = manual_quality.source
+                candidate["reason"] = (
+                    "PROFITABILITY_GATE_FAILED"
+                    if manual_quality.profitability_pass is False
+                    else "PROFITABILITY_MISSING"
+                )
+                candidates.append(candidate)
+                continue
+            else:
+                quality = manual_quality.profile()
+                candidate["quality_source"] = manual_quality.source
+                if quality.risk_multiplier > 0.0:
+                    lane = StrategyLane.CORE_MOMENTUM
+                elif (
+                    catalyst_verified
+                    and catalyst_strength >= 0.8
+                    and quality.score >= 35.0
+                ):
+                    lane = StrategyLane.EVENT_MOMENTUM
+                else:
+                    candidate["reason"] = "QUALITY_OR_LANE_BLOCKED"
+                    candidates.append(candidate)
+                    continue
             candidate["lane"] = str(lane)
             try:
                 plan, _evidence = await self.service.build_plan_from_market(

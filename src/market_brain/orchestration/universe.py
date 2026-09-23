@@ -33,6 +33,8 @@ class ManualQuality:
     as_of: datetime
     source: str = "MANUAL"
     partial: bool = False
+    ttm_net_income: float | None = None
+    profitability_pass: bool | None = None
 
     def profile(self) -> QualityProfile:
         profile = classify_quality(self.symbol, self.quality_score, self.as_of)
@@ -41,7 +43,9 @@ class ManualQuality:
                 evidence_type="QUALITY_ASSESSMENT",
                 summary=(
                     f"Documented quality score {self.quality_score:g}; "
-                    f"partial={str(self.partial).lower()}"
+                    f"partial={str(self.partial).lower()}; "
+                    f"ttm_net_income={self.ttm_net_income}; "
+                    f"profitability_pass={self.profitability_pass}"
                 ),
                 source=self.source,
                 published_at=self.as_of,
@@ -171,7 +175,27 @@ def load_manual_quality(path: Path) -> dict[str, ManualQuality]:
             if source not in {"MANUAL", "EDGAR_AUTO", "YAHOO_FUNDAMENTALS"}:
                 raise ValueError(f"QUALITY_SOURCE_INVALID={symbol}:{line_number}")
             partial = _csv_bool(row.get("partial"), default=False)
-            records[symbol] = ManualQuality(symbol, score, as_of, source, partial)
+            ttm_net_income = _csv_optional_float(row.get("ttm_net_income"))
+            declared_profitability = _csv_optional_bool(row.get("profitability_pass"))
+            profitability_pass = (
+                None if ttm_net_income is None else ttm_net_income > 0.0
+            )
+            if (
+                declared_profitability is not None
+                and declared_profitability != profitability_pass
+            ):
+                raise ValueError(
+                    f"QUALITY_PROFITABILITY_INCONSISTENT={symbol}:{line_number}"
+                )
+            records[symbol] = ManualQuality(
+                symbol,
+                score,
+                as_of,
+                source,
+                partial,
+                ttm_net_income,
+                profitability_pass,
+            )
     return records
 
 
@@ -229,6 +253,26 @@ def _csv_bool(value: str | None, *, default: bool) -> bool:
     if normalized in {"false", "0", "no"}:
         return False
     raise ValueError(f"UNIVERSE_BOOLEAN_INVALID={value!r}")
+
+
+def _csv_optional_bool(value: str | None) -> bool | None:
+    if value is None or not value.strip():
+        return None
+    normalized = value.strip().lower()
+    if normalized in {"true", "1", "yes"}:
+        return True
+    if normalized in {"false", "0", "no"}:
+        return False
+    raise ValueError(f"QUALITY_PROFITABILITY_INVALID={value!r}")
+
+
+def _csv_optional_float(value: str | None) -> float | None:
+    if value is None or not value.strip():
+        return None
+    try:
+        return float(value)
+    except ValueError as exc:
+        raise ValueError(f"QUALITY_TTM_NET_INCOME_INVALID={value!r}") from exc
 
 
 def _parse_datetime(value: str, error: str) -> datetime:
