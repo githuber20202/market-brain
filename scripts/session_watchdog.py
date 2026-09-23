@@ -52,7 +52,7 @@ def run_watchdog(
     runner=subprocess.run,
 ) -> tuple[str, str]:
     runner(
-        ["git", "fetch", "origin", "shadow-state:refs/remotes/origin/shadow-state"],
+        ["git", "fetch", "origin", "market-state:refs/remotes/origin/market-state"],
         cwd=repo,
         check=False,
         capture_output=True,
@@ -87,7 +87,7 @@ def run_watchdog(
                 "gh",
                 "workflow",
                 "run",
-                "shadow-session.yml",
+                "market-session.yml",
                 "--repo",
                 repository,
                 "--ref",
