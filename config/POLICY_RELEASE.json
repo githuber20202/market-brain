@@ -1,6 +1,6 @@
 {
   "policy_version": "2026-09-23.3",
-  "policy_release_sha": "LEGACY_METADATA_NOT_RUNTIME_AUTHORITY",
+  "policy_release_sha": "6301ff8507f6d2ba4905a5c71c948d0929d123bd48d067f77a2e1895331e5941",
   "artifact_schema_version": "market-scan-artifact.v3",
   "execution_plane": "MARKET_CORE",
   "role": "RESEARCH_REPLAY_MANUAL_DECISION_SUPPORT",
