@@ -11,21 +11,13 @@ import httpx
 
 from market_brain.alerts.dispatcher import AlertDispatcher
 from market_brain.alerts.sink import GitHubIssueSink
-from market_brain.domain.models import (
-    AlertRecord,
-    IntradayStructureState,
-    PlanStatus,
-    ShadowTradeStatus,
-    SignalState,
-)
-from market_brain.ledger.events import LedgerEvent
+from market_brain.domain.models import AlertRecord
 from market_brain.ledger.replay import replay_check
 from market_brain.ledger.store import PostgresEventStore
 from market_brain.orchestration.screener import MarketScreener
 from market_brain.orchestration.service import DecisionService
 from market_brain.orchestration.universe import EASTERN
 from market_brain.providers import build_market_data_provider
-from market_brain.providers.base import DataUnavailable
 from market_brain.providers.rate_limit import TokenBucketRateLimiter
 from market_brain.providers.yahoo import YahooMarketData
 from market_brain.replay.engine import ReplayEngine
@@ -35,7 +27,6 @@ from market_brain.runtime.premarket import PremarketFunnel
 from market_brain.runtime.premarket_learning import PremarketLearningReviewer
 from market_brain.runtime.radar_report import append_radar_csv
 from market_brain.runtime.radar_scheduler import RadarScheduler, scheduled_slots
-from market_brain.runtime.shadow import ShadowEvaluator
 from market_brain.settings import ROOT, Settings
 
 
@@ -49,7 +40,6 @@ class BatchRuntime:
         scheduler: RadarScheduler,
         premarket: PremarketFunnel | None = None,
         premarket_learning: PremarketLearningReviewer | None = None,
-        shadow: ShadowEvaluator,
         digest: DailyDigest,
         dispatcher: AlertDispatcher,
         issue_sink: GitHubIssueSink,
@@ -63,7 +53,6 @@ class BatchRuntime:
         self.scheduler = scheduler
         self.premarket = premarket
         self.premarket_learning = premarket_learning
-        self.shadow = shadow
         self.digest = digest
         self.dispatcher = dispatcher
         self.issue_sink = issue_sink
@@ -100,8 +89,6 @@ class BatchRuntime:
         timestamp = _aware(now)
         await self.validate_state(now=timestamp)
         self.scheduler.validate_startup(now=timestamp)
-        self.shadow.validate_startup(now=timestamp)
-        wallet_seeded = await self._ensure_shadow_wallet(timestamp)
         if mode == "radar":
             result = await self._run_radar(timestamp)
         elif mode == "premarket":
@@ -118,7 +105,6 @@ class BatchRuntime:
             raise ValueError("BATCH_MODE_INVALID")
         delivered = await self.dispatcher.dispatch_once(now=timestamp)
         result["alerts_delivered"] = delivered
-        result["wallet_seeded"] = wallet_seeded
         await self._write_latest(mode, timestamp, result)
         print(f"BATCH_RESULT={json.dumps(result, sort_keys=True, default=str)}")
         return result
@@ -146,8 +132,6 @@ class BatchRuntime:
                 runs.append(result)
                 if result.get("rankings"):
                     append_radar_csv(result, self.output_dir)
-        plan_watch = await self._run_plan_watch(timestamp)
-        shadow_count = await self.shadow.evaluate_now(now=timestamp)
         expired = await self.service.sweep_expired(now=timestamp)
         return {
             "mode": "radar",
@@ -155,8 +139,6 @@ class BatchRuntime:
             "due_slots": len(due),
             "runs": runs,
             "missed_slots": len(missed),
-            "plan_watch": plan_watch,
-            "shadow_evaluated": shadow_count,
             "expired": expired,
         }
 
@@ -169,7 +151,6 @@ class BatchRuntime:
         scheduled = datetime.combine(local.date(), time(16, 20), EASTERN)
         if local < scheduled:
             return {"mode": "digest", "status": "NOT_DUE"}
-        shadow_count = await self.shadow.evaluate_now(now=timestamp)
         learning = None
         if self.premarket_learning is not None:
             learning = await self.premarket_learning.review(now=timestamp)
@@ -183,7 +164,6 @@ class BatchRuntime:
         return {
             "mode": "digest",
             "status": "COMPLETED" if alert is not None else "ALREADY_COMPLETED",
-            "shadow_evaluated": shadow_count,
             "premarket_learning": learning,
             "report": str(report) if report else None,
         }
@@ -191,7 +171,6 @@ class BatchRuntime:
     async def _run_weekly(self, timestamp: datetime) -> dict:
         from scripts.quality_refresh import refresh_quality
         from scripts.replay_report import create_replay_report
-        from scripts.shadow_report import create_shadow_report
 
         assert self.scheduler.calendar is not None
         universe = sorted(self.scheduler.universe, key=lambda entry: entry.symbol)
@@ -219,257 +198,12 @@ class BatchRuntime:
             output_dir=self.output_dir,
             now=timestamp,
         )
-        local_date = timestamp.astimezone(EASTERN).date()
-        week_start = local_date - timedelta(days=local_date.weekday())
-        shadow_path = await create_shadow_report(
-            self.store,
-            week_start=week_start,
-            output_dir=self.output_dir,
-        )
         return {
             "mode": "weekly",
             "status": "COMPLETED",
             "replay_report": str(replay_path),
-            "shadow_report": str(shadow_path),
             "quality": quality,
         }
-
-    async def _ensure_shadow_wallet(self, timestamp: datetime) -> bool:
-        if self.cfg.run_mode != "shadow":
-            return False
-        if await self.store.get_wallet() is not None:
-            return False
-        await self.service.seed_wallet(
-            self.cfg.shadow_capital_base,
-            self.cfg.shadow_capital_base,
-            source="SHADOW_VIRTUAL",
-            now=timestamp,
-        )
-        await self.store.set_runtime_status(
-            "shadow_wallet",
-            {
-                "mode": "virtual",
-                "source": "SHADOW_VIRTUAL",
-                "seeded_at": timestamp.isoformat(),
-            },
-        )
-        return True
-
-    async def _run_plan_watch(self, timestamp: datetime) -> dict:
-        if self.cfg.run_mode != "shadow":
-            return {"status": "SKIPPED_LIVE", "symbols": 0}
-        plans = await self.store.list_plans()
-        shadows = await self.store.list_shadow_trades()
-        recovered_releases = 0
-        for trade in shadows:
-            if (
-                await self.store.get_reservation(trade.plan_id) is not None
-                and await self._release_shadow_reservation(trade.plan_id, timestamp)
-            ):
-                recovered_releases += 1
-        if recovered_releases:
-            plans = await self.store.list_plans()
-        active_shadow = {
-            row.symbol.upper()
-            for row in shadows
-            if row.status in {ShadowTradeStatus.OPEN, ShadowTradeStatus.TP1}
-        }
-        active_plans = [
-            row
-            for row in plans
-            if row.status in {PlanStatus.ACTIVE, PlanStatus.RESERVED}
-        ]
-        symbols = sorted({row.symbol.upper() for row in active_plans} | active_shadow)
-        backfill_failures: list[dict] = []
-        failed_symbols: set[str] = set()
-        for symbol in symbols:
-            try:
-                await self.service.backfill_intraday_structures([symbol], now=timestamp)
-            except (DataUnavailable, OSError, RuntimeError, TypeError, ValueError) as exc:
-                error_type = (
-                    exc.error_type if isinstance(exc, DataUnavailable) else type(exc).__name__
-                )
-                failed_symbols.add(symbol)
-                backfill_failures.append({"symbol": symbol, "error_type": error_type})
-
-        triggers = 0
-        retest_valid = 0
-        activations = 0
-        rejected = 0
-        rejected_by_reason: dict[str, int] = {}
-        released = recovered_releases
-        session_date = timestamp.astimezone(EASTERN).date().isoformat()
-        for plan in await self.store.list_plans():
-            if (
-                plan.status != PlanStatus.ACTIVE
-                or plan.triggered_at is not None
-                or plan.symbol.upper() in failed_symbols
-            ):
-                continue
-            bars = await self.store.list_intraday_bars(plan.symbol, session_date)
-            first_after = plan.created_at.astimezone(UTC).replace(
-                second=0,
-                microsecond=0,
-            ) + timedelta(minutes=1)
-            trigger_bar = next(
-                (
-                    row
-                    for row in bars
-                    if row.minute_ts >= first_after and row.high >= plan.entry_trigger
-                ),
-                None,
-            )
-            if trigger_bar is not None and await self.service.record_trigger_hit(
-                plan.plan_id,
-                last=trigger_bar.high,
-                triggered_at=trigger_bar.minute_ts + timedelta(seconds=59),
-                source="BATCH_SIP_BAR",
-            ):
-                triggers += 1
-
-        for plan in await self.store.list_plans():
-            if (
-                plan.status != PlanStatus.ACTIVE
-                or plan.triggered_at is None
-                or timestamp > plan.expires_at
-                or plan.symbol.upper() in failed_symbols
-                or await self.store.get_shadow_trade(plan.plan_id) is not None
-            ):
-                continue
-            structure = await self.service.get_intraday_structure(
-                plan.symbol,
-                now=timestamp,
-            )
-            if structure is None or structure.state in {
-                IntradayStructureState.BUILDING_OR,
-                IntradayStructureState.ARMED,
-                IntradayStructureState.BREAKOUT_SEEN,
-            }:
-                continue
-            if structure.state != IntradayStructureState.RETEST_VALID:
-                reasons = [*structure.reasons] or ["RETEST_INVALID"]
-                if await self._record_activation_rejected(
-                    plan.plan_id,
-                    reasons,
-                    timestamp,
-                ):
-                    rejected += 1
-                    self._count_rejection_reasons(rejected_by_reason, reasons)
-                continue
-            retest_valid += 1
-            try:
-                decision = await self.service.activate_shadow_retest(
-                    plan.plan_id,
-                    structure=structure,
-                    detected_at=timestamp,
-                )
-            except (DataUnavailable, OSError, RuntimeError, TypeError, ValueError) as exc:
-                error_type = (
-                    exc.error_type if isinstance(exc, DataUnavailable) else type(exc).__name__
-                )
-                if await self._record_activation_rejected(
-                    plan.plan_id,
-                    [error_type],
-                    timestamp,
-                ):
-                    rejected += 1
-                    self._count_rejection_reasons(rejected_by_reason, [error_type])
-                continue
-            if decision.state != SignalState.BUY_NOW:
-                reasons = decision.reasons or [str(decision.state)]
-                if await self._record_activation_rejected(
-                    plan.plan_id,
-                    reasons,
-                    timestamp,
-                ):
-                    rejected += 1
-                    self._count_rejection_reasons(rejected_by_reason, reasons)
-                continue
-            activations += 1
-            if await self._release_shadow_reservation(plan.plan_id, timestamp):
-                released += 1
-        return {
-            "status": "COMPLETED",
-            "symbols": len(symbols),
-            "backfill_failures": backfill_failures,
-            "trigger_hits": triggers,
-            "retest_valid": retest_valid,
-            "buy_now": activations,
-            "activation_rejected": rejected,
-            "activation_rejected_by_reason": dict(sorted(rejected_by_reason.items())),
-            "reservations_released": released,
-            "shadow_trades": len(await self.store.list_shadow_trades()),
-        }
-
-    async def _release_shadow_reservation(
-        self,
-        plan_id: str,
-        timestamp: datetime,
-    ) -> bool:
-        async with self.store.transaction():
-            released = await self.service.release_reservation(
-                plan_id,
-                reason="SHADOW_RESERVATION_RELEASED",
-                now=timestamp,
-            )
-            if not released:
-                return False
-            await self.store.append(
-                LedgerEvent(
-                    "SHADOW_RESERVATION_RELEASED",
-                    plan_id,
-                    {"source": "SHADOW_VIRTUAL", "reason": "SHADOW_TRADE_OPENED"},
-                    occurred_at=timestamp,
-                )
-            )
-        return True
-
-    async def _record_activation_rejected(
-        self,
-        plan_id: str,
-        reasons: list[str],
-        timestamp: datetime,
-    ) -> bool:
-        normalized = self._normalized_activation_reasons(reasons)
-        key = f"activation_rejected:{plan_id}"
-        previous = await self.store.get_runtime_status_key(key)
-        if isinstance(previous, dict) and previous.get("reasons") == normalized:
-            return False
-        payload = {
-            "plan_id": plan_id,
-            "reasons": normalized,
-            "at": timestamp.isoformat(),
-        }
-        async with self.store.transaction():
-            await self.store.append(
-                LedgerEvent(
-                    "ACTIVATION_REJECTED",
-                    plan_id,
-                    payload,
-                    occurred_at=timestamp,
-                )
-            )
-            await self.store.set_runtime_status(key, payload)
-        return True
-
-    @staticmethod
-    def _normalized_activation_reasons(reasons: list[str]) -> list[str]:
-        expanded: list[str] = []
-        for reason in reasons:
-            value = str(reason)
-            if value == "NO_CHASE_ENTRY_ZONE_EXCEEDED":
-                expanded.append("EXTENDED")
-            expanded.append(value)
-        return list(dict.fromkeys(expanded))
-
-    @classmethod
-    def _count_rejection_reasons(
-        cls,
-        counts: dict[str, int],
-        reasons: list[str],
-    ) -> None:
-        for reason in cls._normalized_activation_reasons(reasons):
-            counts[reason] = counts.get(reason, 0) + 1
 
     async def _write_latest(self, mode: str, timestamp: datetime, result: dict) -> None:
         runtime = await self.store.get_runtime_status()
@@ -495,7 +229,6 @@ class BatchRuntime:
             "last_completed_slot": completed_slots[-1] if completed_slots else None,
             "plans": len(await self.store.list_plans()),
             "alerts": len(await self.store.list_alerts()),
-            "shadow_trades": len(await self.store.list_shadow_trades()),
         }
         if mode == "premarket":
             payload["checkpoint"] = result.get("checkpoint")
@@ -522,7 +255,7 @@ def write_digest_report(payload: dict, output_dir: Path) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     path = output_dir / f"digest_{session_date}.md"
     path.write_text(
-        f"# Shadow digest: {session_date}\n\n{payload['text']}\n",
+        f"# Market digest: {session_date}\n\n{payload['text']}\n",
         encoding="utf-8",
     )
     return path
@@ -635,7 +368,6 @@ async def build_runtime(
         calendar_path=cfg.market_calendar_path,
         state_dir=runtime_state_dir,
     )
-    shadow = ShadowEvaluator(store, cfg=cfg, backfill=service.backfill_intraday_structures)
     issue_sink = GitHubIssueSink(
         os.getenv("GITHUB_TOKEN"),
         os.getenv("GITHUB_REPOSITORY"),
@@ -644,7 +376,6 @@ async def build_runtime(
     dispatcher = AlertDispatcher(
         store,
         dispatcher_sinks if dispatcher_sinks is not None else [issue_sink],
-        run_mode=cfg.run_mode,
         data_plan=cfg.data_plan,
         redact_values=(os.getenv("GITHUB_TOKEN", ""),),
     )
@@ -655,7 +386,6 @@ async def build_runtime(
         scheduler=scheduler,
         premarket=premarket,
         premarket_learning=premarket_learning,
-        shadow=shadow,
         digest=DailyDigest(store),
         dispatcher=dispatcher,
         issue_sink=issue_sink,
