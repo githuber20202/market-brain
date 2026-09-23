@@ -18,7 +18,6 @@ from market_brain.domain.models import (
     LiquidityProfile,
     PositionState,
     Reservation,
-    ShadowTrade,
     TradePlan,
     WalletState,
     utc_now,
@@ -57,9 +56,6 @@ class EventStore(Protocol):
     async def list_liquidity_profiles(self) -> list[LiquidityProfile]: ...
     async def save_intraday_bar(self, bar: IntradayBarRecord) -> None: ...
     async def list_intraday_bars(self, symbol: str, session_date: str) -> list[IntradayBarRecord]: ...
-    async def save_shadow_trade(self, trade: ShadowTrade) -> None: ...
-    async def get_shadow_trade(self, plan_id: str) -> ShadowTrade | None: ...
-    async def list_shadow_trades(self) -> list[ShadowTrade]: ...
     async def save_alert(self, alert: AlertRecord) -> None: ...
     async def get_alert(self, alert_id: str) -> AlertRecord | None: ...
     async def list_alerts(self) -> list[AlertRecord]: ...
@@ -80,7 +76,6 @@ class InMemoryEventStore:
         self.positions: dict[str, PositionState] = {}
         self.liquidity_profiles: dict[str, LiquidityProfile] = {}
         self.intraday_bars: dict[tuple[str, str, datetime, str], IntradayBarRecord] = {}
-        self.shadow_trades: dict[str, ShadowTrade] = {}
         self.alerts: dict[str, AlertRecord] = {}
         self.runtime_status: dict[str, object] = {}
 
@@ -158,15 +153,6 @@ class InMemoryEventStore:
             if stored_symbol == symbol.upper() and stored_date == session_date
         ]
         return sorted(rows, key=lambda bar: (bar.minute_ts, bar.source))
-
-    async def save_shadow_trade(self, trade: ShadowTrade) -> None:
-        self.shadow_trades[trade.plan_id] = trade
-
-    async def get_shadow_trade(self, plan_id: str) -> ShadowTrade | None:
-        return self.shadow_trades.get(plan_id)
-
-    async def list_shadow_trades(self) -> list[ShadowTrade]:
-        return sorted(self.shadow_trades.values(), key=lambda row: (row.opened_at, row.trade_id))
 
     async def save_alert(self, alert: AlertRecord) -> None:
         self.alerts[alert.alert_id] = alert
@@ -468,24 +454,6 @@ class PostgresEventStore:
             for row in rows
         ]
 
-    async def save_shadow_trade(self, trade: ShadowTrade) -> None:
-        await self._execute(
-            """INSERT INTO shadow_trades(trade_id,plan_id,symbol,status,trade_json,opened_at,closed_at)
-               VALUES($1,$2,$3,$4,$5::jsonb,$6,$7)
-               ON CONFLICT(plan_id) DO UPDATE SET status=EXCLUDED.status,
-                 trade_json=EXCLUDED.trade_json,closed_at=EXCLUDED.closed_at,updated_at=now()""",
-            trade.trade_id, trade.plan_id, trade.symbol, str(trade.status),
-            json.dumps(asdict(trade), default=str), trade.opened_at, trade.closed_at,
-        )
-
-    async def get_shadow_trade(self, plan_id: str) -> ShadowTrade | None:
-        row = await self._fetchrow("SELECT trade_json FROM shadow_trades WHERE plan_id=$1", plan_id)
-        return _shadow_trade_from_json(_json_obj(row["trade_json"])) if row is not None else None
-
-    async def list_shadow_trades(self) -> list[ShadowTrade]:
-        rows = await self._fetch("SELECT trade_json FROM shadow_trades ORDER BY opened_at,trade_id")
-        return [_shadow_trade_from_json(_json_obj(row["trade_json"])) for row in rows]
-
     async def save_alert(self, alert: AlertRecord) -> None:
         await self._execute(
             """INSERT INTO alerts(alert_id,kind,payload_json,created_at,delivered_at,attempts,last_error,next_attempt_at)
@@ -645,32 +613,6 @@ def _position_from_json(data: dict) -> PositionState:
             data.get("reconciliation_state", "UNRECONCILED")
         ),
         last_reconciled_at=_dt(data.get("last_reconciled_at")),
-    )
-
-
-def _shadow_trade_from_json(data: dict) -> ShadowTrade:
-    from market_brain.domain.models import ShadowTradeStatus
-
-    return ShadowTrade(
-        trade_id=str(data["trade_id"]),
-        plan_id=str(data["plan_id"]),
-        symbol=str(data["symbol"]),
-        setup=str(data["setup"]),
-        quantity=int(data["quantity"]),
-        trigger=float(data["trigger"]),
-        fill=float(data["fill"]),
-        stop=float(data["stop"]),
-        tp1=float(data["tp1"]),
-        tp2=float(data["tp2"]),
-        opened_at=_dt(data["opened_at"]),
-        time_stop_at=_dt(data["time_stop_at"]),
-        status=ShadowTradeStatus(data.get("status", "OPEN")),
-        remaining_fraction=float(data.get("remaining_fraction", 1.0)),
-        tp1_taken=bool(data.get("tp1_taken", False)),
-        realized_r=float(data.get("realized_r", 0.0)),
-        exit_legs=list(data.get("exit_legs", [])),
-        last_bar_at=_dt(data.get("last_bar_at")),
-        closed_at=_dt(data.get("closed_at")),
     )
 
 
