@@ -8,7 +8,6 @@ from market_brain.ledger.store import (
     _plan_from_json,
     _position_from_json,
     _reservation_from_json,
-    _shadow_trade_from_json,
     _wallet_from_json,
 )
 
@@ -42,7 +41,6 @@ def rebuild_state(events: list[LedgerEvent]) -> dict:
     plans = {}
     reservations = {}
     positions = {}
-    shadow_trades = {}
     for event in events:
         payload = event.payload
         wallet_snapshot = _wallet_snapshot(event)
@@ -72,15 +70,11 @@ def rebuild_state(events: list[LedgerEvent]) -> dict:
             for raw in payload.get("positions", []):
                 position = _position_from_json(raw)
                 positions[position.position_id] = position
-        if payload.get("shadow_trade") is not None:
-            trade = _shadow_trade_from_json(payload["shadow_trade"])
-            shadow_trades[trade.plan_id] = trade
     return {
         "wallet": wallet,
         "plans": plans,
         "reservations": reservations,
         "positions": positions,
-        "shadow_trades": shadow_trades,
     }
 
 
@@ -112,8 +106,4 @@ async def replay_check(store: EventStore) -> list[str]:
         if not _same(rebuilt["positions"].get(key), actual_positions.get(key)):
             differences.append(f"position:{key}")
 
-    actual_shadow = {row.plan_id: row for row in await store.list_shadow_trades()}
-    for key in sorted(set(rebuilt["shadow_trades"]) | set(actual_shadow)):
-        if not _same(rebuilt["shadow_trades"].get(key), actual_shadow.get(key)):
-            differences.append(f"shadow_trade:{key}")
     return differences
