@@ -21,6 +21,8 @@ YAHOO_FUNDAMENTAL_TYPES = (
     "quarterlyTotalRevenue",
     "annualOperatingIncome",
     "quarterlyOperatingIncome",
+    "annualNetIncome",
+    "quarterlyNetIncome",
     "annualTotalDebt",
     "annualCashAndCashEquivalents",
     "annualFreeCashFlow",
