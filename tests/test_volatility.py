@@ -77,3 +77,23 @@ def test_atr_gate_and_target_budget_fail_closed():
     snapshot.atr14 = None
     snapshot.atr14_pct = None
     assert volatility_gate_reason(snapshot, min_atr_pct=1.0) == "ATR_MISSING"
+
+
+def test_remaining_atr_reasons_fail_closed():
+    snapshot = MarketSnapshot(
+        symbol="TEST",
+        last=101.0,
+        prior_close=100.0,
+        atr14=2.0,
+        atr14_pct=2.0,
+        remaining_atr=None,
+        remaining_atr_pct=None,
+    )
+    assert (
+        volatility_gate_reason(snapshot, min_atr_pct=1.0)
+        == "ATR_REMAINING_MISSING"
+    )
+
+    snapshot.remaining_atr = 0.0
+    snapshot.remaining_atr_pct = 0.0
+    assert volatility_gate_reason(snapshot, min_atr_pct=1.0) == "ATR_EXHAUSTED"
