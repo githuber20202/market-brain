@@ -133,8 +133,8 @@ async def test_github_issue_sink_posts_one_rehearsal_comment_and_closes_issue():
     async def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content) if request.content else None
         requests.append((request.method, request.url.path, body))
-        if request.method == "GET" and request.url.path.endswith("/labels/shadow"):
-            return httpx.Response(200, json={"name": "shadow"})
+        if request.method == "GET" and request.url.path.endswith("/labels/market-core"):
+            return httpx.Response(200, json={"name": "market-core"})
         if request.method == "GET" and request.url.path.endswith("/issues"):
             return httpx.Response(200, json=[])
         if request.method == "GET" and request.url.path.endswith("/comments"):
@@ -157,7 +157,7 @@ async def test_github_issue_sink_posts_one_rehearsal_comment_and_closes_issue():
         for method, path, body in requests
         if method == "POST" and path.endswith("/issues")
     )
-    assert issue["title"] == "Shadow rehearsal 2026-08-28"
+    assert issue["title"] == "Market rehearsal 2026-08-28"
     comments = [
         body
         for method, path, body in requests
@@ -178,12 +178,12 @@ async def test_github_issue_sink_updates_existing_rehearsal_comment():
     async def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content) if request.content else None
         requests.append((request.method, request.url.path, body))
-        if request.url.path.endswith("/labels/shadow"):
-            return httpx.Response(200, json={"name": "shadow"})
+        if request.url.path.endswith("/labels/market-core"):
+            return httpx.Response(200, json={"name": "market-core"})
         if request.url.path.endswith("/issues"):
             return httpx.Response(
                 200,
-                json=[{"number": 28, "title": "Shadow rehearsal 2026-08-28"}],
+                json=[{"number": 28, "title": "Market rehearsal 2026-08-28"}],
             )
         if request.method == "GET" and request.url.path.endswith("/comments"):
             return httpx.Response(
@@ -191,7 +191,7 @@ async def test_github_issue_sink_updates_existing_rehearsal_comment():
                 json=[
                     {
                         "id": 91,
-                        "body": "@githuber20202\n\nShadow rehearsal 2026-08-28: CLEAN",
+                        "body": "@githuber20202\n\nMarket rehearsal 2026-08-28: CLEAN",
                     }
                 ],
             )
@@ -202,7 +202,7 @@ async def test_github_issue_sink_updates_existing_rehearsal_comment():
         assert (
             await sink.send_rehearsal_summary(
                 "2026-08-28",
-                "Shadow rehearsal 2026-08-28: CLEAN updated",
+                "Market rehearsal 2026-08-28: CLEAN updated",
             )
             == 28
         )
@@ -217,7 +217,7 @@ async def test_github_issue_sink_updates_existing_rehearsal_comment():
         == {
             "body": (
                 "@githuber20202\n\n"
-                "Shadow rehearsal 2026-08-28: CLEAN updated"
+                "Market rehearsal 2026-08-28: CLEAN updated"
             )
         }
         for method, path, body in requests
