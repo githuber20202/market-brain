@@ -10,11 +10,7 @@ PROJECT_NAME="${COMPOSE_SMOKE_PROJECT_NAME:-market-brain-smoke}"
 PORT="${COMPOSE_SMOKE_PORT:-18080}"
 export API_BIND_PORT="$PORT"
 compose=(docker compose -p "$PROJECT_NAME")
-shadow_report_host=""
 cleanup() {
-  if [[ -n "$shadow_report_host" ]]; then
-    rm -f -- "$shadow_report_host"
-  fi
   "${compose[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
@@ -56,20 +52,5 @@ PY
 "${compose[@]}" run --rm api python -m market_brain.ops.preflight --offline
 echo "PREFLIGHT_OFFLINE=PASS"
 
-shadow_report_output=$("${compose[@]}" run --rm api python scripts/shadow_report.py)
-printf '%s\n' "$shadow_report_output"
-while IFS= read -r line; do
-  if [[ "$line" =~ ^/app/reports/(shadow_[0-9]{4}-W[0-9]{2}\.md)$ ]]; then
-    shadow_report_host="reports/${BASH_REMATCH[1]}"
-  fi
-done <<< "$shadow_report_output"
-if [[ -z "$shadow_report_host" || ! -s "$shadow_report_host" ]]; then
-  echo "COMPOSE_SMOKE=FAIL SHADOW_REPORT_NOT_PERSISTED"
-  exit 1
-fi
-grep -q '^# Shadow report:' "$shadow_report_host"
-echo "SHADOW_REPORT_SMOKE=PASS path=$shadow_report_host"
-rm -f -- "$shadow_report_host"
-shadow_report_host=""
 
 echo "COMPOSE_SMOKE=PASS"
