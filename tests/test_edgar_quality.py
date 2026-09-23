@@ -105,6 +105,8 @@ def test_quality_score_is_deterministic_for_full_and_partial_facts() -> None:
     assert first == second
     assert first.quality_score == 85
     assert first.partial is False
+    assert first.ttm_net_income == 72.0
+    assert first.profitability_pass is True
     assert first.metrics["revenue_growth_yoy"].points == 25
     assert first.metrics["operating_margin"].points == 25
     assert first.metrics["leverage"].points == 20
@@ -117,7 +119,9 @@ def test_quality_score_is_deterministic_for_full_and_partial_facts() -> None:
         "leverage",
         "fcf_margin",
         "dilution_yoy",
+        "ttm_net_income",
     }
+    assert partial.profitability_pass is None
 
 
 def test_quarterly_series_derives_quarters_from_ytd_and_annual_facts() -> None:
@@ -205,6 +209,8 @@ async def test_quality_refresh_writes_edgar_csv_and_reports_missing(tmp_path: Pa
         "as_of": NOW.isoformat(),
         "source": "EDGAR_AUTO",
         "partial": "false",
+        "ttm_net_income": "72.0",
+        "profitability_pass": "true",
     }
     assert rows[1]["partial"] == "true"
 
@@ -217,8 +223,8 @@ async def test_radar_quality_state_copy_accepts_fresh_and_rejects_stale(tmp_path
     target = repo / "data" / "quality.csv"
     store = InMemoryEventStore()
     content = (
-        "symbol,quality_score,as_of,source,partial\n"
-        f"FULL,85,{NOW.isoformat()},EDGAR_AUTO,false\n"
+        "symbol,quality_score,as_of,source,partial,ttm_net_income,profitability_pass\n"
+        f"FULL,85,{NOW.isoformat()},EDGAR_AUTO,false,72,true\n"
     )
     (state / "quality.csv").write_text(content)
 
