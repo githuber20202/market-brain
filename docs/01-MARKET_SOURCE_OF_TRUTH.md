@@ -1,6 +1,6 @@
 # MARKET BRAIN V4 — Source of Truth
 
-Version: `BROKERLESS-2026-09-23.1`
+Version: `BROKERLESS-2026-09-23.2`
 
 ## Mission
 
@@ -27,7 +27,7 @@ Position sizing uses a user-seeded Risk Wallet, not a financial account balance.
 ## Two-speed cognition
 
 - Slow Brain: company quality, moat, balance sheet, management, valuation and catalyst evidence. It emits expiring Evidence Cards.
-- Fast Reflex: price, BBO, volume, VWAP, opening range, retest, relative strength, extension and risk/reward. It is deterministic and runs on every relevant event.
+- Fast Reflex: price, BBO, volume, VWAP, ATR14/Remaining ATR, opening range, retest, relative strength, extension and risk/reward. It is deterministic and runs on every relevant event.
 
 AI is never in the hot execution path and cannot bypass deterministic rules.
 
@@ -41,7 +41,7 @@ All equity lanes share a non-bypassable profitability gate: `TTM Net Income > 0`
 
 ## BUY_NOW
 
-Allowed only when a non-expired Trade Plan has authoritative market data, fresh BBO, acceptable spread, valid retest, price above VWAP, trigger reached, no chase, valid 1:1.5 and 1:2 targets, and Risk Wallet capacity.
+Allowed only when a non-expired Trade Plan has authoritative market data, fresh BBO, acceptable spread, a passing ATR volatility gate, valid retest, price above VWAP, trigger reached, no chase, valid 1:1.5 and 1:2 targets, and Risk Wallet capacity. The default volatility policy requires `ATR14 / price >= 1.0%`, and TP1 must fit inside `1.0x` Remaining ATR from the current price; both thresholds are configurable and must remain identical in Radar and Replay.
 
 ## SELL_NOW
 
@@ -60,5 +60,6 @@ Every plan, rejection, reservation, fill confirmation, position decision and exi
 - No stop widening.
 - No stale plan reuse.
 - No equity plan when TTM net income is missing or non-positive.
+- No trade plan when ATR14 is missing/below the configured floor, or when TP1 exceeds the configured Remaining ATR budget.
 - No trade management for an unknown position.
 
