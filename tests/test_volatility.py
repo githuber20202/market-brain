@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import pytest
 
 from market_brain.domain.models import LiquidityProfile, MarketSnapshot
@@ -19,7 +21,7 @@ def test_volatility_context_tracks_remaining_long_atr():
         symbol="TEST",
         adv20=10_000_000,
         close=100.0,
-        as_of=__import__("datetime").datetime.now(__import__("datetime").UTC),
+        as_of=datetime.now(UTC),
         atr14=2.0,
         atr14_pct=2.0,
     )
