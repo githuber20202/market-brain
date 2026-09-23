@@ -32,6 +32,11 @@ from market_brain.engines.plan import PlanBuildError, build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.quality import classify_quality
 from market_brain.engines.ranking import score_features
+from market_brain.engines.volatility import (
+    target_atr_budget_reason,
+    volatility_gate_reason,
+    wilder_atr,
+)
 from market_brain.settings import ROOT, Settings, settings
 
 EASTERN = ZoneInfo("America/New_York")
@@ -146,7 +151,13 @@ class ReplayEngine:
                 daily_start,
                 session_start,
             )
-            context.update(_scoring_context_from_daily(day, daily))
+            context.update(
+                _scoring_context_from_daily(
+                    day,
+                    daily,
+                    atr_period=self.cfg.atr_period,
+                )
+            )
 
         trades: list[dict[str, Any]] = []
         for symbol in normalized:
@@ -297,6 +308,8 @@ class ReplayEngine:
             authoritative=True,
         )
         adv20 = _positive_optional(symbol_context.get("adv20"))
+        atr14 = _positive_optional(symbol_context.get("atr14"))
+        atr14_pct = _positive_optional(symbol_context.get("atr14_pct"))
         profile = (
             LiquidityProfile(
                 symbol=symbol,
@@ -304,6 +317,8 @@ class ReplayEngine:
                 close=prior_close or snapshot.last,
                 as_of=created_at,
                 refreshed_at=created_at,
+                atr14=atr14,
+                atr14_pct=atr14_pct,
             )
             if adv20 is not None
             else None
@@ -318,6 +333,21 @@ class ReplayEngine:
             ),
             now=created_at,
         )
+        atr_reason = volatility_gate_reason(
+            snapshot,
+            min_atr_pct=self.cfg.min_atr_pct,
+        )
+        if atr_reason is not None:
+            raise PlanBuildError(atr_reason)
+        risk = structure.opening_range_high - _bar_price(retest_bar, "l", "low")
+        if risk > 0:
+            target_reason = target_atr_budget_reason(
+                snapshot,
+                target=structure.opening_range_high + risk * 1.5,
+                multiplier=self.cfg.atr_target_budget_multiplier,
+            )
+            if target_reason is not None:
+                raise PlanBuildError(target_reason)
         score = score_features(
             compute_features(snapshot),
             structure_score=15.0,
@@ -533,26 +563,41 @@ def replay_summary(trades: list[dict[str, Any]]) -> dict[str, Any]:
 def _scoring_context_from_daily(
     day: date,
     rows_by_symbol: dict[str, list[dict]],
+    *,
+    atr_period: int = 14,
 ) -> dict[str, dict[str, float]]:
     output: dict[str, dict[str, float]] = {}
     for symbol, rows in rows_by_symbol.items():
-        parsed: list[tuple[datetime, float, float]] = []
+        parsed: list[tuple[datetime, float, float, float, float]] = []
         for row in rows:
             try:
                 stamp = _bar_stamp(row)
                 volume = float(row.get("v", row.get("volume")))
                 close = _bar_price(row, "c", "close")
+                high = _bar_price(row, "h", "high")
+                low = _bar_price(row, "l", "low")
             except (TypeError, ValueError):
                 continue
-            if stamp.astimezone(EASTERN).date() >= day or volume < 0:
+            if (
+                stamp.astimezone(EASTERN).date() >= day
+                or volume < 0
+                or high < low
+            ):
                 continue
-            parsed.append((stamp, volume, close))
+            parsed.append((stamp, volume, close, high, low))
         parsed.sort(key=lambda value: value[0])
         if not parsed:
             continue
         values: dict[str, float] = {"prior_close": parsed[-1][2]}
         if len(parsed) >= 20:
             values["adv20"] = sum(row[1] for row in parsed[-20:]) / 20.0
+        atr14 = wilder_atr(
+            [(row[3], row[4], row[2]) for row in parsed],
+            period=atr_period,
+        )
+        if atr14 is not None and atr14 > 0:
+            values["atr14"] = atr14
+            values["atr14_pct"] = atr14 / parsed[-1][2] * 100.0
         output[symbol.upper()] = values
     return output
 
