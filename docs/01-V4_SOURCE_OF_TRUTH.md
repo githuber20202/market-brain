@@ -40,6 +40,7 @@ audit. מזהה `UNRESOLVED` נשאר `MISSING` ואינו נכנס לדירוג
 הפלט הוא Top 10 ועד שתי מועמדות `PREDICTION/WATCH`; הוא לעולם אינו `READY`,
 אינו כולל Trigger/Stop/Targets/quantity ואינו מאפשר פעולה אצל ברוקר.
 ל־`EQUITY` מופעל גם כאן Profitability Hard Gate: חברה עם `TTM Net Income <= 0` או ללא ארבעה רבעוני Net Income נשארת בשורת ה־audit אך אינה `ranking_allowed`, ולכן אינה יכולה להיכנס ל־Top 10 או ל־Finalists. External mover ללא Quality מתועד נחסם באותה צורה.
+בנוסף מופעל `ATR14` Volatility Gate לכל נכס סחיר: פרופיל ה־Daily bars חייב להכיל ATR14 תקף, ו־`ATR14 / price` חייב להיות לפחות `MIN_ATR_PCT` (ברירת מחדל 1.0%). מועמד עם `ATR_MISSING` או `ATR_TOO_LOW` נשאר ב־audit אך אינו `ranking_allowed`.
 
 Premarket Deterioration מאושר כאשר מתקיימים לפחות שניים מהבאים: מרחק של 1% או
 יותר מהשיא, תשואת 15 דקות של ‎-0.5% או פחות, ושני lower highs. מועמד כזה חסום
@@ -110,6 +111,10 @@ Profitability Gate מחושב מארבעת הרבעונים האחרונים ב�
 דילול YoY מפחית 0 נקודות כאשר אינו חיובי, ואז 2/5/10/15 נקודות בספים
 ≤2%/≤5%/≤10%/>10%. נתון דילול חסר אינו מקבל קנס אך מסמן את הציון כחלקי.
 
+## ATR14 volatility capacity
+
+פרופיל השוק היומי מחשב Wilder ATR14 מנרות Daily ושומר `atr14` ו־`atr14_pct` לצד `adv20`. `Remaining ATR` למסלול Long מחושב כ־`max(0, ATR14 - max(0, last - prior_close))`. חסר ATR נכשל סגור עם `ATR_MISSING`; ATR% מתחת לסף נכשל עם `ATR_TOO_LOW`. לאחר שנבנית גאומטריית OR/Retest, המרחק מהמחיר הנוכחי ל־TP1 חייב להיכנס בתוך `ATR_TARGET_BUDGET_MULTIPLIER × Remaining ATR` (ברירת מחדל 1.0x), אחרת `TARGET_EXCEEDS_ATR_BUDGET`. אם Remaining ATR אינו ניתן לחישוב, מתקבל `ATR_REMAINING_MISSING`. אותם כללים משמשים Radar, Plan creation ו־Replay.
+
 ## Plan geometry floors
 
 `build_trade_plan` אוכף את אותן רצפות ב־Radar וב־Replay, לפני שמותר לשמור Plan:
@@ -146,7 +151,7 @@ BBO נשאר חובה, וחסרונו מחזיר `BBO_MISSING`.
 
 ציון ה־Radar משתמש בנתוני ייצור מלאים ולא בערכי ברירת מחדל שמוזנים רק בטסטים:
 
-- בתחילת יום מסחר נשמר לכל ה־Universe פרופיל נזילות יומי עם `adv20`. לאחר מכן
+- בתחילת יום מסחר נשמר לכל ה־Universe פרופיל יומי עם `adv20`, ‏`atr14` ו־`atr14_pct`. לאחר מכן
   אותה רשומה ממוחזרת בכל slots של אותו יום; רענון חסר נכשל סגור ומתועד.
 - נפח הייחוס לשעה הוא `adv20 × clamp(minutes_since_09:30 / 390, 0.05, 1.0)`.
   לכן `relative_volume` משווה את הנפח המצטבר לנפח שהיה צפוי עד אותו רגע, והרצפה
@@ -230,6 +235,7 @@ Shadow trade:
 - Unknown cash or position state blocks quantity and `BUY_NOW`.
 - Missing market authority blocks `BUY_NOW`.
 - Missing or non-positive TTM net income blocks equity Trade Plans; catalyst evidence cannot bypass profitability.
+- Missing/insufficient ATR14, ATR% below the configured floor, or TP1 beyond Remaining ATR budget blocks the Trade Plan.
 - Unacknowledged fills never create positions.
 - Unacknowledged exits never remove positions.
 - No model or agent may bypass deterministic risk, structure, market-authority, or Portfolio Twin gates.
