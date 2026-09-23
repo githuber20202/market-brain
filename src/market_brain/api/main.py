@@ -161,6 +161,8 @@ class PlanRequest(StrictModel):
     symbol: str = Field(min_length=1)
     quality_score: float = Field(ge=0, le=100)
     quality_as_of: datetime
+    ttm_net_income: float
+    profitability_pass: bool
     lane: StrategyLane = StrategyLane.CORE_MOMENTUM
     catalyst_verified: bool = False
     catalyst_strength: float = Field(default=0.0, ge=0, le=1)
@@ -308,6 +310,8 @@ async def wallet() -> dict:
 @app.post("/plans")
 async def create_plan(req: PlanRequest) -> dict:
     try:
+        if not req.profitability_pass or req.ttm_net_income <= 0.0:
+            raise ValueError("PROFITABILITY_GATE_FAILED")
         profile = classify_quality(req.symbol.upper(), req.quality_score, req.quality_as_of)
         plan, evidence = await service.build_plan_from_market(
             symbol=req.symbol,
