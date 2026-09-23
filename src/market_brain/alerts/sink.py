@@ -251,7 +251,7 @@ class GitHubIssueSink:
             params={"per_page": 100},
         )
         response.raise_for_status()
-        marker = f"@{self.mention}\n\nShadow rehearsal {session_date}:"
+        marker = f"@{self.mention}\n\nMarket rehearsal {session_date}:"
         existing_comment = next(
             (
                 row
