@@ -74,8 +74,6 @@ def score_companyfacts(
     operating_margin = _trailing_margin(operating_income, revenue)
     fcf_margin = _fcf_margin(cfo, capex, revenue)
     ttm_net_income = _trailing_sum(net_income)
-    if ttm_net_income is None:
-        ttm_net_income = _latest_series_value(_annual_series(facts, NET_INCOME_TAGS, "USD"))
     leverage = _leverage(facts, operating_income)
     dilution = _yoy_growth(diluted_shares)
     if dilution is None:
@@ -111,7 +109,6 @@ def score_yahoo_fundamentals(
     quarterly_revenue = _yahoo_series(snapshot, "quarterlyTotalRevenue")
     annual_operating = _yahoo_series(snapshot, "annualOperatingIncome")
     quarterly_operating = _yahoo_series(snapshot, "quarterlyOperatingIncome")
-    annual_net_income = _yahoo_series(snapshot, "annualNetIncome")
     quarterly_net_income = _yahoo_series(snapshot, "quarterlyNetIncome")
     annual_debt = _yahoo_series(snapshot, "annualTotalDebt")
     annual_cash = _yahoo_series(snapshot, "annualCashAndCashEquivalents")
@@ -139,8 +136,6 @@ def score_yahoo_fundamentals(
         fcf_date = _latest_common_date(annual_fcf, annual_revenue)
 
     ttm_net_income = _trailing_sum(quarterly_net_income)
-    if ttm_net_income is None:
-        ttm_net_income = _latest_series_value(annual_net_income)
 
     leverage, leverage_date = _yahoo_leverage(
         annual_debt,
@@ -278,12 +273,6 @@ def _trailing_sum(series: dict[date, float]) -> float | None:
     if len(ordered) < 4:
         return None
     return sum(value for _day, value in ordered[-4:])
-
-
-def _latest_series_value(series: dict[date, float]) -> float | None:
-    if not series:
-        return None
-    return series[max(series)]
 
 
 def _trailing_margin(numerator: dict[date, float], revenue: dict[date, float]) -> float | None:
