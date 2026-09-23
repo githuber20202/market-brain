@@ -15,7 +15,9 @@ from market_brain.providers.keyless_http import USER_AGENT
 from market_brain.providers.rate_limit import TokenBucketRateLimiter
 from market_brain.providers.yahoo_fundamentals import (
     YAHOO_FUNDAMENTAL_TYPES,
+    FundamentalPoint,
     YahooFundamentals,
+    YahooFundamentalsSnapshot,
 )
 from market_brain.runtime.state import activate_quality_from_state
 from market_brain.settings import Settings
@@ -94,6 +96,30 @@ def test_yahoo_quality_uses_shared_rubric_and_is_deterministic() -> None:
         "ttm_net_income",
     }
     assert incomplete.profitability_pass is None
+
+
+def test_yahoo_quality_marks_negative_ttm_net_income_unprofitable() -> None:
+    provider = YahooFundamentals(now=lambda: NOW)
+    snapshot = _snapshot_from_fixture(
+        provider,
+        "LOSS",
+        "yahoo_fundamentals_full.json",
+    )
+    series = dict(snapshot.series)
+    series["quarterlyNetIncome"] = tuple(
+        FundamentalPoint(point.as_of, -abs(point.value))
+        for point in series["quarterlyNetIncome"]
+    )
+    loss_snapshot = YahooFundamentalsSnapshot(
+        snapshot.symbol,
+        series,
+        snapshot.fetched_at,
+    )
+
+    result = score_yahoo_fundamentals(loss_snapshot, as_of=NOW)
+
+    assert result.ttm_net_income == -21.0
+    assert result.profitability_pass is False
 
 
 @pytest.mark.asyncio
