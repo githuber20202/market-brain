@@ -45,7 +45,7 @@ from market_brain.engines.liquidity import (
     apply_iex_liquidity_gate,
     apply_keyless_liquidity_gate,
 )
-from market_brain.engines.plan import build_trade_plan
+from market_brain.engines.plan import PlanBuildError, build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.ranking import score_features
 from market_brain.engines.volatility import (
@@ -905,22 +905,6 @@ class DecisionService:
         snapshot.opening_range_high = opening_high
         snapshot.opening_range_low = opening_low
         snapshot.retest_low = retest_low
-        atr_reason = volatility_gate_reason(
-            snapshot,
-            min_atr_pct=self.cfg.min_atr_pct,
-        )
-        if atr_reason is not None:
-            raise ValueError(atr_reason)
-        risk = opening_high - retest_low
-        if risk > 0:
-            tp1 = opening_high + risk * 1.5
-            target_reason = target_atr_budget_reason(
-                snapshot,
-                target=tp1,
-                multiplier=self.cfg.atr_target_budget_multiplier,
-            )
-            if target_reason is not None:
-                raise ValueError(target_reason)
         snapshot.metadata = {
             **snapshot.metadata,
             "planning_feed": snapshot.source_id,
@@ -929,6 +913,26 @@ class DecisionService:
             "bars_count": len(bars),
         }
         return snapshot
+
+    def _enforce_volatility_plan_gate(self, snapshot: MarketSnapshot) -> None:
+        atr_reason = volatility_gate_reason(
+            snapshot,
+            min_atr_pct=self.cfg.min_atr_pct,
+        )
+        if atr_reason is not None:
+            raise PlanBuildError(atr_reason)
+        if snapshot.opening_range_high is None or snapshot.retest_low is None:
+            return
+        risk = snapshot.opening_range_high - snapshot.retest_low
+        if risk <= 0:
+            return
+        target_reason = target_atr_budget_reason(
+            snapshot,
+            target=snapshot.opening_range_high + risk * 1.5,
+            multiplier=self.cfg.atr_target_budget_multiplier,
+        )
+        if target_reason is not None:
+            raise PlanBuildError(target_reason)
 
     @transactional
     async def build_plan(
@@ -941,6 +945,7 @@ class DecisionService:
         *,
         now: datetime | None = None,
     ) -> tuple[TradePlan, dict]:
+        self._enforce_volatility_plan_gate(snapshot)
         features = compute_features(snapshot)
         score = score_features(
             features, structure_score=structure_score, rr_score=rr_score
