@@ -113,7 +113,7 @@ Profitability Gate מחושב מארבעת הרבעונים האחרונים ב�
 
 ## ATR14 volatility capacity
 
-פרופיל השוק היומי מחשב Wilder ATR14 מנרות Daily ושומר `atr14` ו־`atr14_pct` לצד `adv20`. `Remaining ATR` למסלול Long מחושב כ־`max(0, ATR14 - max(0, last - prior_close))`. חסר ATR נכשל סגור עם `ATR_MISSING`; ATR% מתחת לסף נכשל עם `ATR_TOO_LOW`. לאחר שנבנית גאומטריית OR/Retest, המרחק מהמחיר הנוכחי ל־TP1 חייב להיכנס בתוך `ATR_TARGET_BUDGET_MULTIPLIER × Remaining ATR` (ברירת מחדל 1.0x), אחרת `TARGET_EXCEEDS_ATR_BUDGET`. אם Remaining ATR אינו ניתן לחישוב, מתקבל `ATR_REMAINING_MISSING`. אותם כללים משמשים Radar, Plan creation ו־Replay.
+פרופיל השוק היומי מחשב Wilder ATR14 מנרות Daily ושומר `atr14` ו־`atr14_pct` לצד `adv20`. `ATR14%` מחושב מול המחיר הנוכחי. `Remaining ATR` למסלול Long מחושב כ־`max(0, ATR14 - max(0, last - prior_close))`. חסר ATR נכשל סגור עם `ATR_MISSING`; ATR% מתחת לסף נכשל עם `ATR_TOO_LOW`; Remaining ATR חסר מחזיר `ATR_REMAINING_MISSING`; Remaining ATR אפס מחזיר `ATR_EXHAUSTED`. לאחר שנבנית גאומטריית OR/Retest, המרחק מהמחיר הנוכחי ל־TP1 חייב להיכנס בתוך `ATR_TARGET_BUDGET_MULTIPLIER × Remaining ATR` (ברירת מחדל 1.0x), אחרת `TARGET_EXCEEDS_ATR_BUDGET`. אותם כללים משמשים Radar, Plan creation ו־Replay.
 
 ## Plan geometry floors
 
