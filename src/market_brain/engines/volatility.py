@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from market_brain.domain.models import LiquidityProfile, MarketSnapshot
 
+ATR_PERIOD = 14
+
 
 def wilder_atr(
     rows: list[tuple[float, float, float]],
