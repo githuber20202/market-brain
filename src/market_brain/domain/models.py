@@ -145,6 +145,8 @@ class LiquidityProfile:
     close: float
     as_of: datetime
     refreshed_at: datetime = field(default_factory=utc_now)
+    atr14: float | None = None
+    atr14_pct: float | None = None
 
 
 @dataclass(slots=True)
@@ -164,6 +166,10 @@ class MarketSnapshot:
     opening_range_low: float | None = None
     retest_low: float | None = None
     atr_1m: float | None = None
+    atr14: float | None = None
+    atr14_pct: float | None = None
+    remaining_atr: float | None = None
+    remaining_atr_pct: float | None = None
     sector_return_pct: float | None = None
     benchmark_return_pct: float | None = None
     catalyst_verified: bool = False
@@ -188,6 +194,8 @@ class FeatureVector:
     relative_strength_pct: float | None
     catalyst_strength: float
     liquidity_ok: bool
+    atr14_pct: float | None = None
+    remaining_atr_pct: float | None = None
     evidence: dict[str, Any] = field(default_factory=dict)
 
 
