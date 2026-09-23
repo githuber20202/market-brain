@@ -34,7 +34,7 @@ def test_volatility_context_tracks_remaining_long_atr():
     apply_volatility_context(snapshot, profile)
 
     assert snapshot.atr14 == pytest.approx(2.0)
-    assert snapshot.atr14_pct == pytest.approx(2.0)
+    assert snapshot.atr14_pct == pytest.approx(2.0 / 101.0 * 100.0)
     assert snapshot.remaining_atr == pytest.approx(1.0)
     assert snapshot.remaining_atr_pct == pytest.approx(100.0 / 101.0)
 
@@ -62,6 +62,17 @@ def test_atr_gate_and_target_budget_fail_closed():
 
     snapshot.atr14_pct = 0.9
     assert volatility_gate_reason(snapshot, min_atr_pct=1.0) == "ATR_TOO_LOW"
+
+    snapshot.atr14 = 2.0
+    snapshot.atr14_pct = 2.0
+    snapshot.remaining_atr = 0.0
+    assert volatility_gate_reason(snapshot, min_atr_pct=1.0) == "ATR_EXHAUSTED"
+
+    snapshot.remaining_atr = None
+    assert (
+        volatility_gate_reason(snapshot, min_atr_pct=1.0)
+        == "ATR_REMAINING_MISSING"
+    )
 
     snapshot.atr14 = None
     snapshot.atr14_pct = None
