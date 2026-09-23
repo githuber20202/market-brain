@@ -309,6 +309,11 @@ class RadarScheduler:
             snapshot = row.get("snapshot", {})
             score = row.get("score", {})
             symbol = str(snapshot.get("symbol", "")).upper()
+            volatility = (
+                row.get("volatility")
+                if isinstance(row.get("volatility"), dict)
+                else {}
+            )
             candidate = {
                 "symbol": symbol,
                 "rank_score": score.get("discovery_total"),
@@ -325,8 +330,15 @@ class RadarScheduler:
                 "quality_source": None,
                 "plan_id": None,
                 "levels": None,
+                "volatility": volatility,
                 "reason": None,
             }
+            if volatility.get("gate_pass") is not True:
+                candidate["reason"] = str(
+                    volatility.get("reason") or "ATR_MISSING"
+                )
+                candidates.append(candidate)
+                continue
             manual_quality = self.quality.get(symbol)
             catalyst_verified = bool(snapshot.get("catalyst_verified", False))
             catalyst_strength = float(snapshot.get("catalyst_strength", 0.0) or 0.0)
