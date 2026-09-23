@@ -176,7 +176,17 @@ def load_manual_quality(path: Path) -> dict[str, ManualQuality]:
                 raise ValueError(f"QUALITY_SOURCE_INVALID={symbol}:{line_number}")
             partial = _csv_bool(row.get("partial"), default=False)
             ttm_net_income = _csv_optional_float(row.get("ttm_net_income"))
-            profitability_pass = _csv_optional_bool(row.get("profitability_pass"))
+            declared_profitability = _csv_optional_bool(row.get("profitability_pass"))
+            profitability_pass = (
+                None if ttm_net_income is None else ttm_net_income > 0.0
+            )
+            if (
+                declared_profitability is not None
+                and declared_profitability != profitability_pass
+            ):
+                raise ValueError(
+                    f"QUALITY_PROFITABILITY_INCONSISTENT={symbol}:{line_number}"
+                )
             records[symbol] = ManualQuality(
                 symbol,
                 score,
