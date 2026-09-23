@@ -55,16 +55,16 @@ def test_scoring_weights_sum_to_100():
     assert score.discovery_total <= 100
 
 
-def test_shadow_sizing_can_use_virtual_fill_without_changing_live_default():
+def test_sizing_can_use_explicit_fill_price_without_changing_default():
     plan = make_plan()
     wallet = WalletState(capital_base=10_000, cash_available=10_000)
     live = size_from_wallet(wallet, plan)
     virtual_fill = plan.entry_trigger * 1.001
-    shadow = size_from_wallet(wallet, plan, entry_price=virtual_fill)
+    explicit = size_from_wallet(wallet, plan, entry_price=virtual_fill)
 
     assert live.cash_required == round(live.quantity * plan.entry_zone_high, 2)
-    assert shadow.cash_required == round(shadow.quantity * virtual_fill, 2)
-    assert shadow.risk_dollars == round(shadow.quantity * (virtual_fill - plan.stop), 2)
+    assert explicit.cash_required == round(explicit.quantity * virtual_fill, 2)
+    assert explicit.risk_dollars == round(explicit.quantity * (virtual_fill - plan.stop), 2)
 
 
 def test_quality_modifies_risk_not_market_score():
