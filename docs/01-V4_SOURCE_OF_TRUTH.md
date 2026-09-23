@@ -39,6 +39,7 @@ audit. מזהה `UNRESOLVED` נשאר `MISSING` ואינו נכנס לדירוג
 והציון מוגבל ל־79. ללא Catalyst ישיר, מסווג וממקור אמין, הציון מוגבל ל־74.
 הפלט הוא Top 10 ועד שתי מועמדות `PREDICTION/WATCH`; הוא לעולם אינו `READY`,
 אינו כולל Trigger/Stop/Targets/quantity ואינו מאפשר פעולה אצל ברוקר.
+ל־`EQUITY` מופעל גם כאן Profitability Hard Gate: חברה עם `TTM Net Income <= 0` או ללא ארבעה רבעוני Net Income נשארת בשורת ה־audit אך אינה `ranking_allowed`, ולכן אינה יכולה להיכנס ל־Top 10 או ל־Finalists. External mover ללא Quality מתועד נחסם באותה צורה.
 
 Premarket Deterioration מאושר כאשר מתקיימים לפחות שניים מהבאים: מרחק של 1% או
 יותר מהשיא, תשואת 15 דקות של ‎-0.5% או פחות, ושני lower highs. מועמד כזה חסום
