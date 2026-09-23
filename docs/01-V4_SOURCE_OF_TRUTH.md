@@ -93,6 +93,8 @@ Radar מעתיקה אותו אל `data/quality.csv` רק כאשר גיל כל ש
 הציון דטרמיניסטי ומחושב מארבעה מדדים, 0–25 נקודות לכל מדד. נתון חסר מקבל 0
 במדד שלו ומסמן `partial=true`; אין השלמת ערכים משוערים.
 
+**Profitability Hard Gate:** לכל `EQUITY` נדרש `TTM Net Income > 0` ממקור איכות מתועד. `TTM Net Income <= 0` נחסם עם `PROFITABILITY_GATE_FAILED`; נתון חסר נחסם עם `PROFITABILITY_MISSING`. השער מופעל לפני בחירת `CORE_MOMENTUM` או `EVENT_MOMENTUM`, ו־Catalyst חזק אינו רשאי לעקוף אותו. `ETF` פטור מהשער משום שאיכות חברה אינה חלה עליו.
+
 | מדד | 25 | 20 | 15 | 10 | 5 | 0 |
 |---|---:|---:|---:|---:|---:|---:|
 | צמיחת הכנסות YoY | ≥20% | ≥10% | ≥5% | ≥0% | ≥-10% | <-10% או חסר |
@@ -225,6 +227,7 @@ Shadow trade:
 
 - Unknown cash or position state blocks quantity and `BUY_NOW`.
 - Missing market authority blocks `BUY_NOW`.
+- Missing or non-positive TTM net income blocks equity Trade Plans; catalyst evidence cannot bypass profitability.
 - Unacknowledged fills never create positions.
 - Unacknowledged exits never remove positions.
 - No model or agent may bypass deterministic risk, structure, market-authority, or Portfolio Twin gates.
