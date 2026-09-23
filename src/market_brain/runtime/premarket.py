@@ -404,7 +404,7 @@ class PremarketFunnel:
             "numeric_execution_allowed": False,
             "ready_allowed": False,
             "broker_actions_allowed": False,
-            "labels": ["SHADOW", "DELAYED", "PREDICTION", "WATCH"],
+            "labels": ["DELAYED", "PREDICTION", "WATCH"],
         }
         artifact["text"] = format_premarket_report(artifact)
         return artifact
@@ -705,7 +705,7 @@ class PremarketFunnel:
             "numeric_execution_allowed": False,
             "ready_allowed": False,
             "broker_actions_allowed": False,
-            "labels": ["SHADOW", "DELAYED", "PREDICTION", "WATCH"],
+            "labels": ["DELAYED", "PREDICTION", "WATCH"],
         }
         artifact["text"] = format_premarket_report(artifact)
         return artifact
@@ -751,7 +751,7 @@ def format_premarket_report(artifact: dict[str, Any]) -> str:
         (
             f"DATA STATE: {artifact['data_state']} | "
             f"MARKET STATE: {artifact['market_state']} | "
-            "[SHADOW][DELAYED][PREDICTION][WATCH]"
+            "[DELAYED][PREDICTION][WATCH]"
         ),
         f"Premarket Prediction {artifact['checkpoint']} — {artifact['session_id']}",
         (
@@ -812,7 +812,7 @@ def format_premarket_report(artifact: dict[str, Any]) -> str:
         lines.append("Blocked by Premarket Deterioration: " + ", ".join(deteriorated))
     if artifact.get("blockers"):
         lines.append("Blockers: " + ", ".join(artifact["blockers"]))
-    lines.append("Market analysis for Shadow measurement only; not an investment instruction.")
+    lines.append("Market analysis for research and manual decision support only; not an automatic execution instruction.")
     return "\n".join(lines)
 
 
