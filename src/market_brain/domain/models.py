@@ -56,14 +56,6 @@ class PlanStatus(StrEnum):
     CANCELLED = "CANCELLED"
 
 
-class ShadowTradeStatus(StrEnum):
-    OPEN = "OPEN"
-    TP1 = "TP1"
-    STOPPED = "STOPPED"
-    TP2 = "TP2"
-    TIME_STOP = "TIME_STOP"
-
-
 class IntradayStructureState(StrEnum):
     BUILDING_OR = "BUILDING_OR"
     ARMED = "ARMED"
@@ -318,24 +310,3 @@ class PositionState:
         self.average_fill = value
 
 
-@dataclass(slots=True)
-class ShadowTrade:
-    trade_id: str
-    plan_id: str
-    symbol: str
-    setup: str
-    quantity: int
-    trigger: float
-    fill: float
-    stop: float
-    tp1: float
-    tp2: float
-    opened_at: datetime
-    time_stop_at: datetime
-    status: ShadowTradeStatus = ShadowTradeStatus.OPEN
-    remaining_fraction: float = 1.0
-    tp1_taken: bool = False
-    realized_r: float = 0.0
-    exit_legs: list[dict[str, Any]] = field(default_factory=list)
-    last_bar_at: datetime | None = None
-    closed_at: datetime | None = None
