@@ -72,7 +72,7 @@ existing fail-closed consequence. Where multiple defects apply, canonical severi
 
 The declaration of `required_evidence_groups` and `required_components` for every
 stage MUST live in the Task 34 policy bundle. If a stage has no such declaration,
-Shadow MUST keep `coverage.complete=false`. The current keyless path MUST represent
+The runtime MUST keep `coverage.complete=false`. The current keyless path MUST represent
 its lawful evidence rather than invent unavailable fields: relative strength is
 measured against SPY, and spread uses Cboe when available. A field that its source
 does not provide is `MISSING` or `DELAYED` according to the existing policy—not
@@ -376,7 +376,7 @@ source. The surrounding record assembler supplies this immutable context:
 ```
 
 The complete deterministic boundary is therefore `(observation, context) ->
-decision record`. Live and Shadow MAY use different data adapters, but identical
+decision record`. Different runtime and Replay adapters MAY differ, but identical
 canonical inputs and context MUST produce byte-identical canonical decision records.
 
 ## Canonical JSON
@@ -503,7 +503,7 @@ The shown nested payloads are abbreviated only in this documentation; real vecto
 MUST contain complete schema-valid objects. `expected_output_sha256` is the SHA-256
 of canonical `expected_output` bytes including the final LF.
 
-Both GitHub Shadow and the private live consumer MUST:
+Both the runtime consumer and Replay validator MUST:
 
 1. validate the vector envelope and complete input;
 2. verify the input digest;

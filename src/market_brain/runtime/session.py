@@ -734,14 +734,14 @@ async def _prepare_runtime(
 ) -> BatchRuntime:
     await asyncio.to_thread(
         subprocess.run,
-        ["git", "fetch", "origin", "shadow-state:refs/remotes/origin/shadow-state"],
+        ["git", "fetch", "origin", "market-state:refs/remotes/origin/market-state"],
         cwd=repo,
         check=False,
     )
     restored = await asyncio.to_thread(
         restore_state_files,
         repo,
-        ref="origin/shadow-state",
+        ref="origin/market-state",
     )
     effective_phase = select_phase(now) if phase == "auto" else phase
     if restored and effective_phase == "b":

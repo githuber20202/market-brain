@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from dataclasses import asdict, replace
+from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 from functools import wraps
 from math import floor
@@ -22,7 +22,6 @@ from market_brain.domain.models import (
     QualityProfile,
     ReconciliationState,
     Reservation,
-    ShadowTrade,
     SignalState,
     StrategyLane,
     TradePlan,
@@ -53,7 +52,6 @@ from market_brain.engines.wallet import size_from_wallet
 from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import EventStore, InMemoryEventStore
 from market_brain.providers.base import DataUnavailable, MarketDataProvider
-from market_brain.replay.engine import SLIPPAGE_BPS, TIME_STOP_MINUTES
 from market_brain.settings import Settings, settings
 
 
@@ -87,53 +85,6 @@ class DecisionService:
             result = hook(symbol)
             if inspect.isawaitable(result):
                 await result
-
-    async def _open_shadow_trade(
-        self,
-        plan: TradePlan,
-        decision: ActivationDecision,
-        *,
-        fill_price: float | None = None,
-        opened_at: datetime | None = None,
-        now: datetime | None = None,
-    ) -> ShadowTrade | None:
-        if self.cfg.run_mode != "shadow":
-            return None
-        existing = await self.store.get_shadow_trade(plan.plan_id)
-        if existing is not None:
-            return existing
-        if plan.stop is None or plan.tp1 is None or plan.tp2 is None:
-            raise RuntimeError("SHADOW_LEVELS_MISSING")
-        opened_at = opened_at or now or datetime.now(UTC)
-        fill = (
-            round(fill_price, 4)
-            if fill_price is not None
-            else round(plan.entry_trigger * (1.0 + SLIPPAGE_BPS / 10_000.0), 4)
-        )
-        trade = ShadowTrade(
-            trade_id=str(uuid4()),
-            plan_id=plan.plan_id,
-            symbol=plan.symbol,
-            setup=str(plan.lane),
-            quantity=decision.quantity,
-            trigger=plan.entry_trigger,
-            fill=fill,
-            stop=plan.stop,
-            tp1=plan.tp1,
-            tp2=plan.tp2,
-            opened_at=opened_at,
-            time_stop_at=opened_at + timedelta(minutes=TIME_STOP_MINUTES),
-        )
-        await self.store.save_shadow_trade(trade)
-        await self.store.append(
-            LedgerEvent(
-                "SHADOW_TRADE_OPENED",
-                trade.trade_id,
-                {"shadow_trade": asdict(trade)},
-                occurred_at=opened_at,
-            )
-        )
-        return trade
 
     @transactional
     async def seed_wallet(
@@ -1168,115 +1119,6 @@ class DecisionService:
             now=timestamp,
         )
 
-    async def activate_shadow_retest(
-        self,
-        plan_id: str,
-        *,
-        structure: IntradayStructure,
-        detected_at: datetime,
-    ) -> ActivationDecision:
-        """Evaluate a delayed Shadow activation at the already closed retest bar."""
-        timestamp = detected_at.astimezone(UTC)
-        if self.cfg.run_mode != "shadow":
-            return ActivationDecision(
-                plan_id,
-                structure.symbol,
-                SignalState.INVALID,
-                ["SHADOW_RETEST_BASIS_DISABLED"],
-            )
-        await self.sweep_expired(now=timestamp)
-        plan = await self.store.get_plan(plan_id)
-        if plan is None:
-            return ActivationDecision(plan_id, "UNKNOWN", SignalState.INVALID, ["PLAN_NOT_FOUND"])
-        if structure.retest_at is None:
-            return ActivationDecision(
-                plan_id, plan.symbol, SignalState.ARMED, ["RETEST_TIMESTAMP_MISSING"]
-            )
-        retest_minute = structure.retest_at.astimezone(UTC).replace(second=0, microsecond=0)
-        retest_closed_at = retest_minute + timedelta(seconds=59)
-        activation_eligible_after = max(
-            plan.created_at.astimezone(UTC),
-            (plan.triggered_at or plan.created_at).astimezone(UTC),
-        )
-        if retest_closed_at <= activation_eligible_after:
-            return ActivationDecision(
-                plan_id,
-                plan.symbol,
-                SignalState.INVALID,
-                ["RETEST_PRECEDES_PLAN_TRIGGER"],
-            )
-        wallet = await self.store.get_wallet()
-        if wallet is None:
-            return ActivationDecision(plan_id, plan.symbol, SignalState.WATCH, ["WALLET_NOT_SEEDED"])
-        if self.market_data is None:
-            raise RuntimeError("MARKET_DATA_PROVIDER_NOT_CONFIGURED")
-
-        current = await self.market_data.snapshot(plan.symbol, decision=True)
-        if not _is_keyless_source(current.source_id):
-            return ActivationDecision(
-                plan_id,
-                plan.symbol,
-                SignalState.INVALID,
-                ["SHADOW_RETEST_REQUIRES_KEYLESS_SOURCE"],
-            )
-        liquidity_reasons = await self._market_liquidity_reasons(current, now=timestamp)
-        rows = await self.store.list_intraday_bars(plan.symbol, structure.session_date)
-        prefix = [row for row in rows if row.minute_ts <= retest_minute]
-        retest_bar = next((row for row in prefix if row.minute_ts == retest_minute), None)
-        if retest_bar is None:
-            return ActivationDecision(
-                plan_id, plan.symbol, SignalState.ARMED, ["RETEST_BAR_MISSING"]
-            )
-        retest_structure = compute_structure(
-            plan.symbol,
-            structure.session_date,
-            [row.as_market_bar() for row in prefix],
-            self.cfg,
-            now=retest_bar.minute_ts + timedelta(seconds=59),
-            sip_confirmed_through=retest_bar.minute_ts + timedelta(minutes=1),
-        )
-        if (
-            retest_structure.state != IntradayStructureState.RETEST_VALID
-            or retest_structure.retest_at != retest_minute
-            or retest_structure.running_vwap is None
-        ):
-            return ActivationDecision(
-                plan_id, plan.symbol, SignalState.ARMED, ["RETEST_BAR_NOT_VALID"]
-            )
-
-        virtual_entry = round(
-            retest_bar.close * (1.0 + SLIPPAGE_BPS / 10_000.0), 4
-        )
-        price_gap_pct = (current.last - virtual_entry) / virtual_entry * 100.0
-        basis = {
-            "activation_basis": "RETEST_BAR",
-            "retest_bar_ts": retest_minute.isoformat(),
-            "detected_at": timestamp.isoformat(),
-            "current_price": current.last,
-            "virtual_entry": virtual_entry,
-            "price_gap_pct": price_gap_pct,
-        }
-        activation_snapshot = replace(
-            current,
-            last=retest_bar.close,
-            bid=None,
-            ask=None,
-            vwap=retest_structure.running_vwap,
-            metadata={**current.metadata, **basis},
-        )
-        return await self._activate_with_context(
-            plan_id,
-            snapshot=activation_snapshot,
-            liquidity_reasons=liquidity_reasons,
-            retest_valid=True,
-            retest_reasons=["SERVER_RETEST_VALID"],
-            retest_state=str(retest_structure.state),
-            sizing_entry_price=virtual_entry,
-            shadow_opened_at=retest_minute + timedelta(seconds=59),
-            activation_context=basis,
-            now=timestamp,
-        )
-
     @transactional
     async def _activate_with_context(
         self,
@@ -1287,9 +1129,6 @@ class DecisionService:
         retest_valid: bool,
         retest_reasons: list[str],
         retest_state: str,
-        sizing_entry_price: float | None = None,
-        shadow_opened_at: datetime | None = None,
-        activation_context: dict | None = None,
         now: datetime | None = None,
     ) -> ActivationDecision:
         timestamp = now or datetime.now(UTC)
@@ -1421,7 +1260,6 @@ class DecisionService:
                         occurred_at=timestamp,
                     )
                 )
-                await self._open_shadow_trade(plan, decision, now=timestamp)
                 await self._notify_state_change(plan.symbol)
                 return decision
             await self.release_reservation(
@@ -1438,7 +1276,6 @@ class DecisionService:
             wallet,
             retest_valid=retest_valid,
             above_vwap=above_vwap,
-            sizing_entry_price=sizing_entry_price,
             max_data_age_seconds=(
                 self.cfg.max_delayed_age_minutes * 60.0
                 if _is_keyless_source(snapshot.source_id)
@@ -1458,19 +1295,14 @@ class DecisionService:
                 "retest_state": retest_state,
                 "source_id": snapshot.source_id,
                 "data_age_seconds": snapshot.data_age_seconds,
-                "activation_context": activation_context,
             }
         )
         await self.store.append(
             LedgerEvent("PLAN_EVALUATED", plan_id, event_payload, occurred_at=timestamp)
         )
         if decision.state == SignalState.BUY_NOW:
-            reservation_entry = sizing_entry_price or plan.entry_zone_high
-            reservation_risk_per_share = (
-                sizing_entry_price - plan.stop
-                if sizing_entry_price is not None
-                else plan.risk_per_share
-            )
+            reservation_entry = plan.entry_zone_high
+            reservation_risk_per_share = plan.risk_per_share
             risk = decision.quantity * reservation_risk_per_share
             cash = decision.quantity * reservation_entry
             reservation = Reservation(
@@ -1511,14 +1343,6 @@ class DecisionService:
                 "order_ticket": ticket,
                 "text": ticket["text"],
             }
-            if activation_context is not None:
-                alert_payload.update(activation_context)
-                alert_payload["text"] = (
-                    f"{ticket['text']}\n"
-                    f"SHADOW virtual_entry={activation_context['virtual_entry']:.4f} "
-                    f"current_price={activation_context['current_price']:.4f} "
-                    f"gap={activation_context['price_gap_pct']:+.3f}%"
-                )
             alert = await self._queue_alert(
                 "BUY_NOW", alert_payload, created_at=timestamp
             )
@@ -1531,17 +1355,9 @@ class DecisionService:
                         "alert_id": alert.alert_id,
                         "order_ticket": ticket,
                         "decision": asdict(decision),
-                        "activation_context": activation_context,
                     },
                     occurred_at=timestamp,
                 )
-            )
-            await self._open_shadow_trade(
-                plan,
-                decision,
-                fill_price=sizing_entry_price,
-                opened_at=shadow_opened_at,
-                now=timestamp,
             )
         await self._notify_state_change(plan.symbol)
         return decision

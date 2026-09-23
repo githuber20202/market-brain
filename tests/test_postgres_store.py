@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -10,8 +9,6 @@ from market_brain.domain.models import (
     PositionState,
     ProtectionState,
     ReconciliationState,
-    ShadowTrade,
-    ShadowTradeStatus,
     StrategyLane,
     TradePlan,
 )
@@ -220,40 +217,6 @@ async def test_postgres_plan_triggered_at_round_trip(pg_store):
     loaded = await pg_store.get_plan(plan.plan_id)
     assert loaded is not None
     assert loaded.triggered_at == now
-
-
-@pytest.mark.postgres
-@pytest.mark.asyncio
-async def test_postgres_shadow_trade_round_trip_and_event_replay(pg_store):
-    now = datetime.now(UTC)
-    trade = ShadowTrade(
-        trade_id="11111111-1111-1111-1111-111111111111",
-        plan_id="22222222-2222-2222-2222-222222222222",
-        symbol="ABC",
-        setup="CORE_MOMENTUM",
-        quantity=5,
-        trigger=100.0,
-        fill=100.1,
-        stop=98.0,
-        tp1=103.0,
-        tp2=104.0,
-        opened_at=now,
-        time_stop_at=now + timedelta(minutes=30),
-        status=ShadowTradeStatus.OPEN,
-    )
-    await pg_store.save_shadow_trade(trade)
-    await pg_store.append(
-        LedgerEvent(
-            "SHADOW_TRADE_OPENED",
-            trade.trade_id,
-            {"shadow_trade": asdict(trade)},
-            occurred_at=now,
-        )
-    )
-
-    assert await pg_store.get_shadow_trade(trade.plan_id) == trade
-    assert await pg_store.list_shadow_trades() == [trade]
-    assert await replay_check(pg_store) == []
 
 
 @pytest.mark.asyncio

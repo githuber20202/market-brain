@@ -32,7 +32,7 @@ def _fixture(name: str) -> dict:
 @pytest.mark.asyncio
 async def test_edgar_provider_uses_policy_user_agent_rate_limit_and_cache() -> None:
     assert EDGAR_USER_AGENT == (
-        "Market Brain shadow radar githuber20202@users.noreply.github.com"
+        "Market Brain fundamentals githuber20202@users.noreply.github.com"
     )
     requests: list[httpx.Request] = []
 
@@ -237,16 +237,3 @@ async def test_radar_quality_state_copy_accepts_fresh_and_rejects_stale(tmp_path
     stale = await activate_quality_from_state(repo, target, store, now=stale_now)
     assert stale["status"] == "QUALITY_STALE"
     assert not target.exists()
-
-
-def test_shadow_weekly_workflow_and_radar_quality_restore_are_configured() -> None:
-    weekly = (ROOT / ".github/workflows/shadow-weekly.yml").read_text()
-    radar = (ROOT / ".github/workflows/shadow-radar.yml").read_text()
-    assert 'cron: "30 21 * * 5"' in weekly
-    assert "workflow_dispatch:" in weekly
-    assert "group: market-brain-shadow-state" in weekly
-    assert "permissions:\n  contents: write\n  issues: write" in weekly
-    assert "python -m market_brain.runtime.batch --mode weekly" in weekly
-    assert "QUALITY_SOURCE: yahoo" in weekly
-    assert "market_brain.runtime.state persist" in weekly
-    assert "market_brain.runtime.state activate-quality" in radar

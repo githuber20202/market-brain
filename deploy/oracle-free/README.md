@@ -382,4 +382,4 @@ curl -fsS http://127.0.0.1:8080/health
 
 הצלחה: מתקבל health JSON, וב־OCI עדיין קיים Ingress יחיד ל־TCP/22 בלבד.
 
-אחרי השלמת ההתקנה, המשך אל [`docs/SHADOW_RUNBOOK.md`](../../docs/SHADOW_RUNBOOK.md) ל־Preflight ולשגרת ההפעלה הבטוחה של שבוע Shadow.
+אחרי השלמת ההתקנה, הפעל Preflight ו־Replay validation לפי מסמכי ההפעלה העדכניים; אין Shadow runtime.

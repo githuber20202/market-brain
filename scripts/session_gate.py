@@ -26,7 +26,7 @@ class GateResult:
 def state_lease(
     repo: Path,
     *,
-    ref: str = "origin/shadow-state",
+    ref: str = "origin/market-state",
     runner=subprocess.run,
 ) -> dict[str, Any] | None:
     result = runner(
@@ -60,7 +60,7 @@ def active_session_runs(
             "--repo",
             repository,
             "--workflow",
-            "shadow-session.yml",
+            "market-session.yml",
             "--limit",
             "100",
             "--json",
@@ -196,7 +196,7 @@ def main() -> None:
     now = datetime.fromisoformat(args.now) if args.now else datetime.now(UTC)
     repo = args.repo.resolve()
     subprocess.run(
-        ["git", "fetch", "origin", "shadow-state:refs/remotes/origin/shadow-state"],
+        ["git", "fetch", "origin", "market-state:refs/remotes/origin/market-state"],
         cwd=repo,
         check=False,
         capture_output=True,

@@ -8,7 +8,6 @@ from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.replay import replay_check
 from market_brain.orchestration.universe import EASTERN
 from market_brain.runtime.coverage import coverage_for_events, coverage_line
-from market_brain.runtime.shadow import shadow_metrics
 
 
 class DailyDigest:
@@ -51,13 +50,7 @@ class DailyDigest:
         ]
         positions.sort(key=lambda position: (position.symbol, position.position_id))
         runtime = await self.store.get_runtime_status()
-        wallet_status = runtime.get("shadow_wallet")
-        wallet_mode = (
-            "virtual"
-            if isinstance(wallet_status, dict)
-            and wallet_status.get("source") == "SHADOW_VIRTUAL"
-            else "unseeded"
-        )
+        wallet_mode = "seeded" if await self.store.get_wallet() is not None else "unseeded"
         quality_status = runtime.get("quality_state")
         quality = (
             quality_status
@@ -66,14 +59,10 @@ class DailyDigest:
         )
         stream = _stream_status(runtime, timestamp)
         differences = await replay_check(self.store)
-        shadow_trades = await self.store.list_shadow_trades()
-        shadow_today = shadow_metrics(shadow_trades, all_events, session_date=session_date)
-        shadow_cumulative = shadow_metrics(shadow_trades, all_events)
         data_availability = _data_availability(events)
         session_coverage = coverage_for_events(events, session_date)
         plan_rejections = _plan_rejections(events)
         score_histogram = _score_histogram(events)
-        shadow_entries = _shadow_entries(events)
         premarket = _premarket_learning(events)
         open_positions = [
             {
@@ -95,10 +84,6 @@ class DailyDigest:
             "alerts_failed": len(failed_ids),
             "open_positions": open_positions,
             "replay_check": {"ok": not differences, "differences": differences},
-            "shadow": {
-                "today": shadow_today,
-                "cumulative": shadow_cumulative,
-            },
             "data_availability": data_availability,
             "session_coverage": session_coverage,
             "workflow_status": "COMPLETED",
@@ -106,7 +91,6 @@ class DailyDigest:
             "learning_status": session_coverage["learning_status"],
             "plan_rejections": plan_rejections,
             "score_histogram": score_histogram,
-            "shadow_entries": shadow_entries,
             "premarket": premarket,
             "wallet": wallet_mode,
             "quality": quality,
@@ -175,8 +159,6 @@ def _format_text(payload: dict[str, Any]) -> str:
     stream_state = "CONNECTED" if stream["connected"] else "DISCONNECTED"
     uptime = _duration(stream["uptime_seconds"])
     replay = "PASS" if payload["replay_check"]["ok"] else "FAIL"
-    today = payload["shadow"]["today"]
-    cumulative = payload["shadow"]["cumulative"]
     position_lines = [
         (
             f"- {row['symbol']} qty={row['remaining_quantity']} "
@@ -186,31 +168,12 @@ def _format_text(payload: dict[str, Any]) -> str:
     ]
     if not position_lines:
         position_lines = ["- none"]
-    setup_lines = [
-        (
-            f"- {setup}: trades={row['trades']} hit_rate={row['hit_rate']:.2%} "
-            f"expectancy={row['expectancy_r']:.3f}R"
-        )
-        for setup, row in today["by_setup"].items()
-    ]
-    if not setup_lines:
-        setup_lines = ["- none"]
     rejection_lines = [
         f"- {reason}: count={count}"
         for reason, count in payload["plan_rejections"].items()
     ]
     if not rejection_lines:
         rejection_lines = ["- none"]
-    entry_lines = [
-        (
-            f"- {row['symbol']}: virtual_entry={row['virtual_entry']:.4f} "
-            f"current_price={row['current_price']:.4f} "
-            f"gap={row['price_gap_pct']:+.3f}%"
-        )
-        for row in payload["shadow_entries"]
-    ]
-    if not entry_lines:
-        entry_lines = ["- none"]
     premarket = payload["premarket"]
     outcome = premarket["outcome_review"]
     checkpoint_lines = [
@@ -261,24 +224,6 @@ def _format_text(payload: dict[str, Any]) -> str:
                 f"40-65={payload['score_histogram']['40-65']} "
                 f"65+={payload['score_histogram']['65+']}"
             ),
-            (
-                "Shadow today: "
-                f"signals={today['signals']} trades={today['trades']} "
-                f"unfinalized={today['unfinalized']} no_trigger={today['no_trigger']} "
-                f"hit_rate={today['hit_rate']:.2%} "
-                f"expectancy={today['expectancy_r']:.3f}R max_dd={today['max_drawdown_r']:.3f}R"
-            ),
-            (
-                "Shadow cumulative: "
-                f"trades={cumulative['trades']} unfinalized={cumulative['unfinalized']} "
-                f"hit_rate={cumulative['hit_rate']:.2%} "
-                f"expectancy={cumulative['expectancy_r']:.3f}R "
-                f"max_dd={cumulative['max_drawdown_r']:.3f}R"
-            ),
-            "Shadow by setup:",
-            *setup_lines,
-            "Shadow delayed entries:",
-            *entry_lines,
             (
                 "Premarket learning: "
                 f"state={premarket['evaluation_state']} "
@@ -347,30 +292,6 @@ def _plan_rejections(events) -> dict[str, int]:
             if isinstance(reason, str) and reason:
                 counts[reason] = counts.get(reason, 0) + 1
     return dict(sorted(counts.items()))
-
-
-def _shadow_entries(events) -> list[dict[str, Any]]:
-    output: list[dict[str, Any]] = []
-    for event in events:
-        if event.event_type != "BUY_NOW_EMITTED":
-            continue
-        context = event.payload.get("activation_context")
-        if not isinstance(context, dict) or context.get("activation_basis") != "RETEST_BAR":
-            continue
-        try:
-            output.append(
-                {
-                    "symbol": str(event.payload["decision"]["symbol"]),
-                    "virtual_entry": float(context["virtual_entry"]),
-                    "current_price": float(context["current_price"]),
-                    "price_gap_pct": float(context["price_gap_pct"]),
-                    "retest_bar_ts": str(context["retest_bar_ts"]),
-                    "detected_at": str(context["detected_at"]),
-                }
-            )
-        except (KeyError, TypeError, ValueError):
-            continue
-    return output
 
 
 def _score_histogram(events) -> dict[str, int]:

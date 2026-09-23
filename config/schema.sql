@@ -96,15 +96,3 @@ CREATE TABLE IF NOT EXISTS intraday_bars (
 CREATE INDEX IF NOT EXISTS idx_intraday_bars_symbol_session
   ON intraday_bars(symbol, session_date, minute_ts);
 
-CREATE TABLE IF NOT EXISTS shadow_trades (
-  trade_id UUID PRIMARY KEY,
-  plan_id UUID NOT NULL UNIQUE,
-  symbol TEXT NOT NULL,
-  status TEXT NOT NULL,
-  trade_json JSONB NOT NULL,
-  opened_at TIMESTAMPTZ NOT NULL,
-  closed_at TIMESTAMPTZ,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS idx_shadow_trades_status_opened
-  ON shadow_trades(status, opened_at);

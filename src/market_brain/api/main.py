@@ -21,7 +21,6 @@ from market_brain.providers import build_market_data_provider
 from market_brain.runtime.daily_digest import DailyDigest
 from market_brain.runtime.position_monitor import PositionMonitor
 from market_brain.runtime.radar_scheduler import RadarScheduler
-from market_brain.runtime.shadow import ShadowEvaluator
 from market_brain.runtime.stream_health import StreamStaleMonitor
 from market_brain.settings import settings
 from market_brain.version import __version__
@@ -45,10 +44,6 @@ radar_scheduler = RadarScheduler(
     poll_seconds=settings.radar_poll_seconds,
     daily_digest=DailyDigest(service.store),
 )
-shadow_evaluator = ShadowEvaluator(
-    service.store,
-    backfill=service.backfill_intraday_structures,
-)
 stream_stale_monitor = StreamStaleMonitor(service.store)
 
 
@@ -67,8 +62,6 @@ def active_alert_sink_names() -> list[str]:
 async def lifespan(_app: FastAPI):
     startup_at = datetime.now(UTC)
     radar_scheduler.validate_startup()
-    shadow_evaluator.validate_startup(now=startup_at)
-    await shadow_evaluator.catch_up(now=startup_at)
     stream_stale_monitor.validate_startup()
     differences = await replay_check(service.store)
     if differences:
@@ -93,14 +86,12 @@ async def lifespan(_app: FastAPI):
         build_alert_sinks(),
         poll_seconds=settings.alert_poll_seconds,
         max_attempts=settings.alert_max_attempts,
-        run_mode=settings.run_mode,
         data_plan=settings.data_plan,
     )
     task = asyncio.create_task(dispatcher.run())
     monitor = PositionMonitor(service)
     monitor_task = asyncio.create_task(monitor.run())
     radar_task = asyncio.create_task(radar_scheduler.run())
-    shadow_task = asyncio.create_task(shadow_evaluator.run())
     stale_task = asyncio.create_task(stream_stale_monitor.run())
     try:
         yield
@@ -109,12 +100,6 @@ async def lifespan(_app: FastAPI):
         stale_task.cancel()
         try:
             await stale_task
-        except asyncio.CancelledError:
-            pass
-        await shadow_evaluator.stop()
-        shadow_task.cancel()
-        try:
-            await shadow_task
         except asyncio.CancelledError:
             pass
         await radar_scheduler.stop()
@@ -233,7 +218,6 @@ async def health() -> dict:
         "direct_account_access_allowed": settings.direct_account_access_allowed,
         "execution_actions_allowed": settings.execution_actions_allowed,
         "data_plan": settings.data_plan,
-        "run_mode": settings.run_mode,
         "decision_feed": settings.decision_feed,
         "historical_feed": settings.historical_feed,
         "historical_lag_minutes": settings.historical_lag_minutes,

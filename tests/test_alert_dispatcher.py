@@ -149,40 +149,11 @@ async def test_sell_now_is_delivered_before_older_buy_now():
 
         assert await dispatcher.dispatch_once(now=now) == 2
 
-    assert order == ["[SHADOW] SELL", "[SHADOW] BUY"]
+    assert order == ["SELL", "BUY"]
 
 
 @pytest.mark.asyncio
-async def test_shadow_prefix_is_added_once_and_live_remains_brokerless_label_free():
-    seen: list[str] = []
-
-    async def handler(request: httpx.Request) -> httpx.Response:
-        seen.append(json.loads(request.content)["text"])
-        return httpx.Response(200)
-
-    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        shadow_store = InMemoryEventStore()
-        live_store = InMemoryEventStore()
-        await shadow_store.save_alert(AlertRecord(kind="BUY_NOW", payload={"text": "BUY"}))
-        await live_store.save_alert(AlertRecord(kind="BUY_NOW", payload={"text": "BUY"}))
-        await AlertDispatcher(
-            shadow_store,
-            [WebhookSink("https://alerts.example.test", client)],
-            run_mode="shadow",
-            data_plan="free",
-        ).dispatch_once()
-        await AlertDispatcher(
-            live_store,
-            [WebhookSink("https://alerts.example.test", client)],
-            run_mode="live",
-            data_plan="free",
-        ).dispatch_once()
-
-    assert seen == ["[SHADOW] BUY", "BUY"]
-
-
-@pytest.mark.asyncio
-async def test_keyless_delivery_adds_shadow_and_delayed_tags_once():
+async def test_keyless_delivery_adds_delayed_tag_once():
     seen: list[str] = []
 
     async def handler(request: httpx.Request) -> httpx.Response:
@@ -192,17 +163,16 @@ async def test_keyless_delivery_adds_shadow_and_delayed_tags_once():
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         store = InMemoryEventStore()
         await store.save_alert(
-            AlertRecord(kind="BUY_NOW", payload={"text": "[SHADOW] BUY TEST"})
+            AlertRecord(kind="BUY_NOW", payload={"text": "[DELAYED] BUY TEST"})
         )
         dispatcher = AlertDispatcher(
             store,
             [WebhookSink("https://alerts.example.test", client)],
-            run_mode="shadow",
             data_plan="keyless_delayed",
         )
         await dispatcher.dispatch_once()
 
-    assert seen == ["[SHADOW][DELAYED] BUY TEST"]
+    assert seen == ["[DELAYED] BUY TEST"]
 
 
 @pytest.mark.asyncio

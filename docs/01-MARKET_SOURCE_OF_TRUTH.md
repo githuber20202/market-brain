@@ -49,7 +49,7 @@ Allowed only for a position present in the Position Twin. It is deterministic wh
 
 ## Learning
 
-Every plan, rejection, reservation, fill confirmation, position decision and exit confirmation is an event. Shadow outcomes are stored separately from real confirmed positions. Model or rule changes require replay and out-of-sample validation.
+Every plan, rejection, reservation, fill confirmation, position decision and exit confirmation is an event. Model or rule changes require deterministic Replay and out-of-sample validation. No Shadow runtime or virtual-trade ledger exists.
 
 ## Non-negotiable boundaries
 

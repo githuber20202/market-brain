@@ -67,7 +67,6 @@ def _load_runtime_contract() -> tuple[dict, dict]:
         "runtime_status",
         "liquidity_profiles",
         "intraday_bars",
-        "shadow_trades",
     )
     missing_tables = [name for name in required_tables if f"TABLE IF NOT EXISTS {name}" not in schema]
     if missing_tables:
@@ -110,8 +109,6 @@ class Settings(BaseSettings):
     market_calendar_path: Path = DATA_DIR / "market_calendar.csv"
     plans_per_run: int = 5
     radar_poll_seconds: float = 5.0
-    run_mode: Literal["shadow", "live"] = "shadow"
-    shadow_capital_base: float = 100_000.0
     premarket_news_lookback_hours: int = 72
     premarket_news_limit: int = 5
     premarket_external_max_symbols: int = 30
@@ -212,8 +209,6 @@ class Settings(BaseSettings):
             raise ValueError("INVALID_PLANS_PER_RUN")
         if self.radar_poll_seconds <= 0:
             raise ValueError("INVALID_RADAR_POLL_SECONDS")
-        if self.shadow_capital_base <= 0:
-            raise ValueError("INVALID_SHADOW_CAPITAL_BASE")
         if self.premarket_news_lookback_hours <= 0:
             raise ValueError("INVALID_PREMARKET_NEWS_LOOKBACK")
         if self.premarket_news_limit <= 0 or self.premarket_news_limit > 20:

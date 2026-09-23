@@ -1,8 +1,8 @@
 {
-  "policy_version": "2026-09-02.1",
-  "policy_release_sha": "a8d7504124316f120b16b217e306280260d02cb3412db17c8b3166f30b048aad",
+  "policy_version": "2026-09-23.3",
+  "policy_release_sha": "6301ff8507f6d2ba4905a5c71c948d0929d123bd48d067f77a2e1895331e5941",
   "artifact_schema_version": "market-scan-artifact.v3",
-  "execution_plane": "GITHUB_SHADOW",
-  "role": "RESEARCH_REPLAY_LEARNING",
+  "execution_plane": "MARKET_CORE",
+  "role": "RESEARCH_REPLAY_MANUAL_DECISION_SUPPORT",
   "ready_allowed": false
 }

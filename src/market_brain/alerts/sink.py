@@ -130,12 +130,12 @@ class GitHubIssueSink:
             return
         client = self._client()
         base = f"https://api.github.com/repos/{self.repository}"
-        response = await client.get(f"{base}/labels/shadow", headers=self._headers())
+        response = await client.get(f"{base}/labels/market-core", headers=self._headers())
         if response.status_code == 404:
             response = await client.post(
                 f"{base}/labels",
                 headers=self._headers(),
-                json={"name": "shadow", "color": "6f42c1", "description": "Shadow-mode output"},
+                json={"name": "market-core", "color": "6f42c1", "description": "Market CORE research output"},
             )
         response.raise_for_status()
         self._label_ready = True
@@ -147,11 +147,11 @@ class GitHubIssueSink:
         await self._ensure_label()
         client = self._client()
         base = f"https://api.github.com/repos/{self.repository}"
-        title = f"Shadow {session_date}"
+        title = f"Market CORE {session_date}"
         response = await client.get(
             f"{base}/issues",
             headers=self._headers(),
-            params={"state": "all", "labels": "shadow", "per_page": 100},
+            params={"state": "all", "labels": "market-core", "per_page": 100},
         )
         response.raise_for_status()
         issues = response.json()
@@ -170,10 +170,10 @@ class GitHubIssueSink:
                 json={
                     "title": title,
                     "body": (
-                        f"Brokerless shadow-mode alerts for {session_date}. "
-                        "Measurement only; not advice or execution."
+                        f"Market CORE research alerts for {session_date}. "
+                        "Manual decision support only; no automatic execution."
                     ),
-                    "labels": ["shadow"],
+                    "labels": ["market-core"],
                 },
             )
             response.raise_for_status()
@@ -214,11 +214,11 @@ class GitHubIssueSink:
         await self._ensure_label()
         client = self._client()
         base = f"https://api.github.com/repos/{self.repository}"
-        title = f"Shadow rehearsal {session_date}"
+        title = f"Market rehearsal {session_date}"
         response = await client.get(
             f"{base}/issues",
             headers=self._headers(),
-            params={"state": "all", "labels": "shadow", "per_page": 100},
+            params={"state": "all", "labels": "market-core", "per_page": 100},
         )
         response.raise_for_status()
         issue_number = next(
@@ -239,7 +239,7 @@ class GitHubIssueSink:
                         f"Brokerless production-path rehearsal for {session_date}. "
                         "Measurement only; not advice or execution."
                     ),
-                    "labels": ["shadow"],
+                    "labels": ["market-core"],
                 },
             )
             response.raise_for_status()
@@ -251,7 +251,7 @@ class GitHubIssueSink:
             params={"per_page": 100},
         )
         response.raise_for_status()
-        marker = f"@{self.mention}\n\nShadow rehearsal {session_date}:"
+        marker = f"@{self.mention}\n\nMarket rehearsal {session_date}:"
         existing_comment = next(
             (
                 row

@@ -8,7 +8,6 @@ from market_brain.domain.models import AlertRecord, MarketSnapshot, StrategyLane
 from market_brain.engines.quality import classify_quality
 from market_brain.ledger.store import InMemoryEventStore
 from market_brain.orchestration.service import DecisionService
-from market_brain.settings import Settings
 from tests.retest_helpers import activate_with_server_retest
 
 
@@ -130,32 +129,7 @@ async def test_buy_now_creates_alert_and_returns_alert_id():
     assert alert.payload["plan_id"] == plan.plan_id
     emitted = [event for event in store.events if event.event_type == "BUY_NOW_EMITTED"]
     assert emitted[-1].payload["alert_id"] == decision.alert_id
-    shadow = await store.get_shadow_trade(plan.plan_id)
-    assert shadow is not None
-    assert shadow.fill == pytest.approx(plan.entry_trigger * 1.001, abs=0.0001)
-    assert [event.event_type for event in store.events][-1] == "SHADOW_TRADE_OPENED"
-
-
-@pytest.mark.asyncio
-async def test_live_label_mode_stays_brokerless_and_does_not_open_shadow_trade():
-    store = InMemoryEventStore()
-    service = DecisionService(
-        store,
-        cfg=Settings(run_mode="live"),
-        market_data=FakeProvider(),
-    )
-    await service.seed_wallet(10_000, 10_000)
-    quality = classify_quality("TEST", 90, datetime.now(UTC))
-    plan, _ = await service.build_plan(
-        planning_snapshot(), quality, StrategyLane.CORE_MOMENTUM, 15, 10
-    )
-
-    decision = await activate_with_server_retest(service, plan.plan_id)
-
-    assert decision.state == "BUY_NOW"
-    assert decision.order_ticket is not None
-    assert await store.get_shadow_trade(plan.plan_id) is None
-    assert not any(event.event_type == "SHADOW_TRADE_OPENED" for event in store.events)
+    assert [event.event_type for event in store.events][-1] == "BUY_NOW_EMITTED"
 
 
 def test_alerts_endpoint_lists_undelivered(monkeypatch):

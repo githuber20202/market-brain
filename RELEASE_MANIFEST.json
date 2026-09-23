@@ -22,7 +22,7 @@
     "always-on host deployment",
     "live Alpaca credentialed stream session",
     "configured external alert delivery",
-    "multi-session shadow validation",
+    "multi-session market-session validation",
     "production backup/restore drill"
   ]
 }

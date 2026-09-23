@@ -9,5 +9,5 @@
 7. The Position Twin becomes the source of truth for that trade.
 8. Live market events produce HOLD, TRIM, TAKE_PROFIT or SELL_NOW.
 9. The user confirms exits, releasing capital in the Risk Wallet.
-10. Shadow outcomes and real outcomes are reviewed separately.
+10. Replay and outcome-review results are reviewed separately from confirmed real positions.
 

@@ -32,4 +32,3 @@ async def test_health_exposes_stream_stale(monkeypatch):
     result = await api_main.health()
 
     assert result["stream_stale"] is True
-    assert result["run_mode"] in {"shadow", "live"}

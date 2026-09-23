@@ -30,7 +30,6 @@ def full_env() -> dict[str, str]:
         "NATS_URL": "nats://nats:4222",
         "POSTGRES_DSN": "postgresql://market:private@postgres:5432/market",
         "POSTGRES_PASSWORD": "postgres-private",
-        "RUN_MODE": "shadow",
         "REST_SAFE_CALLS_PER_MINUTE": "180",
         "STREAM_MAX_SYMBOLS": "30",
         "STREAM_STALE_ALERT_SECONDS": "120",
@@ -139,7 +138,7 @@ async def test_online_preflight_uses_required_endpoints_and_fixed_telegram_messa
     async def handler(request: httpx.Request) -> httpx.Response:
         requests.append(request)
         if request.url.path.endswith("/getMe"):
-            return httpx.Response(200, json={"ok": True, "result": {"username": "shadow_bot"}})
+            return httpx.Response(200, json={"ok": True, "result": {"username": "market_bot"}})
         if request.url.path.endswith("/sendMessage"):
             return httpx.Response(200, json={"ok": True, "result": {"message_id": 1}})
         return httpx.Response(200, json={})
