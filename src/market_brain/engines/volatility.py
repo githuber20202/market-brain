@@ -8,7 +8,7 @@ ATR_PERIOD = 14
 def wilder_atr(
     rows: list[tuple[float, float, float]],
     *,
-    period: int = 14,
+    period: int = ATR_PERIOD,
 ) -> float | None:
     """Return Wilder ATR from ordered (high, low, close) daily rows."""
     if period <= 0 or len(rows) < period + 1:
