@@ -37,7 +37,11 @@ def apply_volatility_context(
     profile: LiquidityProfile | None,
 ) -> MarketSnapshot:
     snapshot.atr14 = profile.atr14 if profile is not None else None
-    snapshot.atr14_pct = profile.atr14_pct if profile is not None else None
+    snapshot.atr14_pct = (
+        snapshot.atr14 / snapshot.last * 100.0
+        if snapshot.atr14 is not None and snapshot.last > 0
+        else (profile.atr14_pct if profile is not None else None)
+    )
     snapshot.remaining_atr = None
     snapshot.remaining_atr_pct = None
     if (
@@ -63,6 +67,10 @@ def volatility_gate_reason(
         return "ATR_MISSING"
     if snapshot.atr14 <= 0 or snapshot.atr14_pct < min_atr_pct:
         return "ATR_TOO_LOW"
+    if snapshot.remaining_atr is None:
+        return "ATR_REMAINING_MISSING"
+    if snapshot.remaining_atr <= 0:
+        return "ATR_EXHAUSTED"
     return None
 
 
