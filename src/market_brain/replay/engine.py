@@ -293,6 +293,8 @@ class ReplayEngine:
             volume=_total_volume(prefix),
             vwap=_bars_vwap(prefix),
             open_price=_bar_price(prefix[0], "o", "open"),
+            high=max(_bar_price(row, "h", "high") for row in prefix),
+            low=min(_bar_price(row, "l", "low") for row in prefix),
             opening_range_high=structure.opening_range_high,
             opening_range_low=structure.opening_range_low,
             retest_low=_bar_price(retest_bar, "l", "low"),
