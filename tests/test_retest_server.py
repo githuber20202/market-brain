@@ -221,7 +221,7 @@ async def valid_service():
     planning = MarketSnapshot(
         symbol="TEST", last=100.8, prior_close=98.0, bid=100.79, ask=100.81,
         volume=2_000_000, avg_volume=1_000_000, vwap=100.0, open_price=99.0,
-        opening_range_high=100.8, opening_range_low=99.6, retest_low=100.0, benchmark_return_pct=0.5,
+        opening_range_high=100.8, opening_range_low=99.6, retest_low=100.0, atr14=5.0, atr14_pct=5.0, remaining_atr=5.0, remaining_atr_pct=5.0, benchmark_return_pct=0.5,
         catalyst_verified=True, catalyst_strength=0.9,
     )
     plan, _ = await service.build_plan(planning, quality, StrategyLane.CORE_MOMENTUM, 15, 10)
