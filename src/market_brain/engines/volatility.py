@@ -53,9 +53,22 @@ def apply_volatility_context(
         and snapshot.prior_close > 0
         and snapshot.last > 0
     ):
-        # Long-only budget: an upside move from prior close consumes today's ATR.
-        used_upside = max(0.0, snapshot.last - snapshot.prior_close)
-        snapshot.remaining_atr = max(0.0, snapshot.atr14 - used_upside)
+        # Consume the true range already traveled today. This catches both
+        # upside extension and large intraday/downside whipsaws before a long entry.
+        used_range = abs(snapshot.last - snapshot.prior_close)
+        if (
+            snapshot.high is not None
+            and snapshot.low is not None
+            and snapshot.high > 0
+            and snapshot.low > 0
+            and snapshot.high >= snapshot.low
+        ):
+            used_range = max(
+                snapshot.high - snapshot.low,
+                abs(snapshot.high - snapshot.prior_close),
+                abs(snapshot.low - snapshot.prior_close),
+            )
+        snapshot.remaining_atr = max(0.0, snapshot.atr14 - used_range)
         snapshot.remaining_atr_pct = snapshot.remaining_atr / snapshot.last * 100.0
     return snapshot
 
