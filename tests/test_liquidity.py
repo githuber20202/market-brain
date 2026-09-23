@@ -48,7 +48,13 @@ class HistoricalProvider:
         self.calls += 1
         base = datetime(2026, 7, 1, tzinfo=UTC)
         return [
-            {"t": (base + timedelta(days=index)).isoformat(), "v": 2_000_000 + index, "c": 100 + index / 10}
+            {
+                "t": (base + timedelta(days=index)).isoformat(),
+                "v": 2_000_000 + index,
+                "c": 100 + index / 10,
+                "h": 101 + index / 10,
+                "l": 99 + index / 10,
+            }
             for index in range(25)
         ]
 
@@ -65,6 +71,8 @@ async def test_liquidity_profile_refreshes_once_per_day():
     assert provider.calls == 1
     assert first.adv20 == second.adv20
     assert first.close == pytest.approx(102.4)
+    assert first.atr14 == pytest.approx(2.0)
+    assert first.atr14_pct == pytest.approx(2.0 / 102.4 * 100.0)
     await service.ensure_liquidity_profile("TEST", now=now + timedelta(days=1))
     assert provider.calls == 2
 
