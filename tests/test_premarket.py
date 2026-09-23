@@ -176,7 +176,15 @@ class FakeLiquidityService:
     async def refresh_liquidity_profiles_for_symbols(self, symbols, *, now):
         for symbol in symbols:
             await self.store.save_liquidity_profile(
-                LiquidityProfile(symbol, 10_000_000, 100.0, now, refreshed_at=now)
+                LiquidityProfile(
+                    symbol,
+                    10_000_000,
+                    100.0,
+                    now,
+                    refreshed_at=now,
+                    atr14=3.0,
+                    atr14_pct=3.0,
+                )
             )
         return {"session_date": now.date().isoformat(), "refreshed": len(symbols), "failed": []}
 
@@ -219,6 +227,56 @@ async def test_premarket_checkpoints_refresh_delta_deterioration_and_artifacts(t
         assert (path / "report.json").is_file()
         assert (path / "audit.jsonl").is_file()
         assert (path / "funnel.json").is_file()
+
+
+@pytest.mark.asyncio
+async def test_premarket_blocks_low_atr_from_ranking(tmp_path):
+    universe_dir, calendar_path, quality_path = _runtime_files(tmp_path)
+    store = InMemoryEventStore()
+
+    class LowAtrLiquidityService(FakeLiquidityService):
+        async def refresh_liquidity_profiles_for_symbols(self, symbols, *, now):
+            for symbol in symbols:
+                await self.store.save_liquidity_profile(
+                    LiquidityProfile(
+                        symbol,
+                        10_000_000,
+                        100.0,
+                        now,
+                        refreshed_at=now,
+                        atr14=0.5,
+                        atr14_pct=0.5,
+                    )
+                )
+            return {
+                "session_date": now.date().isoformat(),
+                "refreshed": len(symbols),
+                "failed": [],
+            }
+
+    funnel = PremarketFunnel(
+        store=store,
+        service=LowAtrLiquidityService(store),
+        provider=FakePremarketProvider(),
+        universe_dir=universe_dir,
+        calendar_path=calendar_path,
+        cfg=_cfg(),
+        quality_path=quality_path,
+        state_dir=tmp_path / "state",
+    )
+
+    result = await funnel.run("T-30", now=T30)
+    artifact = await store.get_runtime_status_key(
+        "premarket_artifact:2026-08-28:T-30"
+    )
+    aapl = next(row for row in artifact["audit"] if row["symbol"] == "AAPL")
+
+    assert result["status"] == "COMPLETED"
+    assert "AAPL" not in result["top10"]
+    assert "AAPL" not in result["finalists"]
+    assert aapl["atr_gate_pass"] is False
+    assert aapl["atr_gate_reason"] == "ATR_TOO_LOW"
+    assert "ATR_TOO_LOW" in aapl["reason_codes"]
 
 
 @pytest.mark.asyncio
