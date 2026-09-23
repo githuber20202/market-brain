@@ -44,7 +44,7 @@ def test_remaining_atr_consumes_intraday_true_range():
         symbol="TEST",
         adv20=10_000_000,
         close=100.0,
-        as_of=__import__("datetime").datetime.now(__import__("datetime").UTC),
+        as_of=datetime.now(UTC),
         atr14=3.0,
         atr14_pct=3.0,
     )
