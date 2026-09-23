@@ -12,7 +12,7 @@ from market_brain.providers.rate_limit import TokenBucketRateLimiter
 
 EDGAR_SOURCE_ID = "SEC_EDGAR"
 EDGAR_USER_AGENT = (
-    "Market Brain shadow radar githuber20202@users.noreply.github.com"
+    "Market Brain fundamentals githuber20202@users.noreply.github.com"
 )
 EDGAR_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 EDGAR_FACTS_BASE_URL = "https://data.sec.gov/api/xbrl/companyfacts"
