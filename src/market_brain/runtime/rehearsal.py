@@ -101,8 +101,6 @@ async def run_rehearsal(
             "http_requests": provider.request_count - requests_before,
             "http_requests_total": provider.request_count,
             "discovery": discovery,
-            "plan_watch": result.get("plan_watch", {}),
-            "shadow": await _shadow_rows(runtime.store),
             "expired": result.get("expired", {}),
         }
         tick_reports.append(report)
@@ -190,7 +188,6 @@ async def run_rehearsal(
             reason = candidate.get("reason")
             if isinstance(reason, str) and reason:
                 rejection_counts[reason] += 1
-    trades = await _shadow_rows(runtime.store)
     summary = {
         "session": session_date.isoformat(),
         "status": "CLEAN",
@@ -207,15 +204,10 @@ async def run_rehearsal(
         },
         "skipped_symbols": skipped_symbols,
         "trigger_hits": sum(row.event_type == "TRIGGER_HIT" for row in events),
-        "retest_valid": sum(
-            int(report.get("plan_watch", {}).get("retest_valid", 0))
-            for report in tick_reports
-        ),
         "buy_now": sum(row.event_type == "BUY_NOW_EMITTED" for row in events),
         "activation_rejected": sum(
             row.event_type == "ACTIVATION_REJECTED" for row in events
         ),
-        "shadow_trades": trades,
         "http_requests": provider.request_count,
         "exceptions": exceptions,
         "digest": digest_result,
@@ -256,33 +248,16 @@ def _discovery_report(payload: dict) -> dict:
     }
 
 
-async def _shadow_rows(store) -> list[dict]:
-    return [
-        {
-            "trade_id": row.trade_id,
-            "plan_id": row.plan_id,
-            "symbol": row.symbol,
-            "status": str(row.status),
-            "virtual_entry": row.fill,
-            "realized_r": row.realized_r,
-            "opened_at": row.opened_at.isoformat(),
-            "closed_at": row.closed_at.isoformat() if row.closed_at else None,
-            "exit_legs": row.exit_legs,
-        }
-        for row in await store.list_shadow_trades()
-    ]
-
-
 def _issue_summary(summary: dict[str, Any]) -> str:
     lines = [
-        f"Shadow rehearsal {summary['session']}: {summary['status']}",
+        f"Market rehearsal {summary['session']}: {summary['status']}",
         (
             f"ticks={summary['ticks']} discovery_slots={summary['discovery_slots']} "
             f"data_unavailable={summary['data_unavailable_slots']}"
         ),
         (
             f"plans={summary['plans']} trigger_hits={summary['trigger_hits']} "
-            f"retest_valid={summary['retest_valid']} buy_now={summary['buy_now']} "
+            f"buy_now={summary['buy_now']} "
             f"activation_rejected={summary['activation_rejected']}"
         ),
         f"skipped_symbols={summary['skipped_symbols']} http_requests={summary['http_requests']}",
@@ -294,8 +269,6 @@ def _issue_summary(summary: dict[str, Any]) -> str:
         + json.dumps(summary["plan_rejections"], sort_keys=True, ensure_ascii=False),
         "score_histogram="
         + json.dumps(summary["score_histogram"], sort_keys=True, ensure_ascii=False),
-        "shadow_trades="
-        + json.dumps(summary["shadow_trades"], sort_keys=True, default=str, ensure_ascii=False),
         "Measurement only; not advice or execution.",
     ]
     return "\n".join(lines)
