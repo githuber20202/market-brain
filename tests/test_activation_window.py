@@ -114,7 +114,7 @@ async def test_untriggered_plan_keeps_original_expiry() -> None:
 @pytest.mark.asyncio
 async def test_live_activation_still_uses_current_detection_price() -> None:
     store = InMemoryEventStore()
-    cfg = Settings(run_mode="live")
+    cfg = Settings()
     service = DecisionService(store, cfg=cfg, market_data=ActivationProvider(last=101.0))
     plan = _plan()
     await store.save_plan(plan)
