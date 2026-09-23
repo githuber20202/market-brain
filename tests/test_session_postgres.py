@@ -39,7 +39,7 @@ async def test_phase_a_to_b_real_postgres_dump_restore_and_handoff(pg_store, tmp
     publish_state_branch(repo, remote=None)
 
     await pg_store.set_runtime_status("phase_marker", {"phase": "mutated"})
-    assert restore_state(repo, dsn, ref="shadow-state")
+    assert restore_state(repo, dsn, ref="market-state")
     assert verify_handoff(repo / "state", session_id="2026-09-03") == handoff
     assert await pg_store.get_runtime_status_key("phase_marker") == {"phase": "a"}
 
