@@ -48,6 +48,11 @@ from market_brain.engines.liquidity import (
 from market_brain.engines.plan import build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.ranking import score_features
+from market_brain.engines.volatility import (
+    target_atr_budget_reason,
+    volatility_gate_reason,
+    wilder_atr,
+)
 from market_brain.engines.wallet import size_from_wallet
 from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import EventStore, InMemoryEventStore
@@ -408,12 +413,20 @@ class DecisionService:
         end = local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
         start = end - timedelta(days=45)
         rows = await self.market_data.bars(symbol.upper(), "1Day", start, end)
-        parsed: list[tuple[datetime, float, float]] = []
+        parsed: list[tuple[datetime, float, float, float, float]] = []
         for row in rows:
             raw_ts = row.get("t") or row.get("timestamp")
             raw_volume = row.get("v", row.get("volume"))
             raw_close = row.get("c", row.get("close"))
-            if raw_ts is None or raw_volume is None or raw_close is None:
+            raw_high = row.get("h", row.get("high"))
+            raw_low = row.get("l", row.get("low"))
+            if (
+                raw_ts is None
+                or raw_volume is None
+                or raw_close is None
+                or raw_high is None
+                or raw_low is None
+            ):
                 continue
             try:
                 stamp = datetime.fromisoformat(str(raw_ts))
@@ -421,21 +434,38 @@ class DecisionService:
                     stamp = stamp.replace(tzinfo=UTC)
                 volume = float(raw_volume)
                 close = float(raw_close)
+                high = float(raw_high)
+                low = float(raw_low)
             except (TypeError, ValueError):
                 continue
-            if volume < 0 or close <= 0:
+            if (
+                volume < 0
+                or close <= 0
+                or high <= 0
+                or low <= 0
+                or high < low
+            ):
                 continue
-            parsed.append((stamp.astimezone(UTC), volume, close))
+            parsed.append((stamp.astimezone(UTC), volume, close, high, low))
         parsed.sort(key=lambda row: row[0])
         if len(parsed) < 20:
             raise RuntimeError("LIQUIDITY_PROFILE_INSUFFICIENT_HISTORY")
         latest = parsed[-20:]
+        atr14 = wilder_atr(
+            [(row[3], row[4], row[2]) for row in parsed],
+            period=self.cfg.atr_period,
+        )
+        if atr14 is None or atr14 <= 0:
+            raise RuntimeError("ATR_PROFILE_INSUFFICIENT_HISTORY")
+        latest_close = latest[-1][2]
         profile = LiquidityProfile(
             symbol=symbol.upper(),
             adv20=sum(row[1] for row in latest) / 20.0,
-            close=latest[-1][2],
+            close=latest_close,
             as_of=latest[-1][0],
             refreshed_at=timestamp,
+            atr14=atr14,
+            atr14_pct=atr14 / latest_close * 100.0,
         )
         async with self.store.transaction():
             await self.store.save_liquidity_profile(profile)
@@ -873,6 +903,22 @@ class DecisionService:
         snapshot.opening_range_high = opening_high
         snapshot.opening_range_low = opening_low
         snapshot.retest_low = retest_low
+        atr_reason = volatility_gate_reason(
+            snapshot,
+            min_atr_pct=self.cfg.min_atr_pct,
+        )
+        if atr_reason is not None:
+            raise ValueError(atr_reason)
+        risk = opening_high - retest_low
+        if risk > 0:
+            tp1 = opening_high + risk * 1.5
+            target_reason = target_atr_budget_reason(
+                snapshot,
+                target=tp1,
+                multiplier=self.cfg.atr_target_budget_multiplier,
+            )
+            if target_reason is not None:
+                raise ValueError(target_reason)
         snapshot.metadata = {
             **snapshot.metadata,
             "planning_feed": snapshot.source_id,
