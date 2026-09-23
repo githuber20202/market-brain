@@ -455,6 +455,11 @@ class RadarScheduler:
             snapshot = row.get("snapshot") if isinstance(row.get("snapshot"), dict) else {}
             score = row.get("score") if isinstance(row.get("score"), dict) else {}
             features = row.get("features") if isinstance(row.get("features"), dict) else {}
+            volatility = (
+                row.get("volatility")
+                if isinstance(row.get("volatility"), dict)
+                else {}
+            )
             symbol = str(snapshot.get("symbol") or "").upper()
             if not symbol:
                 continue
@@ -487,6 +492,11 @@ class RadarScheduler:
                 "last": snapshot.get("last"),
                 "volume": snapshot.get("volume"),
                 "relative_volume": features.get("relative_volume"),
+                "atr14": volatility.get("atr14"),
+                "atr14_pct": volatility.get("atr14_pct"),
+                "remaining_atr": volatility.get("remaining_atr"),
+                "remaining_atr_pct": volatility.get("remaining_atr_pct"),
+                "atr_gate_pass": volatility.get("gate_pass"),
                 "plan_id": candidate.get("plan_id"),
             }
         output: list[dict] = []
@@ -545,6 +555,11 @@ class RadarScheduler:
             "last": None,
             "volume": None,
             "relative_volume": None,
+            "atr14": None,
+            "atr14_pct": None,
+            "remaining_atr": None,
+            "remaining_atr_pct": None,
+            "atr_gate_pass": None,
             "plan_id": None,
         }
 
