@@ -77,6 +77,8 @@ def test_yahoo_quality_uses_shared_rubric_and_is_deterministic() -> None:
     assert first.quality_score == 85
     assert first.source == "YAHOO_FUNDAMENTALS"
     assert first.partial is False
+    assert first.ttm_net_income == 21.0
+    assert first.profitability_pass is True
     assert first.metrics["revenue_growth_yoy"].points == 25
     assert first.metrics["operating_margin"].points == 25
     assert first.metrics["leverage"].points == 20
@@ -89,7 +91,9 @@ def test_yahoo_quality_uses_shared_rubric_and_is_deterministic() -> None:
         "leverage",
         "fcf_margin",
         "dilution_yoy",
+        "ttm_net_income",
     }
+    assert incomplete.profitability_pass is None
 
 
 @pytest.mark.asyncio
@@ -127,7 +131,10 @@ async def test_yahoo_quality_refresh_writes_provenance_and_partial(tmp_path: Pat
         {"symbol": "SPY", "instrument_type": "ETF"}
     ]
     assert {row["source"] for row in rows} == {"YAHOO_FUNDAMENTALS"}
+    assert rows[0]["ttm_net_income"] == "21.0"
+    assert rows[0]["profitability_pass"] == "true"
     assert rows[1]["partial"] == "true"
+    assert rows[1]["profitability_pass"] == ""
 
 
 @pytest.mark.asyncio
@@ -138,8 +145,8 @@ async def test_yahoo_quality_state_is_accepted_and_still_expires(tmp_path: Path)
     target = repo / "data" / "quality.csv"
     store = InMemoryEventStore()
     content = (
-        "symbol,quality_score,as_of,source,partial\n"
-        f"FULL,85,{NOW.isoformat()},YAHOO_FUNDAMENTALS,false\n"
+        "symbol,quality_score,as_of,source,partial,ttm_net_income,profitability_pass\n"
+        f"FULL,85,{NOW.isoformat()},YAHOO_FUNDAMENTALS,false,21,true\n"
     )
     (state / "quality.csv").write_text(content)
 
@@ -177,10 +184,12 @@ def test_universe_marks_etfs_and_quality_loader_accepts_yahoo(tmp_path: Path) ->
     ]
     quality = tmp_path / "quality.csv"
     quality.write_text(
-        "symbol,quality_score,as_of,source,partial\n"
-        f"NVDA,85,{NOW.isoformat()},YAHOO_FUNDAMENTALS,false\n"
+        "symbol,quality_score,as_of,source,partial,ttm_net_income,profitability_pass\n"
+        f"NVDA,85,{NOW.isoformat()},YAHOO_FUNDAMENTALS,false,1000000,true\n"
     )
-    assert load_manual_quality(quality)["NVDA"].source == "YAHOO_FUNDAMENTALS"
+    loaded = load_manual_quality(quality)["NVDA"]
+    assert loaded.source == "YAHOO_FUNDAMENTALS"
+    assert loaded.profitability_pass is True
     assert Settings().quality_source == "yahoo"
 
 
