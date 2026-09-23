@@ -138,7 +138,7 @@ async def test_online_preflight_uses_required_endpoints_and_fixed_telegram_messa
     async def handler(request: httpx.Request) -> httpx.Response:
         requests.append(request)
         if request.url.path.endswith("/getMe"):
-            return httpx.Response(200, json={"ok": True, "result": {"username": "shadow_bot"}})
+            return httpx.Response(200, json={"ok": True, "result": {"username": "market_bot"}})
         if request.url.path.endswith("/sendMessage"):
             return httpx.Response(200, json={"ok": True, "result": {"message_id": 1}})
         return httpx.Response(200, json={})
