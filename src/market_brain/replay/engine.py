@@ -32,7 +32,7 @@ from market_brain.engines.plan import PlanBuildError, build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.quality import classify_quality
 from market_brain.engines.ranking import score_features
-from market_brain.engines.volatility import wilder_atr
+from market_brain.engines.volatility import ATR_PERIOD, wilder_atr
 from market_brain.settings import ROOT, Settings, settings
 
 EASTERN = ZoneInfo("America/New_York")
