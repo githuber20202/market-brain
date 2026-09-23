@@ -183,8 +183,8 @@ def _daily_bars(symbols):
             {
                 "t": (datetime(2026, 7, 29, 16, tzinfo=UTC) + timedelta(days=index)).isoformat(),
                 "o": close,
-                "h": close,
-                "l": close,
+                "h": close + 2.0,
+                "l": close - 2.0,
                 "c": close,
                 "v": volume,
             }
