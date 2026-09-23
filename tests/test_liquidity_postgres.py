@@ -15,6 +15,8 @@ async def test_postgres_liquidity_profile_round_trip(pg_store):
         close=201.25,
         as_of=now - timedelta(days=1),
         refreshed_at=now,
+        atr14=4.25,
+        atr14_pct=2.11,
     )
     await pg_store.save_liquidity_profile(expected)
     restored = await pg_store.get_liquidity_profile("aapl")
@@ -24,6 +26,8 @@ async def test_postgres_liquidity_profile_round_trip(pg_store):
     assert restored.close == pytest.approx(expected.close)
     assert restored.as_of == expected.as_of
     assert restored.refreshed_at == expected.refreshed_at
+    assert restored.atr14 == pytest.approx(expected.atr14)
+    assert restored.atr14_pct == pytest.approx(expected.atr14_pct)
     listed = await pg_store.list_liquidity_profiles()
     assert [row.symbol for row in listed] == ["AAPL"]
 

@@ -309,6 +309,11 @@ class RadarScheduler:
             snapshot = row.get("snapshot", {})
             score = row.get("score", {})
             symbol = str(snapshot.get("symbol", "")).upper()
+            volatility = (
+                row.get("volatility")
+                if isinstance(row.get("volatility"), dict)
+                else {}
+            )
             candidate = {
                 "symbol": symbol,
                 "rank_score": score.get("discovery_total"),
@@ -325,8 +330,15 @@ class RadarScheduler:
                 "quality_source": None,
                 "plan_id": None,
                 "levels": None,
+                "volatility": volatility,
                 "reason": None,
             }
+            if volatility.get("gate_pass") is not True:
+                candidate["reason"] = str(
+                    volatility.get("reason") or "ATR_MISSING"
+                )
+                candidates.append(candidate)
+                continue
             manual_quality = self.quality.get(symbol)
             catalyst_verified = bool(snapshot.get("catalyst_verified", False))
             catalyst_strength = float(snapshot.get("catalyst_strength", 0.0) or 0.0)
@@ -443,6 +455,11 @@ class RadarScheduler:
             snapshot = row.get("snapshot") if isinstance(row.get("snapshot"), dict) else {}
             score = row.get("score") if isinstance(row.get("score"), dict) else {}
             features = row.get("features") if isinstance(row.get("features"), dict) else {}
+            volatility = (
+                row.get("volatility")
+                if isinstance(row.get("volatility"), dict)
+                else {}
+            )
             symbol = str(snapshot.get("symbol") or "").upper()
             if not symbol:
                 continue
@@ -475,6 +492,11 @@ class RadarScheduler:
                 "last": snapshot.get("last"),
                 "volume": snapshot.get("volume"),
                 "relative_volume": features.get("relative_volume"),
+                "atr14": volatility.get("atr14"),
+                "atr14_pct": volatility.get("atr14_pct"),
+                "remaining_atr": volatility.get("remaining_atr"),
+                "remaining_atr_pct": volatility.get("remaining_atr_pct"),
+                "atr_gate_pass": volatility.get("gate_pass"),
                 "plan_id": candidate.get("plan_id"),
             }
         output: list[dict] = []
@@ -533,6 +555,11 @@ class RadarScheduler:
             "last": None,
             "volume": None,
             "relative_volume": None,
+            "atr14": None,
+            "atr14_pct": None,
+            "remaining_atr": None,
+            "remaining_atr_pct": None,
+            "atr_gate_pass": None,
             "plan_id": None,
         }
 

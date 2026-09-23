@@ -8,6 +8,10 @@ from zoneinfo import ZoneInfo
 
 from market_brain.domain.models import AlertRecord, MarketSnapshot
 from market_brain.engines.premarket import assess_catalyst, score_premarket_candidate
+from market_brain.engines.volatility import (
+    apply_volatility_context,
+    volatility_gate_reason,
+)
 from market_brain.ledger.events import LedgerEvent
 from market_brain.orchestration.universe import (
     EASTERN,
@@ -422,6 +426,7 @@ class PremarketFunnel:
         quality_record,
     ) -> dict[str, Any]:
         catalyst = assess_catalyst(news, as_of=timestamp)
+        apply_volatility_context(snapshot, profile)
         scoring = score_premarket_candidate(
             snapshot,
             adv20=profile.adv20 if profile is not None else None,
@@ -432,6 +437,24 @@ class PremarketFunnel:
             minimum_adv=self.cfg.min_adv_keyless,
             finalist_score=self.cfg.premarket_finalist_score,
         )
+        volatility_reason = volatility_gate_reason(
+            snapshot,
+            min_atr_pct=self.cfg.min_atr_pct,
+        )
+        if volatility_reason is not None:
+            scoring["ranking_allowed"] = False
+            scoring["finalist_eligible"] = False
+            scoring["reason_codes"] = [
+                *scoring.get("reason_codes", []),
+                volatility_reason,
+            ]
+        scoring["metrics"] = {
+            **scoring.get("metrics", {}),
+            "atr14": snapshot.atr14,
+            "atr14_pct": snapshot.atr14_pct,
+            "remaining_atr": snapshot.remaining_atr,
+            "remaining_atr_pct": snapshot.remaining_atr_pct,
+        }
         profitability_reason = None
         if entry.instrument_type == "EQUITY":
             if quality_record is None or quality_record.profitability_pass is None:
@@ -462,6 +485,8 @@ class PremarketFunnel:
             "delay_minutes": snapshot.delay_minutes,
             "catalyst": catalyst.to_dict(),
             "news_error": news_error,
+            "atr_gate_pass": volatility_reason is None,
+            "atr_gate_reason": volatility_reason,
             "quality_source": quality_record.source if quality_record is not None else None,
             "ttm_net_income": quality_record.ttm_net_income if quality_record is not None else None,
             "profitability_pass": (

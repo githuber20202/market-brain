@@ -2,10 +2,10 @@
   "date": "2026-08-28",
   "trade_symbols": ["LOSS", "WIN"],
   "scoring_context": {
-    "LOSS": {"adv20": 1000000, "prior_close": 97.0},
-    "WIN": {"adv20": 1000000, "prior_close": 97.0},
-    "FLAT": {"adv20": 1000000, "prior_close": 97.0},
-    "SPY": {"adv20": 10000000, "prior_close": 100.0}
+    "LOSS": {"adv20": 1000000, "prior_close": 97.0, "atr14": 5.0, "atr14_pct": 5.1546391753},
+    "WIN": {"adv20": 1000000, "prior_close": 97.0, "atr14": 5.0, "atr14_pct": 5.1546391753},
+    "FLAT": {"adv20": 1000000, "prior_close": 97.0, "atr14": 5.0, "atr14_pct": 5.1546391753},
+    "SPY": {"adv20": 10000000, "prior_close": 100.0, "atr14": 2.0, "atr14_pct": 2.0}
   },
   "symbols": {
     "SPY": [

@@ -4,6 +4,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from market_brain.domain.models import FeatureVector, LiquidityProfile, MarketSnapshot
+from market_brain.engines.volatility import apply_volatility_context
 
 EASTERN = ZoneInfo("America/New_York")
 SESSION_MINUTES = 390.0
@@ -37,6 +38,7 @@ def apply_ranking_context(
     fraction = elapsed_session_fraction(now)
     snapshot.avg_volume = profile.adv20 * fraction if profile is not None else None
     snapshot.benchmark_return_pct = benchmark_return_pct
+    apply_volatility_context(snapshot, profile)
     snapshot.metadata = {
         **snapshot.metadata,
         "expected_volume_fraction": fraction,
@@ -98,6 +100,8 @@ def compute_features(snapshot: MarketSnapshot) -> FeatureVector:
         relative_strength_pct=relative_strength,
         catalyst_strength=max(0.0, min(1.0, catalyst)),
         liquidity_ok=liquidity_ok,
+        atr14_pct=snapshot.atr14_pct,
+        remaining_atr_pct=snapshot.remaining_atr_pct,
         evidence={
             "source_id": snapshot.source_id,
             "data_age_seconds": snapshot.data_age_seconds,
@@ -105,5 +109,9 @@ def compute_features(snapshot: MarketSnapshot) -> FeatureVector:
             "fetched_at": snapshot.fetched_at,
             "authoritative": snapshot.authoritative,
             "halted": snapshot.halted,
+            "atr14": snapshot.atr14,
+            "atr14_pct": snapshot.atr14_pct,
+            "remaining_atr": snapshot.remaining_atr,
+            "remaining_atr_pct": snapshot.remaining_atr_pct,
         },
     )

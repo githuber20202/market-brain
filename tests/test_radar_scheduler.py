@@ -125,12 +125,27 @@ class PartialScreener(FakeScreener):
         return ScreenResult(tuple(self.rows[:top_n]), self.skipped)
 
 
-def _row(symbol: str, score: float = 90.0, *, catalyst: bool = False) -> dict:
+def _row(
+    symbol: str,
+    score: float = 90.0,
+    *,
+    catalyst: bool = False,
+    atr_gate_pass: bool = True,
+    atr_reason: str | None = None,
+) -> dict:
     return {
         "snapshot": {
             "symbol": symbol,
             "catalyst_verified": catalyst,
             "catalyst_strength": 0.9 if catalyst else 0.0,
+        },
+        "volatility": {
+            "atr14": 2.0,
+            "atr14_pct": 2.0 if atr_gate_pass else 0.5,
+            "remaining_atr": 1.5,
+            "remaining_atr_pct": 1.5,
+            "gate_pass": atr_gate_pass,
+            "reason": atr_reason,
         },
         "score": {
             "catalyst_or_continuation": 0.0,
@@ -331,6 +346,21 @@ async def test_early_close_stops_after_1300(tmp_path: Path):
     assert await scheduler.run_pending(now=last_slot) is not None
     assert await scheduler.run_pending(now=after_close) is None
     assert len(screener.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_atr_gate_blocks_candidate_before_quality_or_plan(tmp_path: Path):
+    scheduler, service, _screener = _scheduler(
+        tmp_path,
+        [_row("AAPL", atr_gate_pass=False, atr_reason="ATR_TOO_LOW")],
+    )
+    result = await scheduler.run_pending(
+        now=datetime(2026, 8, 28, 9, 50, tzinfo=EASTERN)
+    )
+
+    assert result is not None
+    assert service.plan_calls == []
+    assert result["candidates"][0]["reason"] == "ATR_TOO_LOW"
 
 
 @pytest.mark.asyncio

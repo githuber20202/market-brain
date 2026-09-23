@@ -26,6 +26,10 @@ def snapshot(**overrides):
         "opening_range_high": 100.8,
         "opening_range_low": 99.6,
         "retest_low": 100.0,
+        "atr14": 5.0,
+        "atr14_pct": 5.0,
+        "remaining_atr": 5.0,
+        "remaining_atr_pct": 5.0,
         "benchmark_return_pct": 0.5,
         "catalyst_verified": True,
         "catalyst_strength": 0.9,
@@ -78,6 +82,34 @@ def test_event_lane_allows_medium_quality_at_reduced_risk():
 def test_low_quality_core_is_blocked():
     with pytest.raises(PlanBuildError, match="QUALITY_OR_LANE_BLOCKED"):
         make_plan(quality_score=40)
+
+
+def test_plan_blocks_missing_atr():
+    with pytest.raises(PlanBuildError, match="ATR_MISSING"):
+        make_plan(
+            snapshot(
+                atr14=None,
+                atr14_pct=None,
+                remaining_atr=None,
+                remaining_atr_pct=None,
+            )
+        )
+
+
+def test_plan_blocks_low_atr_percent():
+    with pytest.raises(PlanBuildError, match="ATR_TOO_LOW"):
+        make_plan(snapshot(atr14=0.5, atr14_pct=0.5))
+
+
+def test_plan_blocks_target_beyond_remaining_atr():
+    with pytest.raises(PlanBuildError, match="TARGET_EXCEEDS_ATR_BUDGET"):
+        make_plan(
+            snapshot(
+                last=100.0,
+                remaining_atr=0.2,
+                remaining_atr_pct=0.2,
+            )
+        )
 
 
 def test_plan_is_deterministic_and_has_15_20_targets():

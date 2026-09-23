@@ -9,8 +9,13 @@ from market_brain.engines.features import (
     price_return_pct,
 )
 from market_brain.engines.ranking import score_features
+from market_brain.engines.volatility import (
+    apply_volatility_context,
+    volatility_gate_reason,
+)
 from market_brain.providers import build_market_data_provider
 from market_brain.providers.base import SkippedSymbol
+from market_brain.settings import Settings, settings
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,9 +34,16 @@ class ScreenResult(Sequence[dict]):
 
 
 class MarketScreener:
-    def __init__(self, provider=None, *, store=None):
+    def __init__(
+        self,
+        provider=None,
+        *,
+        store=None,
+        cfg: Settings = settings,
+    ):
         self.provider = provider or build_market_data_provider()
         self.store = store
+        self.cfg = cfg
 
     async def screen(
         self,
@@ -57,26 +69,49 @@ class MarketScreener:
         benchmark_return = price_return_pct(benchmark) if benchmark is not None else None
         rows: list[dict] = []
         for snapshot in snapshots:
+            profile = profiles.get(snapshot.symbol.upper())
             if now is not None:
                 apply_ranking_context(
                     snapshot,
-                    profiles.get(snapshot.symbol.upper()),
+                    profile,
                     benchmark_return_pct=benchmark_return,
                     now=now,
                 )
+            else:
+                apply_volatility_context(snapshot, profile)
             features = compute_features(snapshot)
             score = score_features(
                 features,
                 structure_score=structure_score,
                 rr_score=rr_score,
             )
+            atr_reason = volatility_gate_reason(
+                snapshot,
+                min_atr_pct=self.cfg.min_atr_pct,
+            )
+            if atr_reason is not None:
+                score.reasons.append(atr_reason)
             rows.append(
                 {
                     "snapshot": asdict(snapshot),
                     "features": asdict(features),
                     "score": asdict(score),
+                    "volatility": {
+                        "atr14": snapshot.atr14,
+                        "atr14_pct": snapshot.atr14_pct,
+                        "remaining_atr": snapshot.remaining_atr,
+                        "remaining_atr_pct": snapshot.remaining_atr_pct,
+                        "gate_pass": atr_reason is None,
+                        "reason": atr_reason,
+                    },
                     "state": "DISCOVERED",
                 }
             )
-        rows.sort(key=lambda row: row["score"]["discovery_total"], reverse=True)
+        rows.sort(
+            key=lambda row: (
+                bool(row["volatility"]["gate_pass"]),
+                row["score"]["discovery_total"],
+            ),
+            reverse=True,
+        )
         return ScreenResult(tuple(rows[:top_n]), skipped)
