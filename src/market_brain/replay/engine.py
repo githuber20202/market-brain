@@ -148,11 +148,7 @@ class ReplayEngine:
                 session_start,
             )
             context.update(
-                _scoring_context_from_daily(
-                    day,
-                    daily,
-                    atr_period=self.cfg.atr_period,
-                )
+                _scoring_context_from_daily(day, daily)
             )
 
         trades: list[dict[str, Any]] = []
@@ -546,8 +542,6 @@ def replay_summary(trades: list[dict[str, Any]]) -> dict[str, Any]:
 def _scoring_context_from_daily(
     day: date,
     rows_by_symbol: dict[str, list[dict]],
-    *,
-    atr_period: int = 14,
 ) -> dict[str, dict[str, float]]:
     output: dict[str, dict[str, float]] = {}
     for symbol, rows in rows_by_symbol.items():
@@ -576,7 +570,7 @@ def _scoring_context_from_daily(
             values["adv20"] = sum(row[1] for row in parsed[-20:]) / 20.0
         atr14 = wilder_atr(
             [(row[3], row[4], row[2]) for row in parsed],
-            period=atr_period,
+            period=ATR_PERIOD,
         )
         if atr14 is not None and atr14 > 0:
             values["atr14"] = atr14
