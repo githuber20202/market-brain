@@ -32,11 +32,7 @@ from market_brain.engines.plan import PlanBuildError, build_trade_plan
 from market_brain.engines.position import evaluate_position
 from market_brain.engines.quality import classify_quality
 from market_brain.engines.ranking import score_features
-from market_brain.engines.volatility import (
-    target_atr_budget_reason,
-    volatility_gate_reason,
-    wilder_atr,
-)
+from market_brain.engines.volatility import wilder_atr
 from market_brain.settings import ROOT, Settings, settings
 
 EASTERN = ZoneInfo("America/New_York")
@@ -333,21 +329,6 @@ class ReplayEngine:
             ),
             now=created_at,
         )
-        atr_reason = volatility_gate_reason(
-            snapshot,
-            min_atr_pct=self.cfg.min_atr_pct,
-        )
-        if atr_reason is not None:
-            raise PlanBuildError(atr_reason)
-        risk = structure.opening_range_high - _bar_price(retest_bar, "l", "low")
-        if risk > 0:
-            target_reason = target_atr_budget_reason(
-                snapshot,
-                target=structure.opening_range_high + risk * 1.5,
-                multiplier=self.cfg.atr_target_budget_multiplier,
-            )
-            if target_reason is not None:
-                raise PlanBuildError(target_reason)
         score = score_features(
             compute_features(snapshot),
             structure_score=15.0,
@@ -362,6 +343,8 @@ class ReplayEngine:
             plan_ttl_seconds=self.cfg.plan_ttl_seconds,
             min_risk_pct=self.cfg.min_risk_pct,
             min_opening_range_pct=self.cfg.min_opening_range_pct,
+            min_atr_pct=self.cfg.min_atr_pct,
+            atr_target_budget_multiplier=self.cfg.atr_target_budget_multiplier,
             speculative_enabled=False,
             now=created_at,
         )
