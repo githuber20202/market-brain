@@ -52,7 +52,7 @@ Premarket Deterioration מאושר כאשר מתקיימים לפחות שניי
 את ה־batch כ־`DATA_UNAVAILABLE`. לאחר הפתיחה בלבד רשאים שערי Opening Range,
 VWAP, ‏Retest, סמכות נתון ו־risk envelope להפיק `READY/BUY_NOW`. ה־Daily Digest
 מקשר את מועמדות checkpoint האחרון למניות שנראו ב־Radar ולאלו שאושרו לאחר
-הפתיחה, לצורך Shadow learning בלבד. לאחר סיום המסחר נשמר
+הפתיחה, לצורך Replay/Outcome learning בלבד. לאחר סיום המסחר נשמר
 `PREMARKET_LEARNING_REVIEW` עם MFE, ‏MAE, תשואות קדימה אחרי 5/15/30/60 דקות
 ו־EOD לכל הופעה ב־Top 10. חוסר ב־checkpoint, מחיר ייחוס או נרות מסומן
 `LEARNING_DATA_INCOMPLETE`; הסקירה אינה משנה משקלים ואינה מאפשרת פעולת ברוקר.
@@ -197,30 +197,9 @@ Position:
 
 `ACTIVE → HOLD | TRIM_NOW | TAKE_PROFIT | SELL_NOW → ACKNOWLEDGED`
 
-Shadow trade:
+Replay validation:
 
-`OPEN → STOPPED | TP1 → STOPPED | TP2 | TIME_STOP`
-
-`shadow_trades` היא ההטלה החומרית של טריידים וירטואליים שנפתחו מאירוע
-`BUY_NOW_EMITTED` כאשר `RUN_MODE=shadow`. במסלול batch המושהה בלבד, החלטת
-ההפעלה נבחנת כאילו התקבלה בסגירת נר ה-retest: המחיר וה-VWAP הם הערכים המצטברים
-באותו נר, המילוי הווירטואלי הוא סגירת הנר ועוד 10 bps, וזמן הפתיחה הוא סוף הנר.
-ההתראה שומרת גם את מחיר הגילוי המאוחר ואת הפער ממנו. מסלול live ממשיך לבחון את
-מחיר השוק העדכני בזמן ההפעלה. מאחר שנרות Yahoo אינם כוללים VWAP לכל נר,
-ה־running VWAP במסלול זה נגזר מ־volume-weighted typical price, באותה נוסחה שבה
-משתמש snapshot של Yahoo; נר ללא volume נשאר ללא תרומת VWAP.
-נר retest זכאי להפעלת Shadow רק אם נסגר אחרי יצירת ה-plan ואחרי ה-TRIGGER_HIT
-שלו. Retest מוקדם יותר נדחה כ-`RETEST_PRECEDES_PLAN_TRIGGER`; אסור לפתוח טרייד
-וירטואלי רטרואקטיבית על מבנה שהושלם לפני שה-plan היה קיים.
-כללי היציאה משותפים ל־Replay ול־Shadow, כולל Stop-first בנר שנוגע גם ב־Stop וגם
-ב־Target. הטבלה אינה מייצגת פוזיציה אצל ברוקר ואינה מפעילה פקודה.
-
-אירועי Shadow החדשים:
-
-- `SHADOW_TRADE_OPENED` — נפתח טרייד וירטואלי יחיד עבור Plan;
-- `SHADOW_TRADE_EVALUATED` — נרות SIP חדשים נבדקו וה־cursor נשמר;
-- `SHADOW_TRADE_TRANSITIONED` — נשמר מעבר ל־`STOPPED`, ‏`TP1`, ‏`TP2` או
-  `TIME_STOP`, כולל מצב מלא לצורך Replay.
+Replay הוא מנגנון האימות ההיסטורי היחיד. הוא משתמש באותם Gates, scoring ו־Plan geometry של המסלול הפעיל, אך אינו יוצר Position Twin, Reservation, BUY_NOW runtime או עסקאות וירטואליות. כל שינוי מדיניות חייב לעבור Replay לפני קידום.
 
 אירועי בריאות הזרם:
 
