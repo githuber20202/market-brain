@@ -30,7 +30,6 @@ def full_env() -> dict[str, str]:
         "NATS_URL": "nats://nats:4222",
         "POSTGRES_DSN": "postgresql://market:private@postgres:5432/market",
         "POSTGRES_PASSWORD": "postgres-private",
-        "RUN_MODE": "shadow",
         "REST_SAFE_CALLS_PER_MINUTE": "180",
         "STREAM_MAX_SYMBOLS": "30",
         "STREAM_STALE_ALERT_SECONDS": "120",
