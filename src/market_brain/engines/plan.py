@@ -14,6 +14,10 @@ from market_brain.domain.models import (
     utc_now,
 )
 from market_brain.engines.quality import lane_risk_multiplier
+from market_brain.engines.volatility import (
+    target_atr_budget_reason,
+    volatility_gate_reason,
+)
 
 
 class PlanBuildError(ValueError):
@@ -22,6 +26,8 @@ class PlanBuildError(ValueError):
 
 MIN_RISK_PCT = 0.5
 MIN_OPENING_RANGE_PCT = 0.3
+MIN_ATR_PCT = 1.0
+ATR_TARGET_BUDGET_MULTIPLIER = 1.0
 
 
 def build_trade_plan(
@@ -33,6 +39,8 @@ def build_trade_plan(
     plan_ttl_seconds: int = 300,
     min_risk_pct: float = MIN_RISK_PCT,
     min_opening_range_pct: float = MIN_OPENING_RANGE_PCT,
+    min_atr_pct: float = MIN_ATR_PCT,
+    atr_target_budget_multiplier: float = ATR_TARGET_BUDGET_MULTIPLIER,
     speculative_enabled: bool = False,
     now: datetime | None = None,
 ) -> TradePlan:
@@ -40,6 +48,12 @@ def build_trade_plan(
         raise PlanBuildError("HALTED")
     if score.total < 65:
         raise PlanBuildError("SCORE_BELOW_PLAN_THRESHOLD")
+    atr_reason = volatility_gate_reason(
+        snapshot,
+        min_atr_pct=min_atr_pct,
+    )
+    if atr_reason is not None:
+        raise PlanBuildError(atr_reason)
     if (
         snapshot.opening_range_high is None
         or snapshot.opening_range_low is None
@@ -76,6 +90,13 @@ def build_trade_plan(
     entry_zone_high = round(entry + extension, 4)
     tp1 = round(entry + risk * 1.5, 4)
     tp2 = round(entry + risk * 2.0, 4)
+    target_reason = target_atr_budget_reason(
+        snapshot,
+        target=tp1,
+        multiplier=atr_target_budget_multiplier,
+    )
+    if target_reason is not None:
+        raise PlanBuildError(target_reason)
     if tp1 <= entry_zone_high:
         raise PlanBuildError("TARGET_BELOW_ENTRY")
     created_at = now or utc_now()
