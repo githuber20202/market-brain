@@ -10,7 +10,7 @@
   "runtime_loading": {
     "00-V4_MANIFEST.json": "market_brain.settings startup config-set validation",
     "02-RISK_ENVELOPE.json": "market_brain.settings defaults; environment may override",
-    "POLICY_RELEASE.json": "shadow policy version and canonical release hash; no live account data",
+    "POLICY_RELEASE.json": "research policy metadata; no live account data or execution authority",
     "schema.sql": "market_brain.settings startup schema-contract validation and PostgreSQL compose init"
   },
   "invariants": {
