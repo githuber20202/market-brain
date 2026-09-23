@@ -11,7 +11,7 @@ from market_brain.domain.models import (
     PositionState,
     ProtectionState,
     ReconciliationState,
-    ShadowTrade,
+    WalletState,
 )
 from market_brain.ledger.events import LedgerEvent
 from market_brain.ledger.store import InMemoryEventStore
@@ -53,17 +53,7 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
         LedgerEvent(
             "BUY_NOW_EMITTED",
             "plan-1",
-            {
-                "decision": {"symbol": "NVDA"},
-                "activation_context": {
-                    "activation_basis": "RETEST_BAR",
-                    "virtual_entry": 100.1,
-                    "current_price": 101.0,
-                    "price_gap_pct": 0.8991,
-                    "retest_bar_ts": (now - timedelta(minutes=8)).isoformat(),
-                    "detected_at": now.isoformat(),
-                },
-            },
+            {"decision": {"symbol": "NVDA"}},
             occurred_at=now,
         )
     )
@@ -75,10 +65,7 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     await store.set_runtime_status("stream_connected", True)
     await store.set_runtime_status("stream_connected_since", connected_since.isoformat())
     await store.set_runtime_status("stream_last_message_at", (now - timedelta(seconds=2)).isoformat())
-    await store.set_runtime_status(
-        "shadow_wallet",
-        {"mode": "virtual", "source": "SHADOW_VIRTUAL"},
-    )
+    await store.save_wallet(WalletState(10_000, 10_000))
     await store.set_runtime_status(
         "quality_state",
         {"status": "QUALITY_STALE", "rows": 58},
@@ -128,30 +115,6 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
             occurred_at=now,
         )
     )
-    shadow_trade = ShadowTrade(
-        trade_id="digest-shadow",
-        plan_id="digest-shadow-plan",
-        symbol="NVDA",
-        setup="CORE_MOMENTUM",
-        quantity=2,
-        trigger=100.0,
-        fill=100.1,
-        stop=99.0,
-        tp1=102.0,
-        tp2=103.0,
-        opened_at=opened,
-        time_stop_at=opened + timedelta(minutes=30),
-    )
-    await store.save_shadow_trade(shadow_trade)
-    await store.append(
-        LedgerEvent(
-            "SHADOW_TRADE_OPENED",
-            shadow_trade.trade_id,
-            {"shadow_trade": asdict(shadow_trade)},
-            occurred_at=opened,
-        )
-    )
-
     alert = await DailyDigest(store).create(now=now)
 
     assert alert is not None
@@ -162,10 +125,7 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     assert alert.payload["stream"]["uptime_seconds"] == 22_500
     assert alert.payload["open_positions"][0]["protection"] == "PROTECTED"
     assert alert.payload["replay_check"] == {"ok": True, "differences": []}
-    assert alert.payload["shadow"]["today"]["signals"] == 2
-    assert alert.payload["shadow"]["today"]["trades"] == 1
-    assert alert.payload["shadow"]["today"]["unfinalized"] == 1
-    assert alert.payload["wallet"] == "virtual"
+    assert alert.payload["wallet"] == "seeded"
     assert alert.payload["quality"]["status"] == "QUALITY_STALE"
     assert alert.payload["data_availability"]["slots_missed"] == 1
     assert alert.payload["workflow_status"] == "COMPLETED"
@@ -182,7 +142,6 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
         "40-65": 3,
         "65+": 4,
     }
-    assert alert.payload["shadow_entries"][0]["symbol"] == "NVDA"
     assert alert.payload["premarket"] == {
         "evaluation_state": "MEASURED",
         "final_checkpoint": "T-3",
@@ -210,20 +169,14 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
             "finalist_average_eod_return_percent": None,
         },
     }
-    assert "virtual_entry=100.1000 current_price=101.0000 gap=+0.899%" in alert.payload["text"]
-    assert "Wallet: virtual" in alert.payload["text"]
+    assert "Wallet: seeded" in alert.payload["text"]
     assert "Quality: QUALITY_STALE rows=58" in alert.payload["text"]
     assert "- RISK_TOO_SMALL: count=2" in alert.payload["text"]
     assert "Score histogram: 0-20=1 20-40=2 40-65=3 65+=4" in alert.payload["text"]
-    assert "Shadow today:" in alert.payload["text"]
     assert "Premarket learning: state=MEASURED" in alert.payload["text"]
     assert "Premarket outcomes: state=LEARNING_DATA_INCOMPLETE" in alert.payload["text"]
     assert "- T-3: status=COMPLETED audit=61/61 finalists=NVDA,AAPL" in alert.payload["text"]
     assert "Shadow by setup: {'" not in alert.payload["text"]
-    assert (
-        "- CORE_MOMENTUM: trades=1 hit_rate=0.00% expectancy=0.000R"
-        in alert.payload["text"]
-    )
     assert "Reminder: reconcile broker holdings" in alert.payload["text"]
     assert await DailyDigest(store).create(now=now) is None
 
