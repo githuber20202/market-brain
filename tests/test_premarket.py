@@ -183,7 +183,7 @@ class FakeLiquidityService:
 
 @pytest.mark.asyncio
 async def test_premarket_checkpoints_refresh_delta_deterioration_and_artifacts(tmp_path):
-    universe_dir, calendar_path = _runtime_files(tmp_path)
+    universe_dir, calendar_path, quality_path = _runtime_files(tmp_path)
     store = InMemoryEventStore()
     provider = FakePremarketProvider()
     funnel = PremarketFunnel(
@@ -193,6 +193,7 @@ async def test_premarket_checkpoints_refresh_delta_deterioration_and_artifacts(t
         universe_dir=universe_dir,
         calendar_path=calendar_path,
         cfg=_cfg(),
+        quality_path=quality_path,
         state_dir=tmp_path / "state",
     )
 
@@ -220,8 +221,43 @@ async def test_premarket_checkpoints_refresh_delta_deterioration_and_artifacts(t
         assert (path / "funnel.json").is_file()
 
 
+@pytest.mark.asyncio
+async def test_premarket_blocks_loss_making_equity_from_ranking(tmp_path):
+    universe_dir, calendar_path, quality_path = _runtime_files(tmp_path)
+    quality_path.write_text(
+        "symbol,quality_score,as_of,source,partial,ttm_net_income,profitability_pass\n"
+        "AAPL,85,2026-08-28T00:00:00+00:00,YAHOO_FUNDAMENTALS,false,-1000000,false\n"
+        "MRNA,85,2026-08-28T00:00:00+00:00,YAHOO_FUNDAMENTALS,false,1000000,true\n"
+        "MRVL,85,2026-08-28T00:00:00+00:00,YAHOO_FUNDAMENTALS,false,1000000,true\n"
+    )
+    store = InMemoryEventStore()
+    funnel = PremarketFunnel(
+        store=store,
+        service=FakeLiquidityService(store),
+        provider=FakePremarketProvider(),
+        universe_dir=universe_dir,
+        calendar_path=calendar_path,
+        cfg=_cfg(),
+        quality_path=quality_path,
+        state_dir=tmp_path / "state",
+    )
+
+    result = await funnel.run("T-30", now=T30)
+    artifact = await store.get_runtime_status_key(
+        "premarket_artifact:2026-08-28:T-30"
+    )
+    aapl = next(row for row in artifact["audit"] if row["symbol"] == "AAPL")
+
+    assert result["status"] == "COMPLETED"
+    assert "AAPL" not in result["top10"]
+    assert "AAPL" not in result["finalists"]
+    assert aapl["ranking_allowed"] is False
+    assert aapl["finalist_eligible"] is False
+    assert "PROFITABILITY_GATE_FAILED" in aapl["reason_codes"]
+
+
 def test_premarket_gate_tracks_new_york_dst_and_rejects_duplicates(tmp_path):
-    _universe_dir, calendar_path = _runtime_files(tmp_path)
+    _universe_dir, calendar_path, _quality_path = _runtime_files(tmp_path)
 
     assert premarket_checkpoint(
         datetime(2026, 8, 31, 13, 0, tzinfo=UTC), calendar_path
@@ -272,7 +308,7 @@ class FakeLearningProvider:
 async def test_premarket_learning_review_measures_each_checkpoint_and_is_idempotent(
     tmp_path,
 ):
-    _universe_dir, calendar_path = _runtime_files(tmp_path)
+    _universe_dir, calendar_path, _quality_path = _runtime_files(tmp_path)
     store = InMemoryEventStore()
     for checkpoint, as_of in (
         ("T-30", T30),
@@ -360,7 +396,7 @@ def _snapshot(
     )
 
 
-def _runtime_files(tmp_path: Path) -> tuple[Path, Path]:
+def _runtime_files(tmp_path: Path) -> tuple[Path, Path, Path]:
     universe_dir = tmp_path / "universe"
     universe_dir.mkdir()
     (universe_dir / "universe.csv").write_text(
@@ -370,10 +406,17 @@ def _runtime_files(tmp_path: Path) -> tuple[Path, Path]:
         "MRVL,EQUITY,Marvell,Nasdaq,SPY,true,true\n"
         "SPY,ETF,SPDR,NYSE Arca,SPY,true,true\n"
     )
+    quality_path = tmp_path / "quality.csv"
+    quality_path.write_text(
+        "symbol,quality_score,as_of,source,partial,ttm_net_income,profitability_pass\n"
+        "AAPL,85,2026-08-28T00:00:00+00:00,YAHOO_FUNDAMENTALS,false,1000000,true\n"
+        "MRNA,85,2026-08-28T00:00:00+00:00,YAHOO_FUNDAMENTALS,false,1000000,true\n"
+        "MRVL,85,2026-08-28T00:00:00+00:00,YAHOO_FUNDAMENTALS,false,1000000,true\n"
+    )
     calendar_path = tmp_path / "market_calendar.csv"
     calendar_path.write_text(
         "date,status,open_time,close_time,source\n"
         "2026-09-07,CLOSED,,,NYSE\n"
         "2027-01-01,CLOSED,,,NYSE\n"
     )
-    return universe_dir, calendar_path
+    return universe_dir, calendar_path, quality_path
