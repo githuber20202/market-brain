@@ -165,7 +165,6 @@ class MarketSnapshot:
     opening_range_high: float | None = None
     opening_range_low: float | None = None
     retest_low: float | None = None
-    atr_1m: float | None = None
     atr14: float | None = None
     atr14_pct: float | None = None
     remaining_atr: float | None = None
