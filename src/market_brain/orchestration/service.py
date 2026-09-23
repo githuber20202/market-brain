@@ -411,7 +411,7 @@ class DecisionService:
         eastern = ZoneInfo("America/New_York")
         local = timestamp.astimezone(eastern)
         end = local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
-        start = end - timedelta(days=45)
+        start = end - timedelta(days=max(45, self.cfg.atr_period * 3))
         rows = await self.market_data.bars(symbol.upper(), "1Day", start, end)
         parsed: list[tuple[datetime, float, float, float, float]] = []
         for row in rows:
@@ -524,6 +524,8 @@ class DecisionService:
             existing is not None
             and existing.refreshed_at.astimezone(eastern).date()
             == timestamp.astimezone(eastern).date()
+            and existing.atr14 is not None
+            and existing.atr14_pct is not None
         ):
             return existing
         return await self.refresh_liquidity_profile(symbol, now=timestamp)
