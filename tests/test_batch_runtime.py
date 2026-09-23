@@ -273,7 +273,7 @@ async def test_weekly_batch_refreshes_quality_into_state(tmp_path, monkeypatch):
             skipped_instruments,
         )
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text("symbol,quality_score,as_of,source,partial\n")
+        output_path.write_text("symbol,quality_score,as_of,source,partial,ttm_net_income,profitability_pass\n")
         return {"status": "COMPLETED", "rows": 2}
 
     async def fake_replay(**kwargs):
