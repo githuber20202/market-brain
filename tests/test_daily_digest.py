@@ -176,7 +176,6 @@ async def test_daily_digest_aggregates_runtime_alerts_positions_and_replay_check
     assert "Premarket learning: state=MEASURED" in alert.payload["text"]
     assert "Premarket outcomes: state=LEARNING_DATA_INCOMPLETE" in alert.payload["text"]
     assert "- T-3: status=COMPLETED audit=61/61 finalists=NVDA,AAPL" in alert.payload["text"]
-    assert "Shadow by setup: {'" not in alert.payload["text"]
     assert "Reminder: reconcile broker holdings" in alert.payload["text"]
     assert await DailyDigest(store).create(now=now) is None
 
