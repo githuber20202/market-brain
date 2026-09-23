@@ -90,14 +90,6 @@
         ]
       },
       {
-        "meta": {"symbol": ["FULL"], "type": ["annualNetIncome"]},
-        "annualNetIncome": [
-          {"asOfDate": "2024-12-31", "reportedValue": {"raw": 14.0}},
-          {"asOfDate": "2025-12-31", "reportedValue": {"raw": 18.0}},
-          {"asOfDate": "2026-12-31", "reportedValue": {"raw": 24.0}}
-        ]
-      },
-      {
         "meta": {"symbol": ["FULL"], "type": ["quarterlyNetIncome"]},
         "quarterlyNetIncome": [
           {"asOfDate": "2025-06-30", "reportedValue": {"raw": 4.0}},
