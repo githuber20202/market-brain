@@ -146,7 +146,6 @@ class Settings(BaseSettings):
     keyless_max_bar_range_pct: float = 3.0
     min_risk_pct: float = 0.5
     min_opening_range_pct: float = 0.3
-    atr_period: int = 14
     min_atr_pct: float = 1.0
     atr_target_budget_multiplier: float = 1.0
     min_price: float = 5.0
@@ -277,8 +276,6 @@ class Settings(BaseSettings):
             raise ValueError("INVALID_MIN_RISK_PCT")
         if self.min_opening_range_pct <= 0 or self.min_opening_range_pct > 10.0:
             raise ValueError("INVALID_MIN_OPENING_RANGE_PCT")
-        if self.atr_period < 5 or self.atr_period > 100:
-            raise ValueError("INVALID_ATR_PERIOD")
         if self.min_atr_pct <= 0 or self.min_atr_pct > 20.0:
             raise ValueError("INVALID_MIN_ATR_PCT")
         if self.atr_target_budget_multiplier <= 0 or self.atr_target_budget_multiplier > 3.0:
