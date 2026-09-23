@@ -31,7 +31,7 @@ def _run(
     )
 
 
-def restore_state_files(repo: Path, *, ref: str = "origin/shadow-state") -> bool:
+def restore_state_files(repo: Path, *, ref: str = "origin/market-state") -> bool:
     listing = subprocess.run(
         ["git", "ls-tree", "-r", "--name-only", ref, "--", "state", "reports"],
         cwd=repo,
@@ -77,7 +77,7 @@ def restore_database(repo: Path, dsn: str) -> None:
     print(f"STATE_RESTORE=PASS bytes={dump_path.stat().st_size}")
 
 
-def restore_state(repo: Path, dsn: str, *, ref: str = "origin/shadow-state") -> bool:
+def restore_state(repo: Path, dsn: str, *, ref: str = "origin/market-state") -> bool:
     if not restore_state_files(repo, ref=ref):
         return False
     restore_database(repo, dsn)
@@ -182,7 +182,7 @@ def publish_state_branch(
     repo: Path,
     *,
     remote: str | None = "origin",
-    branch: str = "shadow-state",
+    branch: str = "market-state",
 ) -> str:
     git_dir = Path(
         _run(["git", "rev-parse", "--git-dir"], cwd=repo, capture=True)
@@ -212,7 +212,7 @@ def publish_state_branch(
         _run(["git", "add", "-f", "--", *paths], cwd=repo, env=env)
         tree = _run(["git", "write-tree"], cwd=repo, env=env, capture=True).stdout.decode().strip()
         commit = _run(
-            ["git", "commit-tree", tree, "-m", "state: update shadow runtime snapshot"],
+            ["git", "commit-tree", tree, "-m", "state: update market runtime snapshot"],
             cwd=repo,
             env=env,
             capture=True,
@@ -265,7 +265,7 @@ def main() -> None:
         if name != "verify":
             command.add_argument("--repo", type=Path, default=Path.cwd())
         if name == "restore":
-            command.add_argument("--ref", default="origin/shadow-state")
+            command.add_argument("--ref", default="origin/market-state")
         if name == "persist":
             command.add_argument(
                 "--session-date",
