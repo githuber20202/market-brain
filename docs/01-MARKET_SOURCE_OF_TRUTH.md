@@ -41,7 +41,7 @@ All equity lanes share a non-bypassable profitability gate: `TTM Net Income > 0`
 
 ## BUY_NOW
 
-Allowed only when a non-expired Trade Plan has authoritative market data, fresh BBO, acceptable spread, a passing ATR volatility gate, valid retest, price above VWAP, trigger reached, no chase, valid 1:1.5 and 1:2 targets, and Risk Wallet capacity. The default volatility policy requires `ATR14 / price >= 1.0%`, and TP1 must fit inside `1.0x` Remaining ATR from the current price; both thresholds are configurable and must remain identical in Radar and Replay.
+Allowed only when a non-expired Trade Plan has authoritative market data, fresh BBO, acceptable spread, a passing ATR volatility gate, valid retest, price above VWAP, trigger reached, no chase, valid 1:1.5 and 1:2 targets, and Risk Wallet capacity. The default volatility policy requires `ATR14 / current price >= 1.0%`, Remaining ATR must be positive, and TP1 must fit inside `1.0x` Remaining ATR from the current price; both thresholds are configurable and must remain identical in Radar and Replay. Missing Remaining ATR returns `ATR_REMAINING_MISSING`; zero Remaining ATR returns `ATR_EXHAUSTED`.
 
 ## SELL_NOW
 
