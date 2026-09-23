@@ -182,8 +182,8 @@ class FakeLiquidityService:
                     100.0,
                     now,
                     refreshed_at=now,
-                    atr14=3.0,
-                    atr14_pct=3.0,
+                    atr14=10.0,
+                    atr14_pct=10.0,
                 )
             )
         return {"session_date": now.date().isoformat(), "refreshed": len(symbols), "failed": []}
