@@ -20,7 +20,7 @@ async def pg_store():
         await connection.execute(schema)
         await connection.execute(
             "TRUNCATE TABLE decision_events,trade_plans,risk_wallet,reservations,"
-            "position_twin,alerts,counterfactual_outcomes,liquidity_profiles,intraday_bars,shadow_trades,runtime_status RESTART IDENTITY CASCADE"
+            "position_twin,alerts,counterfactual_outcomes,liquidity_profiles,intraday_bars,runtime_status RESTART IDENTITY CASCADE"
         )
     try:
         yield store
