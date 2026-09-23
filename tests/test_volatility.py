@@ -39,6 +39,29 @@ def test_volatility_context_tracks_remaining_long_atr():
     assert snapshot.remaining_atr_pct == pytest.approx(100.0 / 101.0)
 
 
+def test_remaining_atr_consumes_intraday_true_range():
+    profile = LiquidityProfile(
+        symbol="TEST",
+        adv20=10_000_000,
+        close=100.0,
+        as_of=__import__("datetime").datetime.now(__import__("datetime").UTC),
+        atr14=3.0,
+        atr14_pct=3.0,
+    )
+    snapshot = MarketSnapshot(
+        symbol="TEST",
+        last=100.5,
+        prior_close=100.0,
+        high=101.0,
+        low=98.0,
+    )
+
+    apply_volatility_context(snapshot, profile)
+
+    assert snapshot.remaining_atr == pytest.approx(0.0)
+    assert volatility_gate_reason(snapshot, min_atr_pct=1.0) == "ATR_EXHAUSTED"
+
+
 def test_atr_gate_and_target_budget_fail_closed():
     snapshot = MarketSnapshot(
         symbol="TEST",
