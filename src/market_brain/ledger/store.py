@@ -371,19 +371,21 @@ class PostgresEventStore:
     async def save_liquidity_profile(self, profile: LiquidityProfile) -> None:
         await self._execute(
             """INSERT INTO liquidity_profiles(
-                 symbol,adv20,close,atr14,atr14_pct,as_of,refreshed_at,updated_at
+                 symbol,adv20,close,atr14,atr14_pct,high_52w,as_of,refreshed_at,updated_at
                )
-               VALUES($1,$2,$3,$4,$5,$6,$7,now())
+               VALUES($1,$2,$3,$4,$5,$6,$7,$8,now())
                ON CONFLICT(symbol) DO UPDATE SET adv20=EXCLUDED.adv20,close=EXCLUDED.close,
                  atr14=EXCLUDED.atr14,atr14_pct=EXCLUDED.atr14_pct,
+                 high_52w=EXCLUDED.high_52w,
                  as_of=EXCLUDED.as_of,refreshed_at=EXCLUDED.refreshed_at,updated_at=now()""",
             profile.symbol.upper(), profile.adv20, profile.close,
-            profile.atr14, profile.atr14_pct, profile.as_of, profile.refreshed_at,
+            profile.atr14, profile.atr14_pct, profile.high_52w,
+            profile.as_of, profile.refreshed_at,
         )
 
     async def get_liquidity_profile(self, symbol: str) -> LiquidityProfile | None:
         row = await self._fetchrow(
-            "SELECT symbol,adv20,close,atr14,atr14_pct,as_of,refreshed_at FROM liquidity_profiles WHERE symbol=$1",
+            "SELECT symbol,adv20,close,atr14,atr14_pct,high_52w,as_of,refreshed_at FROM liquidity_profiles WHERE symbol=$1",
             symbol.upper(),
         )
         if row is None:
@@ -398,11 +400,14 @@ class PostgresEventStore:
             atr14_pct=(
                 float(row["atr14_pct"]) if row["atr14_pct"] is not None else None
             ),
+            high_52w=(
+                float(row["high_52w"]) if row["high_52w"] is not None else None
+            ),
         )
 
     async def list_liquidity_profiles(self) -> list[LiquidityProfile]:
         rows = await self._fetch(
-            "SELECT symbol,adv20,close,atr14,atr14_pct,as_of,refreshed_at FROM liquidity_profiles ORDER BY symbol"
+            "SELECT symbol,adv20,close,atr14,atr14_pct,high_52w,as_of,refreshed_at FROM liquidity_profiles ORDER BY symbol"
         )
         return [
             LiquidityProfile(
@@ -414,6 +419,9 @@ class PostgresEventStore:
                 atr14=(float(row["atr14"]) if row["atr14"] is not None else None),
                 atr14_pct=(
                     float(row["atr14_pct"]) if row["atr14_pct"] is not None else None
+                ),
+                high_52w=(
+                    float(row["high_52w"]) if row["high_52w"] is not None else None
                 ),
             )
             for row in rows
