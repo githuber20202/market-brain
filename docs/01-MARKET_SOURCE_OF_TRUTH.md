@@ -1,6 +1,6 @@
 # MARKET BRAIN V4 — Source of Truth
 
-Version: `BROKERLESS-2026-09-23.2`
+Version: `BROKERLESS-2026-09-25.1`
 
 ## Mission
 
@@ -38,6 +38,14 @@ AI is never in the hot execution path and cannot bypass deterministic rules.
 - SPECULATIVE: disabled by default.
 
 All equity lanes share a non-bypassable profitability gate: `TTM Net Income > 0` must be documented. Non-positive earnings return `PROFITABILITY_GATE_FAILED`; missing profitability returns `PROFITABILITY_MISSING`. A catalyst may change the lane or risk budget only after this gate passes. ETFs are exempt because company profitability is not applicable.
+
+## Reference-high context
+
+The premarket funnel records the highest completed-session price from the prior 252 daily sessions as `high_52w`. Nearness to that reference high is context, not a hard rejection rule. The states are `NORMAL`, `NEAR_HIGH`, `FRESH_BREAKOUT`, `EXTENDED_BREAKOUT`, `BREAKOUT`, or `MISSING`.
+
+When ATR14 is available, a breakout is described as `FRESH_BREAKOUT` when the distance above the prior 52-week high is at most `0.5x ATR14`; larger distance is described as `EXTENDED_BREAKOUT`. This split is descriptive and auditable. It does not, by itself, allow or block a trade.
+
+A true all-time high may be displayed when a deterministic full-history source is available, but `ATH = REJECT` is not an execution rule. Reference-high context never bypasses or replaces Remaining ATR, Opening Range, VWAP, Retest, spread, risk/reward, profitability, Risk Wallet, or no-chase checks. Every premarket finalist remains `PREDICTION/WATCH` and requires the same post-open confirmation.
 
 ## BUY_NOW
 
