@@ -209,17 +209,11 @@ def score_premarket_candidate(
             snapshot.last / reference_high_52w - 1.0
         ) * 100.0
         if snapshot.last > reference_high_52w:
+            reference_high_state = "BREAKOUT"
             if snapshot.atr14 is not None and snapshot.atr14 > 0:
                 breakout_extension_atr = (
                     snapshot.last - reference_high_52w
                 ) / snapshot.atr14
-                reference_high_state = (
-                    "FRESH_BREAKOUT"
-                    if breakout_extension_atr <= 0.5
-                    else "EXTENDED_BREAKOUT"
-                )
-            else:
-                reference_high_state = "BREAKOUT"
         elif snapshot.last >= reference_high_52w * 0.99:
             reference_high_state = "NEAR_HIGH"
         else:
@@ -292,11 +286,7 @@ def score_premarket_candidate(
         reason_codes.append("NEGATIVE_CATALYST")
     if deterioration_confirmed:
         reason_codes.append("PREMARKET_DETERIORATION")
-    if reference_high_state == "FRESH_BREAKOUT":
-        reason_codes.append("REFERENCE_HIGH_FRESH_BREAKOUT")
-    elif reference_high_state == "EXTENDED_BREAKOUT":
-        reason_codes.append("REFERENCE_HIGH_EXTENDED_BREAKOUT")
-    elif reference_high_state == "BREAKOUT":
+    if reference_high_state == "BREAKOUT":
         reason_codes.append("REFERENCE_HIGH_BREAKOUT")
     elif reference_high_state == "NEAR_HIGH":
         reason_codes.append("REFERENCE_HIGH_NEAR")
