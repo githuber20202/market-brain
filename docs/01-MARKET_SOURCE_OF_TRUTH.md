@@ -41,9 +41,9 @@ All equity lanes share a non-bypassable profitability gate: `TTM Net Income > 0`
 
 ## Reference-high context
 
-The premarket funnel records the highest completed-session price from the prior 252 daily sessions as `high_52w`. Nearness to that reference high is context, not a hard rejection rule. The states are `NORMAL`, `NEAR_HIGH`, `FRESH_BREAKOUT`, `EXTENDED_BREAKOUT`, `BREAKOUT`, or `MISSING`.
+The premarket funnel records the highest completed-session price from the prior 252 daily sessions as `high_52w`. Nearness to that reference high is context, not a hard rejection rule. The states are `NORMAL`, `NEAR_HIGH`, `BREAKOUT`, or `MISSING`.
 
-When ATR14 is available, a breakout is described as `FRESH_BREAKOUT` when the distance above the prior 52-week high is at most `0.5x ATR14`; larger distance is described as `EXTENDED_BREAKOUT`. This split is descriptive and auditable. It does not, by itself, allow or block a trade.
+When ATR14 is available, the funnel also records `breakout_extension_atr = (price - high_52w) / ATR14`. No new hard threshold is applied to that value until deterministic Replay and out-of-sample validation justify one. Existing Remaining ATR and no-chase rules remain the execution controls for extension.
 
 A true all-time high may be displayed when a deterministic full-history source is available, but `ATH = REJECT` is not an execution rule. Reference-high context never bypasses or replaces Remaining ATR, Opening Range, VWAP, Retest, spread, risk/reward, profitability, Risk Wallet, or no-chase checks. Every premarket finalist remains `PREDICTION/WATCH` and requires the same post-open confirmation.
 
