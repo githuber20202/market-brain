@@ -358,7 +358,9 @@ class DecisionService:
         eastern = ZoneInfo("America/New_York")
         local = timestamp.astimezone(eastern)
         end = local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
-        start = end - timedelta(days=max(45, ATR_PERIOD * 3))
+        # One request still fits the provider's 1000-bar cap, while giving us
+        # enough completed daily sessions for a deterministic 52-week reference high.
+        start = end - timedelta(days=max(400, ATR_PERIOD * 3))
         rows = await self.market_data.bars(symbol.upper(), "1Day", start, end)
         parsed: list[tuple[datetime, float, float, float, float]] = []
         for row in rows:
@@ -405,6 +407,11 @@ class DecisionService:
         if atr14 is None or atr14 <= 0:
             raise RuntimeError("ATR_PROFILE_INSUFFICIENT_HISTORY")
         latest_close = latest[-1][2]
+        high_52w = (
+            max(row[3] for row in parsed[-252:])
+            if len(parsed) >= 252
+            else None
+        )
         profile = LiquidityProfile(
             symbol=symbol.upper(),
             adv20=sum(row[1] for row in latest) / 20.0,
@@ -413,6 +420,7 @@ class DecisionService:
             refreshed_at=timestamp,
             atr14=atr14,
             atr14_pct=atr14 / latest_close * 100.0,
+            high_52w=high_52w,
         )
         async with self.store.transaction():
             await self.store.save_liquidity_profile(profile)
