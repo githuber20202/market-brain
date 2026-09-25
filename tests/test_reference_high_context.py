@@ -42,7 +42,7 @@ def _snapshot(last: float, prior_close: float, atr14: float) -> MarketSnapshot:
     )
 
 
-def test_amd_like_breakout_is_fresh_context_not_rejected():
+def test_amd_like_breakout_is_context_not_rejected():
     result = score_premarket_candidate(
         _snapshot(last=640.0, prior_close=629.005, atr14=25.3508682779),
         adv20=15_000_000,
@@ -55,14 +55,14 @@ def test_amd_like_breakout_is_fresh_context_not_rejected():
         reference_high_52w=630.795,
     )
 
-    assert result["metrics"]["reference_high_state"] == "FRESH_BREAKOUT"
+    assert result["metrics"]["reference_high_state"] == "BREAKOUT"
     assert result["metrics"]["distance_to_reference_high_percent"] == pytest.approx(1.4593, abs=1e-4)
     assert result["metrics"]["breakout_extension_atr"] == pytest.approx(0.3631, abs=1e-4)
-    assert "REFERENCE_HIGH_FRESH_BREAKOUT" in result["reason_codes"]
+    assert "REFERENCE_HIGH_BREAKOUT" in result["reason_codes"]
     assert result["ranking_allowed"] is True
 
 
-def test_extended_reference_high_is_context_not_a_hard_block():
+def test_far_above_reference_high_stays_context_not_a_hard_block():
     result = score_premarket_candidate(
         _snapshot(last=660.0, prior_close=629.005, atr14=25.0),
         adv20=15_000_000,
@@ -75,7 +75,7 @@ def test_extended_reference_high_is_context_not_a_hard_block():
         reference_high_52w=630.795,
     )
 
-    assert result["metrics"]["reference_high_state"] == "EXTENDED_BREAKOUT"
-    assert result["metrics"]["breakout_extension_atr"] > 0.5
-    assert "REFERENCE_HIGH_EXTENDED_BREAKOUT" in result["reason_codes"]
+    assert result["metrics"]["reference_high_state"] == "BREAKOUT"
+    assert result["metrics"]["breakout_extension_atr"] > 1.0
+    assert "REFERENCE_HIGH_BREAKOUT" in result["reason_codes"]
     assert result["ranking_allowed"] is True
