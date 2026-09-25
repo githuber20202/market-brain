@@ -41,6 +41,7 @@ audit. מזהה `UNRESOLVED` נשאר `MISSING` ואינו נכנס לדירוג
 אינו כולל Trigger/Stop/Targets/quantity ואינו מאפשר פעולה אצל ברוקר.
 ל־`EQUITY` מופעל גם כאן Profitability Hard Gate: חברה עם `TTM Net Income <= 0` או ללא ארבעה רבעוני Net Income נשארת בשורת ה־audit אך אינה `ranking_allowed`, ולכן אינה יכולה להיכנס ל־Top 10 או ל־Finalists. External mover ללא Quality מתועד נחסם באותה צורה.
 בנוסף מופעל `ATR14` Volatility Gate לכל נכס סחיר: פרופיל ה־Daily bars חייב להכיל ATR14 תקף, ו־`ATR14 / price` חייב להיות לפחות `MIN_ATR_PCT` (ברירת מחדל 1.0%). מועמד עם `ATR_MISSING` או `ATR_TOO_LOW` נשאר ב־audit אך אינו `ranking_allowed`.
+בנוסף נשמר `high_52w` כשיא של 252 ימי המסחר המלאים הקודמים. קרבה לשיא היא Context בלבד: `NORMAL`, `NEAR_HIGH`, `BREAKOUT` או `MISSING`. בעת פריצה נשמר גם `breakout_extension_atr=(price-high_52w)/ATR14`, אך לא נוסף לו Hard Threshold לפני Replay ובדיקת out-of-sample. הסיווג אינו Hard Gate ואינו הופך Premarket ל־BUY. `ATH = REJECT` אינו כלל במערכת; כל מועמד עדיין חייב לעבור לאחר הפתיחה Opening Range, VWAP, Retest, Remaining ATR, Spread, Risk/Reward ו־No-Chase.
 
 Premarket Deterioration מאושר כאשר מתקיימים לפחות שניים מהבאים: מרחק של 1% או
 יותר מהשיא, תשואת 15 דקות של ‎-0.5% או פחות, ושני lower highs. מועמד כזה חסום

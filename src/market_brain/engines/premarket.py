@@ -185,6 +185,7 @@ def score_premarket_candidate(
     minimum_price: float,
     minimum_adv: float,
     finalist_score: float,
+    reference_high_52w: float | None = None,
 ) -> dict[str, Any]:
     gap = _pct(snapshot.last, snapshot.prior_close)
     return_15m = _number(snapshot.metadata.get("premarket_return_15m_percent"))
@@ -199,6 +200,24 @@ def score_premarket_candidate(
     anchor = sector_return_pct if sector_return_pct is not None else benchmark_return_pct
     relative_strength = gap - anchor if gap is not None and anchor is not None else None
     distance_from_vwap = _pct(snapshot.last, snapshot.vwap)
+
+    reference_high_state = "MISSING"
+    distance_to_reference_high = None
+    breakout_extension_atr = None
+    if reference_high_52w is not None and reference_high_52w > 0:
+        distance_to_reference_high = (
+            snapshot.last / reference_high_52w - 1.0
+        ) * 100.0
+        if snapshot.last > reference_high_52w:
+            reference_high_state = "BREAKOUT"
+            if snapshot.atr14 is not None and snapshot.atr14 > 0:
+                breakout_extension_atr = (
+                    snapshot.last - reference_high_52w
+                ) / snapshot.atr14
+        elif snapshot.last >= reference_high_52w * 0.99:
+            reference_high_state = "NEAR_HIGH"
+        else:
+            reference_high_state = "NORMAL"
 
     deterioration_signals: list[str] = []
     if distance_from_high is not None and distance_from_high >= 1.0:
@@ -267,6 +286,10 @@ def score_premarket_candidate(
         reason_codes.append("NEGATIVE_CATALYST")
     if deterioration_confirmed:
         reason_codes.append("PREMARKET_DETERIORATION")
+    if reference_high_state == "BREAKOUT":
+        reason_codes.append("REFERENCE_HIGH_BREAKOUT")
+    elif reference_high_state == "NEAR_HIGH":
+        reason_codes.append("REFERENCE_HIGH_NEAR")
 
     ranking_allowed = not any(
         reason in reason_codes
@@ -337,6 +360,10 @@ def score_premarket_candidate(
             "benchmark_return_percent": _rounded(benchmark_return_pct),
             "sector_return_percent": _rounded(sector_return_pct),
             "relative_strength_percent": _rounded(relative_strength),
+            "reference_high_52w": _rounded(reference_high_52w),
+            "distance_to_reference_high_percent": _rounded(distance_to_reference_high),
+            "breakout_extension_atr": _rounded(breakout_extension_atr),
+            "reference_high_state": reference_high_state,
         },
         "premarket_deterioration": {
             "signals": deterioration_signals,

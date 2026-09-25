@@ -17,6 +17,7 @@ async def test_postgres_liquidity_profile_round_trip(pg_store):
         refreshed_at=now,
         atr14=4.25,
         atr14_pct=2.11,
+        high_52w=237.49,
     )
     await pg_store.save_liquidity_profile(expected)
     restored = await pg_store.get_liquidity_profile("aapl")
@@ -28,6 +29,7 @@ async def test_postgres_liquidity_profile_round_trip(pg_store):
     assert restored.refreshed_at == expected.refreshed_at
     assert restored.atr14 == pytest.approx(expected.atr14)
     assert restored.atr14_pct == pytest.approx(expected.atr14_pct)
+    assert restored.high_52w == pytest.approx(expected.high_52w)
     listed = await pg_store.list_liquidity_profiles()
     assert [row.symbol for row in listed] == ["AAPL"]
 

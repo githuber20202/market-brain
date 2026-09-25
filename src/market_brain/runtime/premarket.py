@@ -436,6 +436,7 @@ class PremarketFunnel:
             minimum_price=self.cfg.min_price,
             minimum_adv=self.cfg.min_adv_keyless,
             finalist_score=self.cfg.premarket_finalist_score,
+            reference_high_52w=profile.high_52w if profile is not None else None,
         )
         volatility_reason = volatility_gate_reason(
             snapshot,
@@ -792,7 +793,8 @@ def format_premarket_report(artifact: dict[str, Any]) -> str:
             f"{index}. {row['symbol']} | score={row['score']:.2f}{delta_text} "
             f"gap={_fmt_pct(metrics.get('gap_percent'))} "
             f"PM-vol/ADV={_fmt_ratio(metrics.get('premarket_volume_fraction_adv20'))} "
-            f"RS={_fmt_pct(metrics.get('relative_strength_percent'))} | {headline}"
+            f"RS={_fmt_pct(metrics.get('relative_strength_percent'))} "
+            f"HIGH_CTX={metrics.get('reference_high_state', 'MISSING')} | {headline}"
         )
     finalists = artifact.get("finalists", [])
     lines.extend(
@@ -800,6 +802,7 @@ def format_premarket_report(artifact: dict[str, Any]) -> str:
             "",
             "Final predictions: " + (", ".join(finalists) if finalists else "none"),
             "Post-open requirement: Opening Range + VWAP + Retest + live authoritative gate.",
+            "Reference-high/52W breakout status is context, never a premarket BUY signal.",
             "No Trigger/Stop/targets/quantity are published before the open.",
         ]
     )

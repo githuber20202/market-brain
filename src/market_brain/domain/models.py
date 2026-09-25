@@ -139,6 +139,7 @@ class LiquidityProfile:
     refreshed_at: datetime = field(default_factory=utc_now)
     atr14: float | None = None
     atr14_pct: float | None = None
+    high_52w: float | None = None
 
 
 @dataclass(slots=True)
