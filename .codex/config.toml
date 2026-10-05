@@ -1,0 +1,4 @@
+# Codex clients that load project configuration. Verify availability in Cloud.
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3

@@ -1,0 +1,21 @@
+{
+  "schema": "market-core-cloud-release.v1",
+  "resource_revision": "2026-10-03.CHAT.2",
+  "files": {
+    "engine/scripts/evaluate_candidate.py": "e2bcaf2abde750ff84c4b343589bc1c18e546777e895034d92f7fedeae36fe6e",
+    "engine/scripts/normalize_ibkr_evidence.py": "1f31f8b0bccab33c7fb5023303399fd5f5d84cbcbbfdd3100db04d4699604f78",
+    "engine/scripts/run_full_regression.py": "b2148d522ba65e2a4b433d9481344dd4853af82992e20d3512406442e7af8b6d",
+    "engine/scripts/test_chat_gates.py": "668eee70994b4af7490c84caa3f24e54e9165770126bde0473d00ea6fe656848",
+    "engine/scripts/test_ibkr_adapter.py": "cf49ed6ba4a15070b881d83f297573d7417a95af58ba173ea571f5bcdc9201d7",
+    "engine/scripts/test_policy_bundle.py": "967b27f2ee026de12ecb80d5cfeb16e32cc6000b7f0921418057404f6aae3f04",
+    "engine/scripts/test_resource_reads.py": "baad20cbc67b10673d2fc837873e0d7ba8521c32a5b75a3b0f33e24ed1f18f4a",
+    "engine/scripts/verify_resource_reads.py": "e10cc509c805147efcef6ab4c0872b065fec37cffbb22f7129a6cebc143763be",
+    "policy/01-MARKET_SOURCE_OF_TRUTH.md": "021fa7de6c29253755bd3adaf81afe4320d57b577dba22e94b1f7f098f83369b",
+    "policy/03-MARKET_RULES.json": "3c895641d9bbf5b4f714b90fbe32fa6ffbbb98fe70a71caa1b711d3a83c18a4f",
+    "policy/10-MARKET_RUNTIME_CONFIG.json": "34eb881c827db5cdf7d4562abc0b953f2d256b61460476c51beffd167f6f4746",
+    "policy/MARKET_BUNDLE_MANIFEST.json": "28ab1c905f8e8708c66d9d6bc3a49550cc34919141acd0aaa03aabeb21707e89",
+    "policy/MARKET_PROJECT_INSTRUCTIONS.md": "ffc38a7f09887e2373aaed41cf96b55c283e9435da8e5174285102a922f522e1",
+    "policy/validate_market_bundle.py": "77d824614b5e002d59d29bddfc71f144489b6719cd9c67767a7563149383bc1a",
+    "source-lock.json": "68f7b90d231929887436346b82a0641ed09e419b4d293fc06d9e8ccbd798740b"
+  }
+}

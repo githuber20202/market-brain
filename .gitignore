@@ -11,3 +11,8 @@ reports/rehearsal/
 rehearsal-state/
 reports/digest_*.md
 state/
+
+# Private Codex Cloud policy, broker evidence and receipts.
+.market-core/
+.market-core-import-*/
+Market-CORE-Algorithm-*.zip
